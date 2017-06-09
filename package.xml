@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>filter_test</name>
+  <version>0.0.0</version>
+  <description>
+    Filter test
+  </description>
+  <url></url>
+  <author>Michael Burri</author>
+  <maintainer email="burri210@gmail.com">Michael Burri</maintainer>
+  <license>BSD</license>
+
+  <!-- Dependencies which this package needs to build itself. -->
+  <buildtool_depend>catkin</buildtool_depend>
+  <buildtool_depend>catkin_simple</buildtool_depend>
+
+  <!-- Dependencies needed to compile this package. -->
+  <!--<buildtool_depend>message_generation</buildtool_depend>-->
+
+  <!-- Dependencies needed after this package is compiled. -->
+  <depend>roscpp</depend>
+  <depend>cmake_modules</depend>
+  <depend>glog_catkin</depend>
+
+</package>
