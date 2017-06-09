@@ -9,17 +9,6 @@
 
 #include "filter_test/filter.h"
 
-std::string padTo(const std::string &str, const size_t num, const char paddingChar = ' ')
-{
-  std::string padded_string = str;
-    if(num > str.size())
-      padded_string.insert(padded_string.size(), num - padded_string.size(), paddingChar);
-    return padded_string;
-}
-
-bool vectorContainsValue(const std::vector<int>& vec, int value) {
-  return std::find(vec.begin(), vec.end(), value) != vec.end();
-}
 
 //bool isOrdered(const std::vector<int>& vector)
 //{
@@ -43,17 +32,26 @@ bool Filter::defineState(std::vector<BlockType> state_types) {
 }
 
 
-bool Filter::addResidual(ResidualBase* residual, std::vector<int> first_keys,  std::vector<int> second_keys) {
+bool Filter::addResidual(ResidualBase* residual, std::vector<int> first_keys,
+                         std::vector<int> second_keys, std::vector<int> measurement_keys) {
   CHECK(first_state_.dimension_ > 0); // Check if state is defined.
   ResidualContainer container;
   container.first_keys = first_keys;
   container.second_keys = second_keys;
   container.residual_ = residual;
 
+  std::vector<Timeline*> timelines = measurement_manager_.getTimelines(measurement_keys, residual->is_mergeable_);
+  residual->setMeasurementTimelines(timelines);
+
   total_residual_dimension_ += residual->dimension_;
   residuals_.push_back(container);
   return true;
 }
+
+void Filter::addMeasurement(int timeline_key, double timestamp, MeasurementBase* measurement) {
+  measurement_manager_.addMeasurement(timeline_key, timestamp, measurement);
+}
+
 
 void Filter::initStateValue(const int key, const VectorXRef& value) {
   first_state_.setState(key, value);
@@ -61,6 +59,10 @@ void Filter::initStateValue(const int key, const VectorXRef& value) {
 
 void Filter::printState() {
   first_state_.printState();
+}
+
+void Filter::printTimeline() {
+  measurement_manager_.printTimeline();
 }
 
 bool Filter::checkResiduals() {

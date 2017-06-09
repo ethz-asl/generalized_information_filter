@@ -23,6 +23,20 @@ class MeasurementBase {
 };
 
 
+class ImuMeasurement: public MeasurementBase {
+ public:
+  ImuMeasurement() {}
+
+  virtual ~ImuMeasurement() {}
+
+//  virtual MeasurementBase* interpolateMeasurements() = 0;
+
+  virtual std::string getPrintableMeasurement() {
+    return "IMU";
+  }
+ private:
+};
+
 
 
 #endif /* INCLUDE_FILTER_TEST_MEASUREMENT_H_ */

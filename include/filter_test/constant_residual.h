@@ -12,8 +12,10 @@
 
 // We assume that the residuals are embedded in a vector space (i.e. tangent space for manifolds).
 class ConstantResidual: public ResidualBase {
+  static const bool kIsMergeable = true;
+  static const int kResidualDimension = 3;
 public:
-  ConstantResidual(): ResidualBase(3) {
+  ConstantResidual(): ResidualBase(kResidualDimension, kIsMergeable) {
     state1_block_types_.push_back(BlockType::kVector3);
     state2_block_types_.push_back(BlockType::kVector3);
   }

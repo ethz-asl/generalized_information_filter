@@ -16,10 +16,12 @@
 #include "filter_test/measurement_manager.h"
 #include "filter_test/residual.h"
 #include "filter_test/state.h"
+#include "filter_test/helper_functions.h"
 
 struct ResidualContainer {
   std::vector<int> first_keys;
   std::vector<int> second_keys;
+  std::vector<int> measurement_keys;
   ResidualBase* residual_;
 };
 
@@ -52,8 +54,15 @@ class Filter {
 
   // Adds a residual and takes ownership of the residual.
   // Classical KF measurements only depend on the second state and therefore only contain second_keys.
-  bool addResidual(ResidualBase* residual, std::vector<int> first_keys,  std::vector<int> second_keys);
+  bool addResidual(ResidualBase* residual, std::vector<int> first_keys,
+                   std::vector<int> second_keys, std::vector<int> measurement_keys = std::vector<int>());
+
+  void addMeasurement(int timeline_key, double timestamp, MeasurementBase* measurement);
+
+
   void printState();
+
+  void printTimeline();
 
   bool checkResiduals();
 

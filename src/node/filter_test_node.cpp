@@ -18,6 +18,11 @@ enum StateNames {
   kOrientation
 };
 
+enum MeasurementDefinition {
+  kMeasPosition = 0,
+  kMeasImu
+};
+
 int main(int argc, char** argv) {
   // Initialize Google's logging library.
   google::InitGoogleLogging(argv[0]);
@@ -41,6 +46,21 @@ int main(int argc, char** argv) {
 
 
   testfilter.printState();
+
+
+
+  ConstantResidual* test_residual = new ConstantResidual();
+  std::vector<int> first_keys {kStatePosition};
+  std::vector<int> second_keys {kStatePosition};
+  std::vector<int> measurement_keys {kMeasPosition};
+  testfilter.addResidual(test_residual, first_keys, second_keys, measurement_keys);
+
+
+
+  testfilter.checkResiduals();
+
+  testfilter.printTimeline();
+
 
   BlockBase* testbase(new VectorBlock<3>());
 

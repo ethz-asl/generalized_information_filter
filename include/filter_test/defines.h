@@ -24,4 +24,8 @@ typedef Eigen::Ref<Eigen::VectorXd> VectorXRef;
 typedef Eigen::Ref<Eigen::MatrixXd> MatrixXRef;
 
 
+
+
+constexpr int kMaxMeasurmenetBufferSize = 1000;
+
 #endif /* INCLUDE_FILTER_TEST_DEFINES_H_ */

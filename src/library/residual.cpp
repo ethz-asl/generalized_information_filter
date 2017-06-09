@@ -24,3 +24,7 @@ bool ResidualBase::inputTypesValid(const std::vector<BlockBase*>& state1,
     ++current_state_type_it;
   }
 }
+
+void ResidualBase::setMeasurementTimelines(std::vector<Timeline*> timelines) {
+  measurement_timelines_ = timelines;
+}

@@ -6,6 +6,7 @@
  */
 #include "gtest/gtest.h"
 #include "filter_test/filter.h"
+#include "filter_test/measurement.h"
 #include "filter_test/constant_residual.h"
 
 enum StateDefinition {
@@ -22,6 +23,9 @@ enum MeasurementDefinition {
 TEST(StateTest, AssembleState) {
   EXPECT_TRUE(true);
 }
+TEST(StateTest, AssembleState1) {
+  EXPECT_TRUE(true);
+}
 
 TEST(StateTest, SimpleResidualTest) {
   std::vector<BlockType> state_block_types {kVector3, kVector3, kVector2};
@@ -33,12 +37,13 @@ TEST(StateTest, SimpleResidualTest) {
   Eigen::Vector3d test_vec(1,2,3);
   testfilter.initStateValue(kStatePosition, test_vec);
 
-//  testfilter.printState();
+  testfilter.printState();
 
   ConstantResidual* test_residual = new ConstantResidual();
   std::vector<int> first_keys {kStatePosition};
   std::vector<int> second_keys {kStatePosition};
-  testfilter.addResidual(test_residual, first_keys, second_keys);
+  std::vector<int> measurement_keys {kMeasPosition, kMeasImu};
+  testfilter.addResidual(test_residual, first_keys, second_keys, measurement_keys);
 
   ConstantResidual* test_residual2 = new ConstantResidual();
   first_keys = {kStatePosition};
@@ -47,6 +52,16 @@ TEST(StateTest, SimpleResidualTest) {
 
 
   testfilter.checkResiduals();
+
+
+  MeasurementBase* testmeas = new ImuMeasurement();
+
+  testfilter.addMeasurement(kMeasImu, 1.23, testmeas);
+  testfilter.addMeasurement(kMeasImu, 1.3, testmeas);
+  testfilter.addMeasurement(kMeasPosition, 1.4, testmeas);
+  testfilter.addMeasurement(kMeasImu, 1.7, testmeas);
+
+  testfilter.printTimeline();
 
 }
 
