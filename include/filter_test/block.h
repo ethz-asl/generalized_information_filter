@@ -36,7 +36,7 @@ class BlockBase {
   virtual ~BlockBase() {}
 
   virtual void boxPlus(const Eigen::VectorXd& dx, BlockBase* result) = 0;
-  virtual BlockBase* boxMinus(const Eigen::VectorXd& dx) = 0;
+  virtual Eigen::VectorXd boxMinus(const BlockBase* y) = 0;
   virtual Eigen::VectorXd getValue() = 0;
   virtual void setValue(const VectorXRef& value) = 0;
   virtual std::string getTypeName() = 0;
@@ -62,11 +62,11 @@ class VectorBlock: public BlockBase {
     result1->value_ = value_ + dx;
   }
 
-  virtual BlockBase* boxMinus(const Eigen::VectorXd& y) {
-    CHECK(y.size() == Dimension);
-    VectorBlock<Dimension>* block(new VectorBlock<Dimension>());
-    block->value_ = value_ - y;
-    return block;
+  virtual Eigen::VectorXd boxMinus(const BlockBase* y) {
+    const VectorBlock<Dimension>* y_vector = dynamic_cast<const VectorBlock<Dimension>* >(y);
+    CHECK_NOTNULL(y_vector);// << "Type cast from BlockBase to VectorBlock failed! Did you mix types?";
+    Vector<Dimension> result = value_ - y_vector->value_;
+    return result;
   }
 
   virtual Eigen::VectorXd getValue() {return value_;}
@@ -78,9 +78,8 @@ class VectorBlock: public BlockBase {
 
   virtual std::string getTypeName() {return "vector" + std::to_string(Dimension);}
 
- private:
-
   Vector<Dimension> value_;
+ private:
 };
 
 namespace block_helper {

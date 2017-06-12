@@ -57,14 +57,16 @@ class Filter {
   bool addResidual(ResidualBase* residual, std::vector<int> first_keys,
                    std::vector<int> second_keys, std::vector<int> measurement_keys = std::vector<int>());
 
-  void addMeasurement(int timeline_key, double timestamp, MeasurementBase* measurement);
+  void addMeasurement(int timeline_key, int timestamp_ns, MeasurementBase* measurement);
 
 
   void printState();
 
   void printTimeline();
 
-  bool checkResiduals();
+  void printResiduals();
+
+  void checkResiduals();
 
   void step();
 

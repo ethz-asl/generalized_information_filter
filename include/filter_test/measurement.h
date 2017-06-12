@@ -23,9 +23,24 @@ class MeasurementBase {
 };
 
 
+class PositionMeasurement: public MeasurementBase {
+ public:
+  PositionMeasurement(const Vector3& position):position_(position) {}
+
+  virtual ~PositionMeasurement() {}
+
+//  virtual MeasurementBase* interpolateMeasurements() = 0;
+
+  virtual std::string getPrintableMeasurement() {
+    return "Position";
+  }
+  const Vector3 position_;
+ private:
+};
+
 class ImuMeasurement: public MeasurementBase {
  public:
-  ImuMeasurement() {}
+  ImuMeasurement(const Vector3& acceleration, const Vector3& angular_velocity):acceleration_(acceleration), angular_velocity_(angular_velocity) {}
 
   virtual ~ImuMeasurement() {}
 
@@ -34,7 +49,10 @@ class ImuMeasurement: public MeasurementBase {
   virtual std::string getPrintableMeasurement() {
     return "IMU";
   }
+  const Vector3 acceleration_;
+  const Vector3 angular_velocity_;
  private:
+
 };
 
 

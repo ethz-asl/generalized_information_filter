@@ -27,10 +27,10 @@ std::vector<Timeline*> MeasurementManager::getTimelines(std::vector<int> timelin
   return timelines;
 }
 
-void MeasurementManager::addMeasurement(int timeline_key, double timestamp, MeasurementBase* measurement) {
+void MeasurementManager::addMeasurement(const int timeline_key, const int timestamp_ns, MeasurementBase* measurement) {
   CHECK(timeline_key < timelines_.size())
               << "Timeline key does not exist. This probably means that the measurement is not used by any residual.";
-  timelines_[timeline_key].addMeasurement(timestamp, measurement);
+  timelines_[timeline_key].addMeasurement(timestamp_ns, measurement);
 }
 
 void MeasurementManager::printTimeline() {
@@ -48,6 +48,18 @@ void MeasurementManager::printTimeline() {
       ++num_finished_timelines;
     }
     ++i;
+  }
+
+  std::cout << std::endl;
+
+
+  std::cout << padTo("mergeable?", 20);
+  for(const Timeline& current_timeline:timelines_) {
+    if(current_timeline.mergeable_) {
+      std::cout << "  X  ";
+    }else{
+      std::cout << "     ";
+    }
   }
 
   std::cout << std::endl;
@@ -106,6 +118,9 @@ bool MeasurementManager::shouldIRunTheFilter() {
 
   // Check if all the mergeable measurements have a newer measurement to allow for interpolation.
   for(const Timeline& current_timeline:timelines_) {
+    if(current_timeline.isEmpty()) {
+      continue;
+    }
     if(!current_timeline.mergeable_) {
       continue;
     }

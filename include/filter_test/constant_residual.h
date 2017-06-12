@@ -24,9 +24,9 @@ public:
 
   virtual bool evaluate(const std::vector<BlockBase*>& state1,
                         const std::vector<BlockBase*>& state2,
-                        const double t1, const double t2,
-                        VectorXRef* residual, MatrixXRef* jacobian_wrt_state1,
-                        MatrixXRef* jacobian_wrt_state2) {return true;}
+                        const int t1_ns, const int t2_ns,
+                        VectorXRef* residual, std::vector<MatrixXRef>* jacobian_wrt_state1,
+                        std::vector<MatrixXRef>* jacobian_wrt_state2) {return true;}
 
   virtual std::string getResidualName() {return "const residual";}
 

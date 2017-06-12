@@ -48,10 +48,20 @@ bool Filter::addResidual(ResidualBase* residual, std::vector<int> first_keys,
   return true;
 }
 
-void Filter::addMeasurement(int timeline_key, double timestamp, MeasurementBase* measurement) {
-  measurement_manager_.addMeasurement(timeline_key, timestamp, measurement);
+void Filter::addMeasurement(int timeline_key, int timestamp_ns, MeasurementBase* measurement) {
+  measurement_manager_.addMeasurement(timeline_key, timestamp_ns, measurement);
+
+#ifdef VERBOSE_MODE
+  std::cout << "added " << measurement->getPrintableMeasurement() << " at time "<< std::to_string(timestamp_ns) << std::endl;
+  if(measurement_manager_.shouldIRunTheFilter()) {
+    std::cout << "We should run the filter now!" << std::endl;;
+  }
+#endif
 }
 
+//void Filter::update(const double timestamp_ns) {
+//
+//}
 
 void Filter::initStateValue(const int key, const VectorXRef& value) {
   first_state_.setState(key, value);
@@ -65,38 +75,40 @@ void Filter::printTimeline() {
   measurement_manager_.printTimeline();
 }
 
-bool Filter::checkResiduals() {
+void Filter::printResiduals() {
   for(size_t i=0; i < first_state_.state_blocks_.size(); ++i) {
-      std::string state_name = "S" + std::to_string(i);
-      std::cout << padTo(state_name, 5);
-  }
-  std::cout << padTo("residual", 20);
-  for(size_t i=0; i < first_state_.state_blocks_.size(); ++i) {
-      std::string state_name = "S" + std::to_string(i);
-      std::cout << padTo(state_name, 5);
-  }
-  std::cout << std::endl;
+       std::string state_name = "S" + std::to_string(i);
+       std::cout << padTo(state_name, 5);
+   }
+   std::cout << padTo("residual", 20);
+   for(size_t i=0; i < first_state_.state_blocks_.size(); ++i) {
+       std::string state_name = "S" + std::to_string(i);
+       std::cout << padTo(state_name, 5);
+   }
+   std::cout << std::endl;
 
-  for(ResidualContainer& current_residual:residuals_) {
-    for(size_t i=0; i < first_state_.state_blocks_.size(); ++i) {
-      if (vectorContainsValue(current_residual.first_keys, i)) {
-        std::cout << "  X  ";
-      } else {
-        std::cout << "     ";
-      }
-    }
-    std::string residual_name = current_residual.residual_->getResidualName();
-    std::cout << padTo(residual_name, 20);
-    for(size_t i=0; i < second_state_.state_blocks_.size(); ++i) {
-      if (vectorContainsValue(current_residual.second_keys, i)) {
-        std::cout << "  X  ";
-      } else {
-        std::cout << "     ";
-      }
-    }
-    std::cout << std::endl;
-  }
+   for(ResidualContainer& current_residual:residuals_) {
+     for(size_t i=0; i < first_state_.state_blocks_.size(); ++i) {
+       if (vectorContainsValue(current_residual.first_keys, i)) {
+         std::cout << "  X  ";
+       } else {
+         std::cout << "     ";
+       }
+     }
+     std::string residual_name = current_residual.residual_->getResidualName();
+     std::cout << padTo(residual_name, 20);
+     for(size_t i=0; i < second_state_.state_blocks_.size(); ++i) {
+       if (vectorContainsValue(current_residual.second_keys, i)) {
+         std::cout << "  X  ";
+       } else {
+         std::cout << "     ";
+       }
+     }
+     std::cout << std::endl;
+   }
+}
 
+void Filter::checkResiduals() {
   for(ResidualContainer& current_residual:residuals_) {
     std::vector<BlockBase*> blocks1 = getBlocks(first_state_, current_residual.first_keys);
     std::vector<BlockBase*> blocks2 = getBlocks(second_state_, current_residual.second_keys);
