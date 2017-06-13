@@ -102,7 +102,7 @@ void MeasurementManager::printTimeline() {
   }
 }
 
-bool MeasurementManager::shouldIRunTheFilter() {
+bool MeasurementManager::shouldIRunTheFilter(const int& timestamp_previous_update_ns, int* timestamp_update_ns) {
   // Find the oldest non mergeable timestamp.
   // TODO(burrimi): Cache this.
   double oldest_timestamp = std::numeric_limits<double>::max();
@@ -110,8 +110,9 @@ bool MeasurementManager::shouldIRunTheFilter() {
     if(current_timeline.mergeable_ || current_timeline.isEmpty()) {
       continue;
     }
-    if(current_timeline.getOldestMeasurementTimestamp() < oldest_timestamp) {
-      oldest_timestamp = current_timeline.getOldestMeasurementTimestamp();
+    const double& next_timestamp = current_timeline.getNextMeasurementTimestamp(timestamp_previous_update_ns);
+    if(next_timestamp < oldest_timestamp) {
+      oldest_timestamp = next_timestamp;
     }
   }
   // TODO(burrimi): should we also check the oldest timestamp of mergeable residuals?
@@ -129,6 +130,6 @@ bool MeasurementManager::shouldIRunTheFilter() {
     }
   }
   // We probably have all the required measurements for performing one step.
-
+  *timestamp_update_ns = oldest_timestamp;
   return true;
 }

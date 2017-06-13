@@ -53,15 +53,60 @@ void Filter::addMeasurement(int timeline_key, int timestamp_ns, MeasurementBase*
 
 #ifdef VERBOSE_MODE
   std::cout << "added " << measurement->getPrintableMeasurement() << " at time "<< std::to_string(timestamp_ns) << std::endl;
-  if(measurement_manager_.shouldIRunTheFilter()) {
-    std::cout << "We should run the filter now!" << std::endl;;
-  }
 #endif
+  int timestamp_update_ns;
+  if(!measurement_manager_.shouldIRunTheFilter(timestamp_previous_update_ns_, &timestamp_update_ns)) {
+    return;
+  }
+
+  if(!first_run_) {
+#ifdef VERBOSE_MODE
+    std::cout << "update at time "<< std::to_string(timestamp_update_ns) << std::endl;
+#endif
+    update(timestamp_update_ns);
+    return;
+  }
+
+  // This is the first run and we have to initialize everything
+#ifdef VERBOSE_MODE
+  std::cout << "first run at time "<< std::to_string(timestamp_update_ns) << std::endl;
+#endif
+  init();
+  update(timestamp_update_ns);
+  first_run_ = false;
+
 }
 
-//void Filter::update(const double timestamp_ns) {
-//
-//}
+void Filter::update(const int timestamp_ns) {
+  int index_residual = 0;
+  jacobian_wrt_state1_.setZero();
+  jacobian_wrt_state2_.setZero();
+  residual_vector_.setZero();
+  if(timestamp_ns > -1) {
+    for(ResidualContainer& current_residual:residuals_) {
+      std::vector<BlockBase*> blocks1 = getBlocks(first_state_, current_residual.first_keys);
+      std::vector<BlockBase*> blocks2 = getBlocks(second_state_, current_residual.second_keys);
+      
+      const int& residual_dimension = current_residual.residual_->dimension_;
+      VectorXRef residual = residual_vector_.segment(index_residual, residual_dimension);
+      std::vector<MatrixXRef> jacobian_wrt_state1 = getJacobianBlocks(jacobian_wrt_state1_, current_residual.first_keys, index_residual, residual_dimension);
+      std::vector<MatrixXRef> jacobian_wrt_state2 = getJacobianBlocks(jacobian_wrt_state2_, current_residual.second_keys, index_residual, residual_dimension);;
+      
+      bool residual_ok = current_residual.residual_->evaluate(blocks1, blocks2, timestamp_previous_update_ns_, timestamp_ns, &residual, &jacobian_wrt_state1, &jacobian_wrt_state2);
+      if(residual_ok) {
+        std::cout << "r idx " << index_residual << std::endl;
+
+        index_residual += residual_dimension;
+      }
+    }
+  }
+
+  std::cout << "J1 " << jacobian_wrt_state1_ << std::endl;
+  std::cout << "J2 " << jacobian_wrt_state2_ << std::endl;
+  std::cout << "r  " << residual_vector_.transpose() << std::endl;
+  
+  timestamp_previous_update_ns_ = timestamp_ns;
+}
 
 void Filter::initStateValue(const int key, const VectorXRef& value) {
   first_state_.setState(key, value);
@@ -77,35 +122,35 @@ void Filter::printTimeline() {
 
 void Filter::printResiduals() {
   for(size_t i=0; i < first_state_.state_blocks_.size(); ++i) {
-       std::string state_name = "S" + std::to_string(i);
-       std::cout << padTo(state_name, 5);
-   }
-   std::cout << padTo("residual", 20);
-   for(size_t i=0; i < first_state_.state_blocks_.size(); ++i) {
-       std::string state_name = "S" + std::to_string(i);
-       std::cout << padTo(state_name, 5);
-   }
-   std::cout << std::endl;
+    std::string state_name = "S" + std::to_string(i);
+    std::cout << padTo(state_name, 5);
+  }
+  std::cout << padTo("residual", 20);
+  for(size_t i=0; i < first_state_.state_blocks_.size(); ++i) {
+    std::string state_name = "S" + std::to_string(i);
+    std::cout << padTo(state_name, 5);
+  }
+  std::cout << std::endl;
 
-   for(ResidualContainer& current_residual:residuals_) {
-     for(size_t i=0; i < first_state_.state_blocks_.size(); ++i) {
-       if (vectorContainsValue(current_residual.first_keys, i)) {
-         std::cout << "  X  ";
-       } else {
-         std::cout << "     ";
-       }
-     }
-     std::string residual_name = current_residual.residual_->getResidualName();
-     std::cout << padTo(residual_name, 20);
-     for(size_t i=0; i < second_state_.state_blocks_.size(); ++i) {
-       if (vectorContainsValue(current_residual.second_keys, i)) {
-         std::cout << "  X  ";
-       } else {
-         std::cout << "     ";
-       }
-     }
-     std::cout << std::endl;
-   }
+  for(ResidualContainer& current_residual:residuals_) {
+    for(size_t i=0; i < first_state_.state_blocks_.size(); ++i) {
+      if (vectorContainsValue(current_residual.first_keys, i)) {
+        std::cout << "  X  ";
+      } else {
+        std::cout << "     ";
+      }
+    }
+    std::string residual_name = current_residual.residual_->getResidualName();
+    std::cout << padTo(residual_name, 20);
+    for(size_t i=0; i < second_state_.state_blocks_.size(); ++i) {
+      if (vectorContainsValue(current_residual.second_keys, i)) {
+        std::cout << "  X  ";
+      } else {
+        std::cout << "     ";
+      }
+    }
+    std::cout << std::endl;
+  }
 }
 
 void Filter::checkResiduals() {
@@ -118,11 +163,14 @@ void Filter::checkResiduals() {
   }
 }
 
-std::vector<BlockBase*> Filter::getBlocks(const State& state, const std::vector<int>& keys) {
-  std::vector<BlockBase*> blocks;
-  for(int current_key:keys) {
-    blocks.emplace_back(state.state_blocks_[current_key]);
-  }
-  return blocks;
-}
 
+
+bool Filter::init() {
+  const int& minimal_state_dimension = first_state_.minimal_dimension_;
+  information_.resize(minimal_state_dimension, minimal_state_dimension);
+  information_.setIdentity();
+  residual_vector_.resize(total_residual_dimension_);
+  jacobian_wrt_state1_.resize(total_residual_dimension_, minimal_state_dimension);
+  jacobian_wrt_state2_.resize(total_residual_dimension_, minimal_state_dimension);
+  return true;
+}

@@ -30,15 +30,19 @@ public:
                         const int t1_ns, const int t2_ns,
                         VectorXRef* residual, std::vector<MatrixXRef>* jacobian_wrt_state1,
                         std::vector<MatrixXRef>* jacobian_wrt_state2) {
-
-    const Vector3& p_kp1 = static_cast<VectorBlock<3>*>(state2[0])->value_;
-
     if(residual == NULL) {
       return false;
     }
 
-    const MeasurementBase* meas = measurement_timelines_[0]->getMeasurement(t2_ns);
-    const PositionMeasurement* position_measurement = dynamic_cast<const PositionMeasurement*>(meas);
+    const MeasurementBase* measurement = measurement_timelines_[0]->getMeasurement(t2_ns);
+    if(measurement == NULL) {
+      return false;
+    }
+    const PositionMeasurement* position_measurement = dynamic_cast<const PositionMeasurement*>(measurement);
+    if(position_measurement == NULL) { // Check if cast was successful.
+      return false;
+    }
+    const Vector3& p_kp1 = static_cast<VectorBlock<3>*>(state2[0])->value_;
 
     residual->template block<3,1>(0,0) = sqrt_information_matrix_ * (position_measurement->position_ - p_kp1);
 

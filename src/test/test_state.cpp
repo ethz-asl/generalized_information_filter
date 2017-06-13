@@ -83,14 +83,14 @@ TEST(StateTest, SimpleResidualTest) {
 }
 
 TEST(StateTest, SimpleFilterTest) {
-  std::vector<BlockType> state_block_types {kVector3, kVector3, kVector2};
+  std::vector<BlockType> state_block_types {kVector3, kVector3};
 //  std::vector<int> state_names {kPosition, kVelocity, kOrientation};
 
   Filter testfilter;
   testfilter.defineState(state_block_types);
 
-  Eigen::Vector3d test_vec(1,2,3);
-  testfilter.initStateValue(kStatePosition, test_vec);
+  Vector3 initial_position(1,2,3);
+  testfilter.initStateValue(kStatePosition, initial_position);
 
   testfilter.printState();
 
@@ -111,15 +111,14 @@ TEST(StateTest, SimpleFilterTest) {
 
   testfilter.checkResiduals();
 
+  testfilter.printTimeline();
 
-  MeasurementBase* imu_measurement1 = new ImuMeasurement(Vector3(1,1,1), Vector3(1,1,1));
-  testfilter.addMeasurement(kMeasImu, 123, imu_measurement1);
-  MeasurementBase* imu_measurement2 = new ImuMeasurement(Vector3(1,1,1), Vector3(1,1,1));
-  testfilter.addMeasurement(kMeasImu, 130, imu_measurement2);
+
+
   MeasurementBase* position_measurement = new PositionMeasurement(Vector3(1,1,1));
   testfilter.addMeasurement(kMeasPosition, 140, position_measurement);
-  MeasurementBase* imu_measurement3 = new ImuMeasurement(Vector3(1,1,1), Vector3(1,1,1));
-  testfilter.addMeasurement(kMeasImu, 170, imu_measurement3);
+
+  testfilter.addMeasurement(kMeasPosition, 150, position_measurement);
 
   testfilter.printTimeline();
 

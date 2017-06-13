@@ -20,6 +20,7 @@ template <int Dimension>
 using Vector = Eigen::Matrix<double, Dimension, 1>;
 
 typedef Eigen::Vector3d Vector3;
+typedef Eigen::VectorXd VectorX;
 
 typedef Eigen::Ref<Eigen::Vector3d> Vector3Ref;
 typedef Eigen::Ref<Eigen::VectorXd> VectorXRef;
@@ -27,6 +28,7 @@ typedef Eigen::Ref<Eigen::VectorXd> VectorXRef;
 typedef Eigen::Ref<Eigen::MatrixXd> MatrixXRef;
 
 typedef Eigen::Matrix3d Matrix3;
+typedef Eigen::MatrixXd MatrixX;
 
 
 constexpr double kNanoSecondsToSeconds = 1e-9;

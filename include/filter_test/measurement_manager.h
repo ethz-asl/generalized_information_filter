@@ -81,7 +81,7 @@ public:
   // Takes ownership of the data.
   void addMeasurement(const int timeline_key, const int timestamp_ns, MeasurementBase* measurement);
 
-  bool shouldIRunTheFilter();
+  bool shouldIRunTheFilter(const int& timestamp_previous_update_ns, int* timestamp_update_ns);
 
   Timeline* getTimelinePtr(int timeline_key);
   std::vector<Timeline*> getTimelines(std::vector<int> timeline_keys, bool is_mergeable);

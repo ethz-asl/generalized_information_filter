@@ -16,7 +16,7 @@ class MeasurementBase {
 
   virtual ~MeasurementBase() {}
 
-//  virtual MeasurementBase* interpolateMeasurements() = 0;
+  //  virtual MeasurementBase* interpolateMeasurements() = 0;
 
   virtual std::string getPrintableMeasurement() = 0;
  private:
@@ -29,7 +29,7 @@ class PositionMeasurement: public MeasurementBase {
 
   virtual ~PositionMeasurement() {}
 
-//  virtual MeasurementBase* interpolateMeasurements() = 0;
+  //  virtual MeasurementBase* interpolateMeasurements() = 0;
 
   virtual std::string getPrintableMeasurement() {
     return "Position";
@@ -44,7 +44,7 @@ class ImuMeasurement: public MeasurementBase {
 
   virtual ~ImuMeasurement() {}
 
-//  virtual MeasurementBase* interpolateMeasurements() = 0;
+  //  virtual MeasurementBase* interpolateMeasurements() = 0;
 
   virtual std::string getPrintableMeasurement() {
     return "IMU";

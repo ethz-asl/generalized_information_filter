@@ -13,6 +13,7 @@
 class State {
  public:
   std::vector<BlockBase*> state_blocks_;
+  std::vector<int> accumulated_minimal_dimensions_;
   int dimension_;
   int minimal_dimension_;
 
@@ -27,6 +28,7 @@ class State {
   void defineState(std::vector<BlockType> block_types) {
     for(BlockType current_type: block_types ) {
       BlockBase* current_block = block_helper::createBlockByType(current_type);
+      accumulated_minimal_dimensions_.push_back(dimension_);
       dimension_ += current_block->dimension_;
       minimal_dimension_ += current_block->minimal_dimension_;
       state_blocks_.push_back(current_block);
@@ -44,6 +46,10 @@ class State {
     for(BlockBase* current_block: state_blocks_ ) {
       CHECK(false); //TODO(burrimi): implement.
     }
+  }
+
+  inline int getAccumulatedMinimalDimension(const int& key) {
+    return accumulated_minimal_dimensions_[key];
   }
 
   void printState() {
