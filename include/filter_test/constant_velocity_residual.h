@@ -26,6 +26,11 @@ public:
 
   ~ConstantVelocityResidual() {}
 
+  virtual bool prepareResidual(const int t1_ns, const int t2_ns) {
+    // this residual has nothing to prepare.
+    return true;
+  }
+
   virtual bool evaluate(const std::vector<BlockBase*>& state1,
                         const std::vector<BlockBase*>& state2,
                         const int t1_ns, const int t2_ns,

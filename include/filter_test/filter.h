@@ -27,7 +27,11 @@ struct ResidualContainer {
 
 class Filter {
  public:
-  Filter():total_residual_dimension_(0), first_run_(true), timestamp_previous_update_ns_(-1) {}
+  Filter():total_residual_dimension_(0), first_run_(true), timestamp_previous_update_ns_(-1) {
+    max_iter_ = 1;
+    th_iter_ = 0.1;
+    iter_ = 0;
+  }
 
   ~Filter() {
     for(ResidualContainer& current_residual:residuals_) {
@@ -44,6 +48,7 @@ class Filter {
 
   MatrixX information_;
   VectorX residual_vector_;
+  VectorX weightedDelta_;
   MatrixX jacobian_wrt_state1_;
   MatrixX jacobian_wrt_state2_;
 
@@ -64,6 +69,9 @@ class Filter {
 
   void addMeasurement(int timeline_key, int timestamp_ns, MeasurementBase* measurement);
 
+void computeLinearizationPoint(const int timestamp_ns);
+int preProcessResidual(const int timestamp_ns);
+void constructProblem(const int timestamp_ns);
 
   void printState();
 
@@ -100,6 +108,12 @@ class Filter {
 
   bool first_run_;
   int timestamp_previous_update_ns_;
+
+
+  // CHECK IF NEEDED
+  int max_iter_;
+  double th_iter_;
+  int iter_;
 };
 
 

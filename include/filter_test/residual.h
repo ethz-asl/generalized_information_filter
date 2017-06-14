@@ -18,19 +18,22 @@ class ResidualBase {
  public:
   const int dimension_;
   const bool is_mergeable_;
+  bool active_;
   std::vector<BlockType> state1_block_types_;
   std::vector<BlockType> state2_block_types_;
 
   // TODO(burrimi): Do we need the full timeline or just the map<time,measurement>?
   std::vector<Timeline*> measurement_timelines_;
 
-  ResidualBase(int dimension, bool is_mergeable):dimension_(dimension), is_mergeable_(is_mergeable) {}
+  ResidualBase(int dimension, bool is_mergeable):dimension_(dimension), is_mergeable_(is_mergeable), active_(false) {}
   virtual ~ResidualBase() {}
 
   bool inputTypesValid(const std::vector<BlockBase*>& state1,
                        const std::vector<BlockBase*>& state2); // Do some sanity checks if all types match
 
   void setMeasurementTimelines(std::vector<Timeline*>timelines);
+
+  virtual bool prepareResidual(const int t1_ns, const int t2_ns) = 0;
 
   virtual bool evaluate(const std::vector<BlockBase*>& state1,
                         const std::vector<BlockBase*>& state2,

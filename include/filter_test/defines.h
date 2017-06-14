@@ -13,6 +13,8 @@
 #include <Eigen/Dense>
 
 
+#define TSIF_VERBOSE true
+
 #define DO_SANITY_CHECKS true
 #define VERBOSE_MODE true // Should we output a lot of stuff to the console?
 

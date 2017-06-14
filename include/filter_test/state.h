@@ -11,8 +11,9 @@
 #include "filter_test/block.h"
 
 class State {
+  using BlockVector = std::vector<BlockBase*>;
  public:
-  std::vector<BlockBase*> state_blocks_;
+  BlockVector state_blocks_;
   std::vector<int> accumulated_minimal_dimensions_;
   int dimension_;
   int minimal_dimension_;
@@ -28,10 +29,7 @@ class State {
   void defineState(std::vector<BlockType> block_types) {
     for(BlockType current_type: block_types ) {
       BlockBase* current_block = block_helper::createBlockByType(current_type);
-      accumulated_minimal_dimensions_.push_back(dimension_);
-      dimension_ += current_block->dimension_;
-      minimal_dimension_ += current_block->minimal_dimension_;
-      state_blocks_.push_back(current_block);
+      addBlock(current_block);
     }
   }
 
@@ -43,8 +41,13 @@ class State {
   void boxPlus(const VectorXRef& dx, State* result_state) {
     CHECK(minimal_dimension_ == dx.size()); // Check if dimension of dx is valid.
     CHECK(dimension_ == result_state->dimension_); // Check if dimension of result_state is valid.
+    int accumulated_dimension = 0;
+
+    BlockVector::iterator block_iterator = result_state->state_blocks_.begin();
     for(BlockBase* current_block: state_blocks_ ) {
-      CHECK(false); //TODO(burrimi): implement.
+      current_block->boxPlus(dx.segment(accumulated_dimension, current_block->minimal_dimension_), (*block_iterator));
+      accumulated_dimension += current_block->minimal_dimension_;
+      ++block_iterator;
     }
   }
 
@@ -52,13 +55,54 @@ class State {
     return accumulated_minimal_dimensions_[key];
   }
 
-  void printState() {
+  std::string printState() {
+    std::ostringstream oss;
     for(BlockBase* current_block: state_blocks_ ) {
-      std::cout << current_block->getTypeName() << "[" << current_block->getValue().transpose() << "], ";
+      oss << current_block->getTypeName() << "[" << current_block->getValue().transpose() << "], ";
     }
-    std::cout << std::endl;
+    return oss.str();
   }
+
+  void test(BlockBase* test) {}
+
+  State& operator= (const State& other)
+  {
+    // check for self-assignment
+    if(&other == this)
+      return *this;
+
+    // reuse storage when possible
+    // TODO(burrimi): Do better check! For now we assume that the same dimension is probably the same state :/
+    if(dimension_ == other.dimension_) {
+      BlockVector::iterator block_iterator = state_blocks_.begin();
+      BlockVector::const_iterator  other_block_iterator = other.state_blocks_.begin();
+      while(other_block_iterator!=other.state_blocks_.end()) {
+        (*other_block_iterator)->copyBlockTo(*block_iterator);
+        ++block_iterator;
+        ++other_block_iterator;
+
+      }
+
+      return *this;
+    }
+
+    // At this point the state is probably empty and we have to allocate the blocks
+    for(BlockBase* current_block: other.state_blocks_ ) {
+      BlockBase* new_block = current_block->clone();
+      addBlock(new_block);
+    }
+    return *this;
+
+  }
+  // note
  private:
+  inline void addBlock(BlockBase* block_to_add) {
+    accumulated_minimal_dimensions_.push_back(dimension_);
+    dimension_ += block_to_add->dimension_;
+    minimal_dimension_ += block_to_add->minimal_dimension_;
+    state_blocks_.push_back(block_to_add);
+  }
+
 };
 
 

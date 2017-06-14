@@ -8,6 +8,8 @@
 #ifndef INCLUDE_FILTER_TEST_BLOCK_H_
 #define INCLUDE_FILTER_TEST_BLOCK_H_
 
+#include <iostream>
+
 #include <glog/logging.h>
 
 #include "filter_test/block.h"
@@ -35,6 +37,11 @@ class BlockBase {
   };
   virtual ~BlockBase() {}
 
+  virtual BlockBase* clone() const = 0;
+
+  virtual void copyBlockTo(BlockBase* result) const = 0; // TODO(burrimi): find better way.
+
+
   virtual void boxPlus(const Eigen::VectorXd& dx, BlockBase* result) = 0;
   virtual Eigen::VectorXd boxMinus(const BlockBase* y) = 0;
   virtual Eigen::VectorXd getValue() = 0;
@@ -42,6 +49,18 @@ class BlockBase {
   virtual std::string getTypeName() = 0;
  private:
 };
+
+
+//template <class Derived>
+//class BlockHelper : public BlockBase
+//{
+//public:
+//  virtual BlockBase* clone() const
+//  {
+//    return new Derived(static_cast<const Derived&>(*this)); // call the copy ctor.
+//  }
+//};
+
 
 template <int Dimension>
 class VectorBlock: public BlockBase {
@@ -54,6 +73,17 @@ class VectorBlock: public BlockBase {
   VectorBlock():VectorBlock(Vector<Dimension>::Zero()) { }
 
   virtual ~VectorBlock() {}
+
+  virtual BlockBase* clone() const
+  {
+    return new VectorBlock<Dimension>(static_cast<const VectorBlock<Dimension>&>(*this)); // call the copy ctor.
+  }
+
+  virtual void copyBlockTo(BlockBase* result) const {
+    VectorBlock<Dimension>* result1 = dynamic_cast<VectorBlock<Dimension>* >(result);
+    CHECK_NOTNULL(result1);
+    result1->value_ = value_;
+  }
 
   virtual void boxPlus(const Eigen::VectorXd& dx, BlockBase* result) {
     CHECK(dx.size() == Dimension);

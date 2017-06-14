@@ -28,8 +28,21 @@ TEST(StateTest, AssembleState) {
 TEST(StateTest, AssembleState1) {
   std::vector<BlockType> state_block_types {kVector3, kVector3, kVector2};
 
-  Filter testfilter;
-  testfilter.defineState(state_block_types);
+  State first_state;
+  first_state.defineState(state_block_types);
+
+  Vector3 test(1,2,1);
+  first_state.setState(kStatePosition, test);
+
+  std::cout << first_state.printState() << std::endl;
+
+
+  State second_state;
+
+  second_state = first_state;
+  std::cout << "second state: "<< std::endl;
+  std::cout << second_state.printState() << std::endl;
+
   EXPECT_TRUE(true);
 }
 
@@ -113,12 +126,10 @@ TEST(StateTest, SimpleFilterTest) {
 
   testfilter.printTimeline();
 
-
-
-  MeasurementBase* position_measurement = new PositionMeasurement(Vector3(1,1,1));
-  testfilter.addMeasurement(kMeasPosition, 140, position_measurement);
-
-  testfilter.addMeasurement(kMeasPosition, 150, position_measurement);
+  MeasurementBase* position_measurement1 = new PositionMeasurement(Vector3(1,1,1));
+  testfilter.addMeasurement(kMeasPosition, 140, position_measurement1);
+  MeasurementBase* position_measurement2 = new PositionMeasurement(Vector3(1,1,1));
+  testfilter.addMeasurement(kMeasPosition, 150, position_measurement2);
 
   testfilter.printTimeline();
 

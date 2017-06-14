@@ -25,6 +25,18 @@ public:
 
   ~PositionResidual() {}
 
+  virtual bool prepareResidual(const int t1_ns, const int t2_ns) {
+    const MeasurementBase* measurement = measurement_timelines_[0]->getMeasurement(t2_ns);
+    if(measurement == NULL) {
+      return false;
+    }
+    position_measurement_ = dynamic_cast<const PositionMeasurement*>(measurement);
+    if(position_measurement_ == NULL) { // Check if cast was successful.
+      return false;
+    }
+    return true;
+  }
+
   virtual bool evaluate(const std::vector<BlockBase*>& state1,
                         const std::vector<BlockBase*>& state2,
                         const int t1_ns, const int t2_ns,
@@ -33,18 +45,13 @@ public:
     if(residual == NULL) {
       return false;
     }
+    if(position_measurement_ == NULL) { // this should not happen!
+      return false;
+    }
 
-    const MeasurementBase* measurement = measurement_timelines_[0]->getMeasurement(t2_ns);
-    if(measurement == NULL) {
-      return false;
-    }
-    const PositionMeasurement* position_measurement = dynamic_cast<const PositionMeasurement*>(measurement);
-    if(position_measurement == NULL) { // Check if cast was successful.
-      return false;
-    }
     const Vector3& p_kp1 = static_cast<VectorBlock<3>*>(state2[0])->value_;
 
-    residual->template block<3,1>(0,0) = sqrt_information_matrix_ * (position_measurement->position_ - p_kp1);
+    residual->template block<3,1>(0,0) = sqrt_information_matrix_ * (position_measurement_->position_ - p_kp1);
 
     if(jacobian_wrt_state2 != NULL) {
       (*jacobian_wrt_state2)[0].template block<3,3>(0,0) = -sqrt_information_matrix_ * Matrix3::Identity();
@@ -57,6 +64,7 @@ public:
 
 private:
   Matrix3 sqrt_information_matrix_;
+  const PositionMeasurement* position_measurement_;
 };
 
 
