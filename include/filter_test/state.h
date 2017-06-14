@@ -26,6 +26,14 @@ class State {
     }
   }
 
+  // Copy constructor clones the other state and takes care of allocating the new blocks
+  State(const State& other) : dimension_(0), minimal_dimension_(0) {
+    for(BlockBase* current_block: other.state_blocks_ ) {
+      BlockBase* new_block = current_block->clone();
+      addBlock(new_block);
+    }
+  }
+
   void defineState(std::vector<BlockType> block_types) {
     for(BlockType current_type: block_types ) {
       BlockBase* current_block = block_helper::createBlockByType(current_type);
@@ -40,7 +48,7 @@ class State {
 
   void boxPlus(const VectorXRef& dx, State* result_state) {
     CHECK(minimal_dimension_ == dx.size()); // Check if dimension of dx is valid.
-    CHECK(dimension_ == result_state->dimension_); // Check if dimension of result_state is valid.
+    CHECK(dimension_ == result_state->dimension_) << "dimension first" << dimension_ << " result " << result_state->dimension_; // Check if dimension of result_state is valid.
     int accumulated_dimension = 0;
 
     BlockVector::iterator block_iterator = result_state->state_blocks_.begin();
@@ -82,7 +90,6 @@ class State {
         ++other_block_iterator;
 
       }
-
       return *this;
     }
 

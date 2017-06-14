@@ -56,9 +56,9 @@ void MeasurementManager::printTimeline() {
   std::cout << padTo("mergeable?", 20);
   for(const Timeline& current_timeline:timelines_) {
     if(current_timeline.mergeable_) {
-      std::cout << "  X  ";
+      std::cout << " yes ";
     }else{
-      std::cout << "     ";
+      std::cout << " no  ";
     }
   }
 

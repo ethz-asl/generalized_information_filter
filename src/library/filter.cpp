@@ -100,7 +100,6 @@ void Filter::constructProblem(const int timestamp_ns) {
   int index_residual = 0;
   for(ResidualContainer& current_residual:residuals_) {
     if(current_residual.residual_->active_) {
-      std::cout << "residual: " << current_residual.residual_->getResidualName() << std::endl;
       std::vector<BlockBase*> blocks1 = getBlocks(first_state_, current_residual.first_keys);
       std::vector<BlockBase*> blocks2 = getBlocks(second_state_, current_residual.second_keys);
 
@@ -176,8 +175,7 @@ void Filter::update(const int timestamp_ns) {
 
 
       // Apply Kalman Update
-      State newState;
-      newState = second_state_;
+      State newState = second_state_;
 
 //      State newState = second_state_; TODO(burrimi): delete default copy constructor!!!
 

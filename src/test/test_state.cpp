@@ -43,6 +43,11 @@ TEST(StateTest, AssembleState1) {
   std::cout << "second state: "<< std::endl;
   std::cout << second_state.printState() << std::endl;
 
+
+  State third_state = second_state;
+
+  std::cout << third_state.printState() << std::endl;
+
   EXPECT_TRUE(true);
 }
 
