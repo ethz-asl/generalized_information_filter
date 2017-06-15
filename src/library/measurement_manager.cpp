@@ -7,6 +7,8 @@
 
 #include "filter_test/measurement_manager.h"
 
+namespace tsif {
+
 // We assume that timeline id's start with zero. If a timeline does not exist it's created.
 Timeline* MeasurementManager::getTimelinePtr(int timeline_key) {
   // Check if timeline for that sensor id already exists.
@@ -33,7 +35,7 @@ void MeasurementManager::addMeasurement(const int timeline_key, const int timest
   timelines_[timeline_key].addMeasurement(timestamp_ns, measurement);
 }
 
-void MeasurementManager::printTimeline() {
+void MeasurementManager::printTimeline() const {
   std::vector<TimedMeasurement::const_iterator> timeline_iterators;
   std::vector<TimedMeasurement::const_iterator> timeline_iterators_end;
   int i=0;
@@ -102,7 +104,7 @@ void MeasurementManager::printTimeline() {
   }
 }
 
-bool MeasurementManager::shouldIRunTheFilter(const int& timestamp_previous_update_ns, int* timestamp_update_ns) {
+bool MeasurementManager::shouldIRunTheFilter(const int& timestamp_previous_update_ns, int* timestamp_update_ns) const {
   // Find the oldest non mergeable timestamp.
   // TODO(burrimi): Cache this.
   double oldest_timestamp = std::numeric_limits<double>::max();
@@ -133,3 +135,5 @@ bool MeasurementManager::shouldIRunTheFilter(const int& timestamp_previous_updat
   *timestamp_update_ns = oldest_timestamp;
   return true;
 }
+
+}  // namespace tsif

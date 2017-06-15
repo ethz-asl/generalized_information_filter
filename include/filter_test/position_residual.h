@@ -10,6 +10,8 @@
 
 #include "filter_test/residual.h"
 
+namespace tsif {
+
 // We assume that the residuals are embedded in a vector space (i.e. tangent space for manifolds).
 class PositionResidual: public ResidualBase {
   static const bool kIsMergeable = false;
@@ -60,15 +62,13 @@ public:
     return true;
   }
 
-  virtual std::string getResidualName() {return "Position residual";}
+  virtual std::string getResidualName() const {return "Position residual";}
 
 private:
   Matrix3 sqrt_information_matrix_;
   const PositionMeasurement* position_measurement_;
 };
 
-
-
-
+}  // namespace tsif
 
 #endif /* INCLUDE_FILTER_TEST_POSITION_RESIDUAL_H_ */

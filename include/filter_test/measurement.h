@@ -10,6 +10,8 @@
 
 #include "filter_test/block.h"
 
+namespace tsif {
+
 class MeasurementBase {
  public:
   MeasurementBase() {}
@@ -18,7 +20,7 @@ class MeasurementBase {
 
   //  virtual MeasurementBase* interpolateMeasurements() = 0;
 
-  virtual std::string getPrintableMeasurement() = 0;
+  virtual std::string getPrintableMeasurement() const = 0;
  private:
 };
 
@@ -31,7 +33,7 @@ class PositionMeasurement: public MeasurementBase {
 
   //  virtual MeasurementBase* interpolateMeasurements() = 0;
 
-  virtual std::string getPrintableMeasurement() {
+  virtual std::string getPrintableMeasurement() const {
     return "Position";
   }
   const Vector3 position_;
@@ -46,15 +48,14 @@ class ImuMeasurement: public MeasurementBase {
 
   //  virtual MeasurementBase* interpolateMeasurements() = 0;
 
-  virtual std::string getPrintableMeasurement() {
+  virtual std::string getPrintableMeasurement() const {
     return "IMU";
   }
   const Vector3 acceleration_;
   const Vector3 angular_velocity_;
  private:
-
 };
 
-
+}  // namespace tsif
 
 #endif /* INCLUDE_FILTER_TEST_MEASUREMENT_H_ */

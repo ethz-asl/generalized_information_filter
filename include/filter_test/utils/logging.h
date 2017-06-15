@@ -5,6 +5,7 @@
 
 #include "filter_test/defines.h"
 
+
 #if TSIF_VERBOSE > 0
 #define TSIF_LOG(msg) std::cout << msg << std::endl
 #define TSIF_LOGIF(con,msg) if(con) TSIF_LOG(msg)
@@ -20,5 +21,6 @@
 #define TSIF_LOGE(msg)
 #define TSIF_LOGEIF(con,msg)
 #endif
+
 
 #endif /* TSIF_LOGGING_HPP_ */

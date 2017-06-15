@@ -22,11 +22,18 @@ enum MeasurementDefinition {
   kMeasImu
 };
 
-TEST(StateTest, AssembleState) {
-  EXPECT_TRUE(true);
+using namespace tsif;
+
+TEST(StateTest, DefineState) {
+  std::vector<BlockType> state_block_types {kVector3, kVector1, kVector2};
+  State first_state;
+  first_state.defineState(state_block_types);
+
+  EXPECT_TRUE(first_state.dimension_ ==6);
+  EXPECT_TRUE(first_state.minimal_dimension_ ==6);
 }
 TEST(StateTest, AssembleState1) {
-  std::vector<BlockType> state_block_types {kVector3, kVector3, kVector2};
+  std::vector<BlockType> state_block_types {kVector3, kVector1, kVector2};
 
   State first_state;
   first_state.defineState(state_block_types);

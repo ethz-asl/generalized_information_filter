@@ -18,6 +18,8 @@
 #include "filter_test/state.h"
 #include "filter_test/helper_functions.h"
 
+namespace tsif {
+
 struct ResidualContainer {
   std::vector<int> first_keys;
   std::vector<int> second_keys;
@@ -73,15 +75,13 @@ void computeLinearizationPoint(const int timestamp_ns);
 int preProcessResidual(const int timestamp_ns);
 void constructProblem(const int timestamp_ns);
 
-  void printState();
+  void printState() const;
 
-  void printTimeline();
+  void printTimeline() const;
 
-  void printResiduals();
+  void printResiduals() const;
 
   void checkResiduals();
-
-  void step();
 
  private:
 
@@ -116,6 +116,6 @@ void constructProblem(const int timestamp_ns);
   int iter_;
 };
 
-
+}  // namespace tsif
 
 #endif /* INCLUDE_FILTER_TEST_FILTER_H_ */

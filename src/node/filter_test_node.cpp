@@ -36,7 +36,7 @@ int main(int argc, char** argv) {
   std::vector<int> state_names {kPosition, kVelocity, kOrientation};
 
 
-  Filter testfilter;
+  tsif::Filter testfilter;
   testfilter.defineState(state_types);
 
   Eigen::Vector3d test_vec(1,2,3);
@@ -49,7 +49,7 @@ int main(int argc, char** argv) {
 
 
 
-  ConstantResidual* test_residual = new ConstantResidual();
+  tsif::ConstantResidual* test_residual = new ConstantResidual();
   std::vector<int> first_keys {kStatePosition};
   std::vector<int> second_keys {kStatePosition};
   std::vector<int> measurement_keys {kMeasPosition};
@@ -62,7 +62,7 @@ int main(int argc, char** argv) {
   testfilter.printTimeline();
 
 
-  BlockBase* testbase(new VectorBlock<3>());
+  tsif::BlockBase* testbase(new VectorBlock<3>());
 
 
   Eigen::MatrixXd test;

@@ -10,6 +10,8 @@
 
 #include "filter_test/residual.h"
 
+namespace tsif {
+
 struct ResidualContainer {
   std::vector<int> first_keys;
   std::vector<int> second_keys;
@@ -36,6 +38,6 @@ class ResidualManager {
   int dimension_;
 };
 
-
+}  // namespace tsif
 
 #endif /* INCLUDE_FILTER_TEST_RESIDUAL_MANAGER_H_ */

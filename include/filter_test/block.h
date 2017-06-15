@@ -15,6 +15,9 @@
 #include "filter_test/block.h"
 #include "filter_test/defines.h"
 
+
+namespace tsif {
+
 enum BlockType {
   kVector1 = 0, // Vector types need to be in correct order, otherwise type checks won't work!
   kVector2,
@@ -115,5 +118,7 @@ class VectorBlock: public BlockBase {
 namespace block_helper {
 BlockBase* createBlockByType(BlockType block_type);
 }  // namespace block_helper
+
+}  // namespace tsif
 
 #endif /* INCLUDE_FILTER_TEST_BLOCK_H_ */

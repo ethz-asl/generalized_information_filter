@@ -10,8 +10,10 @@
 
 #include <vector>
 
-#include "filter_test/measurement_manager.h"
 #include "filter_test/block.h"
+#include "filter_test/timeline.h"
+
+namespace tsif {
 
 // We assume that the residuals are embedded in a vector space (i.e. tangent space for manifolds).
 class ResidualBase {
@@ -29,7 +31,7 @@ class ResidualBase {
   virtual ~ResidualBase() {}
 
   bool inputTypesValid(const std::vector<BlockBase*>& state1,
-                       const std::vector<BlockBase*>& state2); // Do some sanity checks if all types match
+                       const std::vector<BlockBase*>& state2) const; // Do some sanity checks if all types match
 
   void setMeasurementTimelines(std::vector<Timeline*>timelines);
 
@@ -40,10 +42,10 @@ class ResidualBase {
                         const int t1_ns, const int t2_ns,
                         VectorXRef* residual, std::vector<MatrixXRef>* jacobian_wrt_state1,
                         std::vector<MatrixXRef>* jacobian_wrt_state2) = 0;
-  virtual std::string getResidualName() = 0;
+  virtual std::string getResidualName() const = 0;
  private:
 };
 
-
+}  // namespace tsif
 
 #endif /* INCLUDE_FILTER_TEST_RESIDUAL_H_ */

@@ -10,20 +10,7 @@
 #include "filter_test/filter.h"
 #include "filter_test/utils/logging.h"
 
-
-//bool isOrdered(const std::vector<int>& vector)
-//{
-//  std::vector<int>::iterator it = vector.begin();
-//  int smallest_number = *it;
-//  while(it!=vector.end()) {
-//    ++it;
-//    if(*it <= smallest_number) {
-//      return false;
-//    }
-//    smallest_number = *it;
-//  }
-//  return true;
-//}
+namespace tsif {
 
 bool Filter::defineState(std::vector<BlockType> state_types) {
   state_types_ = state_types;
@@ -116,90 +103,73 @@ void Filter::constructProblem(const int timestamp_ns) {
   }
 }
 
+// Most of this function is copied from Bloesch https://github.com/ethz-asl/two_state_information_filter!!!
 void Filter::update(const int timestamp_ns) {
-//  jacobian_wrt_state1_.setZero();
-//  jacobian_wrt_state2_.setZero();
-//  residual_vector_.setZero();
-//
-//
-//  std::cout << "J1 " << jacobian_wrt_state1_ << std::endl;
-//  std::cout << "J2 " << jacobian_wrt_state2_ << std::endl;
-//  std::cout << "r  " << residual_vector_.transpose() << std::endl;
 
-  //
   //  // Compute linearisation point
   computeLinearizationPoint(timestamp_ns);
   //
   //  // Check available measurements and prepare residuals
 
-  int innDim = preProcessResidual(timestamp_ns);
+  int active_residuals_dimension = preProcessResidual(timestamp_ns);
   //  PreProcess();
   //
-    // Temporaries
-    residual_vector_.resize(innDim);
-    residual_vector_.setZero();
-    jacobian_wrt_state1_.resize(innDim, first_state_.minimal_dimension_);
-    jacobian_wrt_state1_.setZero();
-    jacobian_wrt_state2_.resize(innDim, first_state_.minimal_dimension_);
-    jacobian_wrt_state2_.setZero();
+  // Temporaries
+  residual_vector_.resize(active_residuals_dimension);
+  residual_vector_.setZero();
+  jacobian_wrt_state1_.resize(active_residuals_dimension, first_state_.minimal_dimension_);
+  jacobian_wrt_state1_.setZero();
+  jacobian_wrt_state2_.resize(active_residuals_dimension, first_state_.minimal_dimension_);
+  jacobian_wrt_state2_.setZero();
 
-    double weightedDelta = th_iter_;
-    MatrixX newInf(first_state_.minimal_dimension_,first_state_.minimal_dimension_);
-    for(iter_=0;iter_<max_iter_ && weightedDelta >= th_iter_;++iter_){
+  double weightedDelta = th_iter_;
+  MatrixX newInf(first_state_.minimal_dimension_,first_state_.minimal_dimension_);
+  for(iter_=0;iter_<max_iter_ && weightedDelta >= th_iter_;++iter_){
 
-      constructProblem(timestamp_ns);
+    constructProblem(timestamp_ns);
 
-      TSIF_LOG("Innovation:\t" << residual_vector_.transpose());
-      TSIF_LOG("JacPre:\n" << jacobian_wrt_state1_);
-      TSIF_LOG("JacCur:\n" << jacobian_wrt_state2_);
+    TSIF_LOG("Innovation:\t" << residual_vector_.transpose());
+    TSIF_LOG("JacPre:\n" << jacobian_wrt_state1_);
+    TSIF_LOG("JacCur:\n" << jacobian_wrt_state2_);
 
-      // Compute Kalman Update // TODO use more efficient form
-      MatrixX D = information_ + jacobian_wrt_state1_.transpose() * jacobian_wrt_state1_;
-      MatrixX J(innDim,innDim); J.setIdentity();
-  #if TSIF_VERBOSE > 0
-      Eigen::JacobiSVD<MatrixX> svdD(D);
-      const double condD = svdD.singularValues()(0) / svdD.singularValues()(svdD.singularValues().size()-1);
-      TSIF_LOG("D condition number:\n" << condD);
-  #endif
-      MatrixX S = jacobian_wrt_state2_.transpose() * (J - jacobian_wrt_state1_ * D.inverse() * jacobian_wrt_state1_.transpose());
-      newInf = S * jacobian_wrt_state2_;
-      newInf = 0.5*(newInf + newInf.transpose().eval());
-      Eigen::LDLT<MatrixX> I_LDLT(newInf);
-  #if TSIF_VERBOSE > 0
-      Eigen::JacobiSVD<MatrixX> svdI(newInf);
-      const double condI = svdI.singularValues()(0) / svdI.singularValues()(svdI.singularValues().size()-1);
-      TSIF_LOG("I condition number:\n" << condI);
-  #endif
-      TSIF_LOGEIF((I_LDLT.info() != Eigen::Success),"Computation of Iinv failed");
-      VectorX dx = -I_LDLT.solve(S * residual_vector_);
+    // Compute Kalman Update // TODO use more efficient form
+    MatrixX D = information_ + jacobian_wrt_state1_.transpose() * jacobian_wrt_state1_;
+    MatrixX J(active_residuals_dimension,active_residuals_dimension); J.setIdentity();
+#if TSIF_VERBOSE > 0
+    Eigen::JacobiSVD<MatrixX> svdD(D);
+    const double condD = svdD.singularValues()(0) / svdD.singularValues()(svdD.singularValues().size()-1);
+    TSIF_LOG("D condition number:\n" << condD);
+#endif
+    MatrixX S = jacobian_wrt_state2_.transpose() * (J - jacobian_wrt_state1_ * D.inverse() * jacobian_wrt_state1_.transpose());
+    newInf = S * jacobian_wrt_state2_;
+    newInf = 0.5*(newInf + newInf.transpose().eval());
+    Eigen::LDLT<MatrixX> I_LDLT(newInf);
+#if TSIF_VERBOSE > 0
+    Eigen::JacobiSVD<MatrixX> svdI(newInf);
+    const double condI = svdI.singularValues()(0) / svdI.singularValues()(svdI.singularValues().size()-1);
+    TSIF_LOG("I condition number:\n" << condI);
+#endif
+    TSIF_LOGEIF((I_LDLT.info() != Eigen::Success),"Computation of Iinv failed");
+    VectorX dx = -I_LDLT.solve(S * residual_vector_);
 
+    // Apply Kalman Update
+    second_state_.boxPlus(dx, &second_state_);
 
-      // Apply Kalman Update
-      State newState = second_state_;
-
-//      State newState = second_state_; TODO(burrimi): delete default copy constructor!!!
-
-      second_state_.boxPlus(dx, &newState);
-
-      second_state_ = newState;
-
-      weightedDelta = sqrt((dx.dot(newInf*dx))/dx.size());
-      TSIF_LOG("iter: " << iter_ << "\tw: " << sqrt((dx.dot(dx))/dx.size()) << "\twd: " << weightedDelta);
-    }
+    weightedDelta = sqrt((dx.dot(newInf*dx))/dx.size());
+    TSIF_LOG("iter: " << iter_ << "\tw: " << sqrt((dx.dot(dx))/dx.size()) << "\twd: " << weightedDelta);
+  }
 
 
-    TSIF_LOGWIF(weightedDelta >= th_iter_, "Reached maximal iterations:" << iter_);
+  TSIF_LOGWIF(weightedDelta >= th_iter_, "Reached maximal iterations:" << iter_);
 
-    first_state_ = second_state_;
+  first_state_ = second_state_;
 
-    information_ = newInf;
-    TSIF_LOG("State after Update:\n" << first_state_.printState());
-    TSIF_LOG("Information matrix:\n" << information_);
+  information_ = newInf;
+  TSIF_LOG("State after Update:\n" << first_state_.printState());
+  TSIF_LOG("Information matrix:\n" << information_);
 
-//    // Post Processing
-//    PostProcess();
-//    time_ = t;
-
+  //    // Post Processing
+  //    PostProcess();
 
   timestamp_previous_update_ns_ = timestamp_ns;
 }
@@ -208,15 +178,15 @@ void Filter::initStateValue(const int key, const VectorXRef& value) {
   first_state_.setState(key, value);
 }
 
-void Filter::printState() {
+void Filter::printState() const {
   std::cout << first_state_.printState() << std::endl;
 }
 
-void Filter::printTimeline() {
+void Filter::printTimeline() const {
   measurement_manager_.printTimeline();
 }
 
-void Filter::printResiduals() {
+void Filter::printResiduals() const {
   for(size_t i=0; i < first_state_.state_blocks_.size(); ++i) {
     std::string state_name = "S" + std::to_string(i);
     std::cout << padTo(state_name, 5);
@@ -228,7 +198,7 @@ void Filter::printResiduals() {
   }
   std::cout << std::endl;
 
-  for(ResidualContainer& current_residual:residuals_) {
+  for(const ResidualContainer& current_residual:residuals_) {
     for(size_t i=0; i < first_state_.state_blocks_.size(); ++i) {
       if (vectorContainsValue(current_residual.first_keys, i)) {
         std::cout << "  X  ";
@@ -272,3 +242,5 @@ bool Filter::init() {
   jacobian_wrt_state2_.resize(total_residual_dimension_, minimal_state_dimension);
   return true;
 }
+
+}  // namespace tsif

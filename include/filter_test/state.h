@@ -10,6 +10,8 @@
 
 #include "filter_test/block.h"
 
+namespace tsif {
+
 class State {
   using BlockVector = std::vector<BlockBase*>;
  public:
@@ -34,45 +36,6 @@ class State {
     }
   }
 
-  void defineState(std::vector<BlockType> block_types) {
-    for(BlockType current_type: block_types ) {
-      BlockBase* current_block = block_helper::createBlockByType(current_type);
-      addBlock(current_block);
-    }
-  }
-
-  void setState(const int key, const VectorXRef& value) {
-    CHECK(state_blocks_.size() > key); // Check if key is valid.
-    state_blocks_.at(key)->setValue(value);
-  }
-
-  void boxPlus(const VectorXRef& dx, State* result_state) {
-    CHECK(minimal_dimension_ == dx.size()); // Check if dimension of dx is valid.
-    CHECK(dimension_ == result_state->dimension_) << "dimension first" << dimension_ << " result " << result_state->dimension_; // Check if dimension of result_state is valid.
-    int accumulated_dimension = 0;
-
-    BlockVector::iterator block_iterator = result_state->state_blocks_.begin();
-    for(BlockBase* current_block: state_blocks_ ) {
-      current_block->boxPlus(dx.segment(accumulated_dimension, current_block->minimal_dimension_), (*block_iterator));
-      accumulated_dimension += current_block->minimal_dimension_;
-      ++block_iterator;
-    }
-  }
-
-  inline int getAccumulatedMinimalDimension(const int& key) {
-    return accumulated_minimal_dimensions_[key];
-  }
-
-  std::string printState() {
-    std::ostringstream oss;
-    for(BlockBase* current_block: state_blocks_ ) {
-      oss << current_block->getTypeName() << "[" << current_block->getValue().transpose() << "], ";
-    }
-    return oss.str();
-  }
-
-  void test(BlockBase* test) {}
-
   State& operator= (const State& other)
   {
     // check for self-assignment
@@ -88,7 +51,6 @@ class State {
         (*other_block_iterator)->copyBlockTo(*block_iterator);
         ++block_iterator;
         ++other_block_iterator;
-
       }
       return *this;
     }
@@ -99,8 +61,46 @@ class State {
       addBlock(new_block);
     }
     return *this;
-
   }
+
+  void defineState(std::vector<BlockType> block_types) {
+    for(BlockType current_type: block_types ) {
+      BlockBase* current_block = block_helper::createBlockByType(current_type);
+      addBlock(current_block);
+    }
+  }
+
+  void setState(const int key, const VectorXRef& value) {
+    CHECK(state_blocks_.size() > key); // Check if key is valid.
+    state_blocks_.at(key)->setValue(value);
+  }
+
+  void boxPlus(const VectorXRef& dx, State* result_state) const {
+    CHECK(minimal_dimension_ == dx.size()); // Check if dimension of dx is valid.
+    CHECK(dimension_ == result_state->dimension_) << "Dimension of first state" <<
+        dimension_ << " result state " << result_state->dimension_; // Check if dimension of result_state is valid.
+    int accumulated_dimension = 0;
+
+    BlockVector::iterator block_iterator = result_state->state_blocks_.begin();
+    for(BlockBase* current_block: state_blocks_ ) {
+      current_block->boxPlus(dx.segment(accumulated_dimension, current_block->minimal_dimension_), (*block_iterator));
+      accumulated_dimension += current_block->minimal_dimension_;
+      ++block_iterator;
+    }
+  }
+
+  inline int getAccumulatedMinimalDimension(const int& key) const {
+    return accumulated_minimal_dimensions_[key];
+  }
+
+  std::string printState() const {
+    std::ostringstream oss;
+    for(BlockBase* current_block: state_blocks_ ) {
+      oss << current_block->getTypeName() << "[" << current_block->getValue().transpose() << "], ";
+    }
+    return oss.str();
+  }
+
   // note
  private:
   inline void addBlock(BlockBase* block_to_add) {
@@ -112,6 +112,6 @@ class State {
 
 };
 
-
+}  // namespace tsif
 
 #endif /* INCLUDE_FILTER_TEST_STATE_H_ */

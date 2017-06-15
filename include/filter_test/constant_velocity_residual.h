@@ -8,6 +8,10 @@
 #ifndef INCLUDE_FILTER_TEST_CONSTANT_VELOCITY_RESIDUAL_H_
 #define INCLUDE_FILTER_TEST_CONSTANT_VELOCITY_RESIDUAL_H_
 
+
+namespace tsif {
+
+// This residual implements the following set of equations
 // r_x = x_kp1 - ( x_k + dt * v_k);
 // r_v = v_kp1 - ( v_k);
 
@@ -69,7 +73,7 @@ public:
     return true;
   }
 
-  virtual std::string getResidualName() {return "const velocity";}
+  virtual std::string getResidualName() const {return "const velocity";}
 
 private:
 
@@ -77,5 +81,6 @@ private:
   double sqrt_information_velocity_;
 };
 
+}  // namespace tsif
 
 #endif /* INCLUDE_FILTER_TEST_CONSTANT_VELOCITY_RESIDUAL_H_ */

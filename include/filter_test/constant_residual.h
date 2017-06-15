@@ -10,6 +10,8 @@
 
 #include "filter_test/residual.h"
 
+namespace tsif {
+
 // We assume that the residuals are embedded in a vector space (i.e. tangent space for manifolds).
 class ConstantResidual: public ResidualBase {
   static const bool kIsMergeable = true;
@@ -33,11 +35,11 @@ public:
                         VectorXRef* residual, std::vector<MatrixXRef>* jacobian_wrt_state1,
                         std::vector<MatrixXRef>* jacobian_wrt_state2) {return true;}
 
-  virtual std::string getResidualName() {return "const residual";}
+  virtual std::string getResidualName() const {return "const residual";}
 
 private:
 };
 
-
+}  // namespace tsif
 
 #endif /* INCLUDE_FILTER_TEST_CONSTANT_RESIDUAL_H_ */

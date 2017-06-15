@@ -8,6 +8,9 @@
 #ifndef INCLUDE_FILTER_TEST_HELPER_FUNCTIONS_H_
 #define INCLUDE_FILTER_TEST_HELPER_FUNCTIONS_H_
 
+#include <vector>
+
+namespace tsif {
 
 inline std::string padTo(const std::string &str, const size_t num, const char paddingChar = ' ')
 {
@@ -21,6 +24,6 @@ inline bool vectorContainsValue(const std::vector<int>& vec, int value) {
   return std::find(vec.begin(), vec.end(), value) != vec.end();
 }
 
-
+}  // namespace tsif
 
 #endif /* INCLUDE_FILTER_TEST_HELPER_FUNCTIONS_H_ */

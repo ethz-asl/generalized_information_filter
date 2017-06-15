@@ -1,6 +1,7 @@
 
 #include "filter_test/block.h"
 
+namespace tsif {
 
 namespace block_helper {
 BlockBase* createBlockByType(BlockType block_type) {
@@ -26,3 +27,5 @@ BlockBase* createBlockByType(BlockType block_type) {
   return NULL;
 }
 }
+
+}  // namespace tsif
