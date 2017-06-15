@@ -20,16 +20,16 @@ struct ResidualContainer {
 
 class ResidualManager {
  public:
-  ResidualManager(): dimension_(0) {}
+  ResidualManager() : dimension_(0) {}
 
   ~ResidualManager() {
-    for(ResidualContainer& current_residual:residuals_) {
+    for (ResidualContainer& current_residual : residuals_) {
       delete current_residual.residual_;
     }
   }
 
   // This function adds a residual and takes ownership of the residual.
-  bool addResidual(ResidualBase* residual, std::vector<std::string> in,  std::vector<std::string> out);
+  bool addResidual(ResidualBase* residual, std::vector<std::string> in, std::vector<std::string> out);
 
   bool checkAllResidualTypes();
 

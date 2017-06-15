@@ -8,7 +8,6 @@
 #ifndef INCLUDE_FILTER_TEST_DEFINES_H_
 #define INCLUDE_FILTER_TEST_DEFINES_H_
 
-
 #include <Eigen/Dense>
 
 namespace tsif {
@@ -16,7 +15,7 @@ namespace tsif {
 #define TSIF_VERBOSE true
 
 #define DO_SANITY_CHECKS true
-#define VERBOSE_MODE true // Should we output a lot of stuff to the console?
+#define VERBOSE_MODE true  // Should we output a lot of stuff to the console?
 
 template <int Dimension>
 using Vector = Eigen::Matrix<double, Dimension, 1>;

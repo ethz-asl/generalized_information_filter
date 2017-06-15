@@ -8,20 +8,18 @@
 #ifndef INCLUDE_FILTER_TEST_MEASUREMENT_MANAGER_H_
 #define INCLUDE_FILTER_TEST_MEASUREMENT_MANAGER_H_
 
-
-#include <map>
 #include <iostream>
+#include <map>
 
 #include "filter_test/defines.h"
 #include "filter_test/helper_functions.h"
 #include "filter_test/measurement.h"
 #include "filter_test/timeline.h"
 
-
 namespace tsif {
 
 class MeasurementManager {
-public:
+ public:
   MeasurementManager() {}
   ~MeasurementManager() {}
   std::vector<Timeline> timelines_;
@@ -36,7 +34,7 @@ public:
 
   void printTimeline() const;
 
-private:
+ private:
 };
 
 }  // namespace tsif
