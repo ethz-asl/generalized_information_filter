@@ -28,5 +28,9 @@ catkin_add_gtest(test_state
   src/test/test_state.cpp)
 target_link_libraries(test_state ${PROJECT_NAME})
 
+catkin_add_gtest(test_filter
+  src/test/test_filter.cpp)
+target_link_libraries(test_filter ${PROJECT_NAME})
+
 cs_install()
 cs_export()

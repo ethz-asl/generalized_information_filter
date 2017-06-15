@@ -93,6 +93,16 @@ class State {
     return accumulated_minimal_dimensions_[key];
   }
 
+  VectorX getAsVector() const {
+    VectorX state_vector(dimension_);
+    int index = 0;
+    for(BlockBase* current_block: state_blocks_ ) {
+      state_vector.segment(index,current_block->dimension_) = current_block->getValue();
+      index += current_block->dimension_;
+    }
+    return state_vector;
+  }
+
   std::string printState() const {
     std::ostringstream oss;
     for(BlockBase* current_block: state_blocks_ ) {
