@@ -74,6 +74,35 @@ TEST(StateTest, CopyAndAssignOperator) {
   EXPECT_TRUE(third_state.getAsVector() == state_vector_expected);
 }
 
+
+TEST(StateTest, BoxPlus) {
+  std::vector<BlockType> state_block_types{kVector3, kVector1, kVector2};
+
+  State first_state;
+  first_state.defineState(state_block_types);
+
+  Vector3 test(1, 2, 1);
+  first_state.setState(kStatePosition, test);
+
+  VectorX dx(6);
+  dx << -1, -2, -1, -1, -2, 1;
+
+  VectorX state_vector_expected(6);
+  state_vector_expected << 0, 0, 0, -1, -2, 1;
+
+  State result_state;
+  first_state.boxPlus(dx, &result_state);
+
+  EXPECT_TRUE(result_state.getAsVector() == state_vector_expected);
+
+  VectorX result_dx(6);
+  result_dx.setZero();
+  result_state.boxMinus(first_state, &result_dx);
+
+  // Check assignment operator.
+  EXPECT_TRUE(result_dx == dx);
+}
+
 }  // namespace tsif
 
 int main(int argc, char **argv) {

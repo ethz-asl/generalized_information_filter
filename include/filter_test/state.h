@@ -31,10 +31,7 @@ class State {
 
   // Copy constructor clones the other state and takes care of allocating the new blocks
   State(const State& other) : dimension_(0), minimal_dimension_(0) {
-    for (BlockBase* current_block : other.state_blocks_) {
-      BlockBase* new_block = current_block->clone();
-      addBlock(new_block);
-    }
+    cloneState(other);
   }
 
   State& operator=(const State& other) {
@@ -55,11 +52,15 @@ class State {
     }
 
     // At this point the state is probably empty and we have to allocate the blocks
+    cloneState(other);
+    return *this;
+  }
+
+  inline void cloneState(const State& other) {
     for (BlockBase* current_block : other.state_blocks_) {
       BlockBase* new_block = current_block->clone();
       addBlock(new_block);
     }
-    return *this;
   }
 
   void defineState(std::vector<BlockType> block_types) {
@@ -75,7 +76,14 @@ class State {
   }
 
   void boxPlus(const VectorXRef& dx, State* result_state) const {
+    CHECK_NOTNULL(result_state);
     CHECK(minimal_dimension_ == dx.size());  // Check if dimension of dx is valid.
+
+    // Convenience function: if we have an empty state we clone the current state to create it.
+    if(result_state->dimension_ == 0) {
+      result_state->cloneState(*this);
+    }
+
     CHECK(dimension_ == result_state->dimension_)
         << "Dimension of first state" << dimension_ << " result state "
         << result_state->dimension_;  // Check if dimension of result_state is valid.
@@ -88,6 +96,25 @@ class State {
       ++block_iterator;
     }
   }
+
+  // calculates this - other = dx
+  void boxMinus(const State& other, VectorX* dx) const {
+//    CHECK_NOTNULL(dx);
+    CHECK(minimal_dimension_ == dx->size());  // Check if dimension of dx is valid.
+
+    CHECK(dimension_ == other.dimension_)
+        << "Dimension of first state " << dimension_ << " other state "
+        << other.dimension_;  // Check if dimension of result_state is valid.
+
+    int index = 0;
+    BlockVector::const_iterator block_iterator = other.state_blocks_.begin();
+    for (BlockBase* current_block : state_blocks_) {
+      dx->segment(index, current_block->minimal_dimension_) = current_block->boxMinus((*block_iterator));
+      index += current_block->minimal_dimension_;
+      ++block_iterator;
+    }
+  }
+
 
   inline int getAccumulatedMinimalDimension(const int& key) const { return accumulated_minimal_dimensions_[key]; }
 
