@@ -4,6 +4,7 @@
  *  Created on: 09.06.2017
  *      Author: burrimi
  */
+#include "glog/logging.h"
 
 #include "filter_test/measurement_manager.h"
 

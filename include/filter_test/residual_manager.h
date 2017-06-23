@@ -15,7 +15,7 @@ namespace tsif {
 struct ResidualContainer {
   std::vector<int> first_keys;
   std::vector<int> second_keys;
-  ResidualBase* residual_;
+  ResidualBase* residual;
 };
 
 class ResidualManager {
@@ -24,7 +24,7 @@ class ResidualManager {
 
   ~ResidualManager() {
     for (ResidualContainer& current_residual : residuals_) {
-      delete current_residual.residual_;
+      delete current_residual.residual;
     }
   }
 

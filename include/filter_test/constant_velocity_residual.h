@@ -16,6 +16,13 @@ namespace tsif {
 
 // We assume that the residuals are embedded in a vector space (i.e. tangent space for manifolds).
 class ConstantVelocityResidual : public ResidualBase {
+
+  struct InternalState {
+    InternalState(Vector3& p1, Vector3& v1):p(p1),v(v1) {}
+    Vector3& p;
+    Vector3& v;
+  };
+
   static const bool kIsMergeable = true;
   static const int kResidualDimension = 6;
 
@@ -36,20 +43,37 @@ class ConstantVelocityResidual : public ResidualBase {
     return true;
   }
 
+  virtual bool predict(const std::vector<BlockBase*>& state1, const int t1_ns,
+                       const int dt_ns, std::vector<BlockBase*>* state2, std::vector<MatrixXRef>* jacobian_wrt_state1) {
+
+    InternalState x_k(state1[0]->getValue<VectorBlock<3>>(),state1[0]->getValue<VectorBlock<3>>());
+    const Vector3& p_k = state1[0]->getValue<VectorBlock<3>>();
+//    const Vector3& p_k = static_cast<VectorBlock<3>*>(state1[0])->value_;
+    const Vector3& v_k = state1[1]->getValue<VectorBlock<3>>();
+
+
+    return true;
+  }
+
+  bool predict_implementation(const Vector3& p_k, const Vector3& v_k, Vector3* p_kp1, Vector3* v_kp1) {
+
+  }
+
   virtual bool evaluate(const std::vector<BlockBase*>& state1, const std::vector<BlockBase*>& state2, const int t1_ns,
                         const int t2_ns, VectorXRef* residual, std::vector<MatrixXRef>* jacobian_wrt_state1,
                         std::vector<MatrixXRef>* jacobian_wrt_state2) {
-    const Vector3& p_k = static_cast<VectorBlock<3>*>(state1[0])->value_;
-    const Vector3& v_k = static_cast<VectorBlock<3>*>(state1[1])->value_;
-    const Vector3& p_kp1 = static_cast<VectorBlock<3>*>(state2[0])->value_;
-    const Vector3& v_kp1 = static_cast<VectorBlock<3>*>(state2[1])->value_;
+    const Vector3& p_k = state1[0]->getValue<VectorBlock<3>>();
+//    const Vector3& p_k = static_cast<VectorBlock<3>*>(state1[0])->value_;
+    const Vector3& v_k = state1[1]->getValue<VectorBlock<3>>();
+    const Vector3& p_kp1 = state2[0]->getValue<VectorBlock<3>>();
+    const Vector3& v_kp1 = state2[1]->getValue<VectorBlock<3>>();
 
     if (residual == NULL) {
       return false;
     }
 
     double dt = kNanoSecondsToSeconds * (t2_ns - t1_ns);
-    residual->template block<3, 1>(0, 0) = sqrt_information_position_ * (p_kp1 - (p_k - dt * v_k));
+    residual->template block<3, 1>(0, 0) = sqrt_information_position_ * (p_kp1 - (p_k + dt * v_k));
     residual->template block<3, 1>(3, 0) = sqrt_information_velocity_ * (v_kp1 - (v_k));
 
     if (jacobian_wrt_state1 != NULL) {
@@ -71,7 +95,7 @@ class ConstantVelocityResidual : public ResidualBase {
     return true;
   }
 
-  virtual std::string getResidualName() const { return "const velocity"; }
+  virtual std::string getPrintableName() const { return "const velocity"; }
 
  private:
   double sqrt_information_position_;

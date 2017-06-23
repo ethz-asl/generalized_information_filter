@@ -70,9 +70,37 @@ class State {
     }
   }
 
-  void setState(const int key, const VectorXRef& value) {
+  void setBlock(const int key, const VectorXRef& value) {
+    getBlock(key)->setValue(value);
+  }
+
+  template <typename BlockType>
+  void setValue(const int key, const typename BlockType::StorageType& value) {
+    BlockType* block = dynamic_cast<BlockType*>(getBlock(key));
+    CHECK_NOTNULL(block);  // Check if cast successful
+    block->setValue(value);
+  }
+
+  template <typename BlockType>
+  typename BlockType::StorageType& getValue(const int key) {
+    BlockType* block = getBlock(key);
+    return block->template getValue<BlockType>();
+  }
+
+  inline BlockBase* getBlock(const int& key) const {
     CHECK(state_blocks_.size() > key);  // Check if key is valid.
-    state_blocks_.at(key)->setValue(value);
+    return state_blocks_[key];
+  }
+
+  template <typename BlockType>
+  BlockType* getBlock(const int& key) const {
+    BlockType* block = dynamic_cast<BlockType*>(getBlock(key));
+    CHECK_NOTNULL(block);  // Check if key is valid.
+    return block;
+  }
+
+  size_t numberOfBlocks() const {
+    return state_blocks_.size();
   }
 
   void boxPlus(const VectorXRef& dx, State* result_state) const {
@@ -122,7 +150,7 @@ class State {
     VectorX state_vector(dimension_);
     int index = 0;
     for (BlockBase* current_block : state_blocks_) {
-      state_vector.segment(index, current_block->dimension_) = current_block->getValue();
+      state_vector.segment(index, current_block->dimension_) = current_block->getValueAsVector();
       index += current_block->dimension_;
     }
     return state_vector;
@@ -131,7 +159,7 @@ class State {
   std::string printState() const {
     std::ostringstream oss;
     for (BlockBase* current_block : state_blocks_) {
-      oss << current_block->getTypeName() << "[" << current_block->getValue().transpose() << "], ";
+      oss << current_block->getTypeName() << "[" << current_block->getValueAsVector().transpose() << "], ";
     }
     return oss.str();
   }

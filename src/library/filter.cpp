@@ -25,13 +25,13 @@ bool Filter::addResidual(ResidualBase* residual, std::vector<int> first_keys, st
   ResidualContainer container;
   container.first_keys = first_keys;
   container.second_keys = second_keys;
-  container.residual_ = residual;
+  container.residual = residual;
 
   std::vector<Timeline*> timelines = measurement_manager_.getTimelines(measurement_keys, residual->is_mergeable_);
   residual->setMeasurementTimelines(timelines);
 
   total_residual_dimension_ += residual->dimension_;
-  residuals_.push_back(container);
+  residual_containers_.push_back(container);
   return true;
 }
 
@@ -68,36 +68,35 @@ void Filter::computeLinearizationPoint(const int timestamp_ns) { second_state_ =
 
 int Filter::preProcessResidual(const int timestamp_ns) {
   int active_residuals_dimension = 0;
-  for (ResidualContainer& current_residual : residuals_) {
-    bool residual_ok = current_residual.residual_->prepareResidual(timestamp_previous_update_ns_, timestamp_ns);
-    current_residual.residual_->active_ = residual_ok;  // TODO(burrimi): Do this a better way. move to base class?
+  for (ResidualContainer& current_residual : residual_containers_) {
+    bool residual_ok = current_residual.residual->prepareResidual(timestamp_previous_update_ns_, timestamp_ns);
+    current_residual.residual->active_ = residual_ok;  // TODO(burrimi): Do this a better way. move to base class?
 
     if (residual_ok) {
-      active_residuals_dimension += current_residual.residual_->dimension_;
+      active_residuals_dimension += current_residual.residual->dimension_;
     }
   }
 
   return active_residuals_dimension;
 }
 
-void Filter::constructProblem(const int timestamp_ns) {
+void Filter::constructProblem(const int timestamp_ns, const State& first_state, const State& second_state, VectorX* residual_vector, MatrixX* jacobian_wrt_state1, MatrixX* jacobian_wrt_state2) {
   int index_residual = 0;
-  for (ResidualContainer& current_residual : residuals_) {
-    if (current_residual.residual_->active_) {
-      std::vector<BlockBase*> blocks1 = getBlocks(first_state_, current_residual.first_keys);
-      std::vector<BlockBase*> blocks2 = getBlocks(second_state_, current_residual.second_keys);
+  for (ResidualContainer& current_residual : residual_containers_) {
+    if (current_residual.residual->active_) {
+      std::vector<BlockBase*> blocks1 = getBlocks(first_state, current_residual.first_keys);
+      std::vector<BlockBase*> blocks2 = getBlocks(second_state, current_residual.second_keys);
 
-      const int& residual_dimension = current_residual.residual_->dimension_;
-      VectorXRef residual = residual_vector_.segment(index_residual, residual_dimension);
-      std::vector<MatrixXRef> jacobian_wrt_state1 =
-          getJacobianBlocks(jacobian_wrt_state1_, current_residual.first_keys, index_residual, residual_dimension);
-      std::vector<MatrixXRef> jacobian_wrt_state2 =
-          getJacobianBlocks(jacobian_wrt_state2_, current_residual.second_keys, index_residual, residual_dimension);
-      ;
+      const int& residual_dimension = current_residual.residual->dimension_;
+      VectorXRef residual = residual_vector->segment(index_residual, residual_dimension);
+      std::vector<MatrixXRef> jacobian_wrt_state1_blocks =
+          getJacobianBlocks(current_residual.first_keys, index_residual, residual_dimension, jacobian_wrt_state1);
+      std::vector<MatrixXRef> jacobian_wrt_state2_blocks =
+          getJacobianBlocks(current_residual.second_keys, index_residual, residual_dimension, jacobian_wrt_state2);
 
       bool residual_ok =
-          current_residual.residual_->evaluate(blocks1, blocks2, timestamp_previous_update_ns_, timestamp_ns, &residual,
-                                               &jacobian_wrt_state1, &jacobian_wrt_state2);
+          current_residual.residual->evaluate(blocks1, blocks2, timestamp_previous_update_ns_, timestamp_ns, &residual,
+                                               &jacobian_wrt_state1_blocks, &jacobian_wrt_state2_blocks);
       if (residual_ok) {
         index_residual += residual_dimension;
       }
@@ -125,8 +124,9 @@ void Filter::update(const int timestamp_ns) {
 
   double weightedDelta = th_iter_;
   MatrixX newInf(first_state_.minimal_dimension_, first_state_.minimal_dimension_);
-  for (iter_ = 0; iter_ < max_iter_ && weightedDelta >= th_iter_; ++iter_) {
-    constructProblem(timestamp_ns);
+  size_t update_iteration;
+  for (update_iteration = 0; update_iteration < max_iter_ && weightedDelta >= th_iter_; ++update_iteration) {
+    constructProblem(timestamp_ns, first_state_, second_state_, &residual_vector_, &jacobian_wrt_state1_, &jacobian_wrt_state2_);
 
     TSIF_LOG("Innovation:\t" << residual_vector_.transpose());
     TSIF_LOG("JacPre:\n" << jacobian_wrt_state1_);
@@ -158,10 +158,10 @@ void Filter::update(const int timestamp_ns) {
     second_state_.boxPlus(dx, &second_state_);
 
     weightedDelta = sqrt((dx.dot(newInf * dx)) / dx.size());
-    TSIF_LOG("iter: " << iter_ << "\tw: " << sqrt((dx.dot(dx)) / dx.size()) << "\twd: " << weightedDelta);
+    TSIF_LOG("iter: " << update_iteration << "\tw: " << sqrt((dx.dot(dx)) / dx.size()) << "\twd: " << weightedDelta);
   }
 
-  TSIF_LOGWIF(weightedDelta >= th_iter_, "Reached maximal iterations:" << iter_);
+  TSIF_LOGWIF(weightedDelta >= th_iter_, "Reached maximal iterations:" << update_iteration);
 
   first_state_ = second_state_;
 
@@ -175,35 +175,35 @@ void Filter::update(const int timestamp_ns) {
   timestamp_previous_update_ns_ = timestamp_ns;
 }
 
-void Filter::initStateValue(const int key, const VectorXRef& value) { first_state_.setState(key, value); }
+void Filter::initStateValue(const int key, const VectorXRef& value) { first_state_.setBlock(key, value); }
 
 void Filter::printState() const { std::cout << first_state_.printState() << std::endl; }
 
 void Filter::printTimeline() const { measurement_manager_.printTimeline(); }
 
 void Filter::printResiduals() const {
-  for (size_t i = 0; i < first_state_.state_blocks_.size(); ++i) {
+  for (size_t i = 0; i < first_state_.numberOfBlocks(); ++i) {
     std::string state_name = "S" + std::to_string(i);
     std::cout << padTo(state_name, 5);
   }
   std::cout << padTo("residual", 20);
-  for (size_t i = 0; i < first_state_.state_blocks_.size(); ++i) {
+  for (size_t i = 0; i < first_state_.numberOfBlocks(); ++i) {
     std::string state_name = "S" + std::to_string(i);
     std::cout << padTo(state_name, 5);
   }
   std::cout << std::endl;
 
-  for (const ResidualContainer& current_residual : residuals_) {
-    for (size_t i = 0; i < first_state_.state_blocks_.size(); ++i) {
+  for (const ResidualContainer& current_residual : residual_containers_) {
+    for (size_t i = 0; i < first_state_.numberOfBlocks(); ++i) {
       if (vectorContainsValue(current_residual.first_keys, i)) {
         std::cout << "  X  ";
       } else {
         std::cout << "     ";
       }
     }
-    std::string residual_name = current_residual.residual_->getResidualName();
+    std::string residual_name = current_residual.residual->getPrintableName();
     std::cout << padTo(residual_name, 20);
-    for (size_t i = 0; i < second_state_.state_blocks_.size(); ++i) {
+    for (size_t i = 0; i < second_state_.numberOfBlocks(); ++i) {
       if (vectorContainsValue(current_residual.second_keys, i)) {
         std::cout << "  X  ";
       } else {
@@ -215,11 +215,11 @@ void Filter::printResiduals() const {
 }
 
 void Filter::checkResiduals() {
-  for (ResidualContainer& current_residual : residuals_) {
+  for (ResidualContainer& current_residual : residual_containers_) {
     std::vector<BlockBase*> blocks1 = getBlocks(first_state_, current_residual.first_keys);
     std::vector<BlockBase*> blocks2 = getBlocks(second_state_, current_residual.second_keys);
-    std::cout << "Checking input types for residual : " << current_residual.residual_->getResidualName() << std::endl;
-    current_residual.residual_->inputTypesValid(blocks1, blocks2);
+    std::cout << "Checking input types for residual : " << current_residual.residual->getPrintableName() << std::endl;
+    current_residual.residual->inputTypesValid(blocks1, blocks2);
   }
 }
 

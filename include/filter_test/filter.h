@@ -24,7 +24,15 @@ struct ResidualContainer {
   std::vector<int> first_keys;
   std::vector<int> second_keys;
   std::vector<int> measurement_keys;
-  ResidualBase* residual_;
+  ResidualBase* residual;
+};
+
+struct PreparedResidual {
+  std::vector<BlockBase*> blocks1;
+  std::vector<BlockBase*> blocks2;
+  VectorXRef residual;
+  std::vector<MatrixXRef> jacobian_wrt_state1_blocks;
+  std::vector<MatrixXRef> jacobian_wrt_state2_blocks;
 };
 
 class Filter {
@@ -32,12 +40,11 @@ class Filter {
   Filter() : total_residual_dimension_(0), first_run_(true), timestamp_previous_update_ns_(-1) {
     max_iter_ = 1;
     th_iter_ = 0.1;
-    iter_ = 0;
   }
 
   ~Filter() {
-    for (ResidualContainer& current_residual : residuals_) {
-      delete current_residual.residual_;
+    for (ResidualContainer& current_residual : residual_containers_) {
+      delete current_residual.residual;
     }
   }
 
@@ -57,7 +64,9 @@ class Filter {
   MeasurementManager measurement_manager_;
 
   // everything related to the residuals
-  std::vector<ResidualContainer> residuals_;
+  std::vector<ResidualContainer> residual_containers_;
+  std::vector<int> prediction_residual_ids_;
+
   int total_residual_dimension_;
 
   bool defineState(std::vector<BlockType> state_types);
@@ -73,7 +82,7 @@ class Filter {
 
   void computeLinearizationPoint(const int timestamp_ns);
   int preProcessResidual(const int timestamp_ns);
-  void constructProblem(const int timestamp_ns);
+  void constructProblem(const int timestamp_ns, const State& first_state, const State& second_state, VectorX* residual_vector, MatrixX* jacobian_wrt_state1, MatrixX* jacobian_wrt_state2);
 
   void printState() const;
 
@@ -86,21 +95,21 @@ class Filter {
  private:
   inline std::vector<BlockBase*> getBlocks(const State& state, const std::vector<int>& keys) {
     std::vector<BlockBase*> blocks;
-    for (int current_key : keys) {
-      blocks.emplace_back(state.state_blocks_[current_key]);
+    for (const int& current_key : keys) {
+      blocks.emplace_back(state.getBlock(current_key));
     }
     return blocks;
   }
 
-  inline std::vector<MatrixXRef> getJacobianBlocks(MatrixX& jacobian, const std::vector<int>& keys,
-                                                   const int& residual_index, const int& residual_dimension) {
+  inline std::vector<MatrixXRef> getJacobianBlocks(const std::vector<int>& keys,
+                                                   const int& residual_index, const int& residual_dimension, MatrixX* jacobian) {
     std::vector<MatrixXRef> jacobian_blocks;
-    for (int current_key : keys) {
+    for (const int& current_key : keys) {
       //    MatrixXRef test = jacobian.block(residual_index, current_key, residual_dimension,
       //    first_state_.minimal_dimension_);
       const int& state_index = first_state_.getAccumulatedMinimalDimension(current_key);
       jacobian_blocks.emplace_back(
-          jacobian.block(residual_index, state_index, residual_dimension, first_state_.minimal_dimension_));
+          jacobian->block(residual_index, state_index, residual_dimension, first_state_.minimal_dimension_));
     }
     return jacobian_blocks;
   }
@@ -114,7 +123,6 @@ class Filter {
   // CHECK IF NEEDED
   int max_iter_;
   double th_iter_;
-  int iter_;
 };
 
 }  // namespace tsif

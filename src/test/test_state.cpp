@@ -26,6 +26,7 @@ TEST(StateTest, DefineState) {
 
   EXPECT_TRUE(first_state.dimension_ == 6);
   EXPECT_TRUE(first_state.minimal_dimension_ == 6);
+
 }
 
 TEST(StateTest, SetState) {
@@ -35,7 +36,7 @@ TEST(StateTest, SetState) {
   first_state.defineState(state_block_types);
 
   Vector3 test(1, 2, 1);
-  first_state.setState(kStatePosition, test);
+  first_state.setBlock(kStatePosition, test);
 
   std::cout << first_state.printState() << std::endl;
 
@@ -46,7 +47,7 @@ TEST(StateTest, SetState) {
 
   VectorX vector_2(2);
   vector_2 << 3, 5;
-  first_state.setState(kStateOrientation, vector_2);
+  first_state.setBlock(kStateOrientation, vector_2);
 
   state_vector_expected << 1, 2, 1, 0, 3, 5;
   EXPECT_TRUE(first_state.getAsVector() == state_vector_expected);
@@ -59,7 +60,7 @@ TEST(StateTest, CopyAndAssignOperator) {
   first_state.defineState(state_block_types);
 
   Vector3 test(1, 2, 1);
-  first_state.setState(kStatePosition, test);
+  first_state.setBlock(kStatePosition, test);
 
   VectorX state_vector_expected(6);
   state_vector_expected << 1, 2, 1, 0, 0, 0;
@@ -82,7 +83,7 @@ TEST(StateTest, BoxPlus) {
   first_state.defineState(state_block_types);
 
   Vector3 test(1, 2, 1);
-  first_state.setState(kStatePosition, test);
+  first_state.setBlock(kStatePosition, test);
 
   VectorX dx(6);
   dx << -1, -2, -1, -1, -2, 1;

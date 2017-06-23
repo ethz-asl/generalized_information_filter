@@ -8,7 +8,6 @@
 #ifndef INCLUDE_FILTER_TEST_MEASUREMENT_H_
 #define INCLUDE_FILTER_TEST_MEASUREMENT_H_
 
-#include "filter_test/block.h"
 
 namespace tsif {
 

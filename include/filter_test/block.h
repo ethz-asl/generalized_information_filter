@@ -14,6 +14,7 @@
 
 #include "filter_test/block.h"
 #include "filter_test/defines.h"
+#include "filter_test/utils/geometry.h"
 
 namespace tsif {
 
@@ -31,9 +32,9 @@ class BlockBase {
  public:
   const int minimal_dimension_;  // Dimension of the tangent space
   const int dimension_;
-  const BlockType type_;
-  BlockBase(int o_dim, int dimension, BlockType type) : minimal_dimension_(dimension), dimension_(o_dim), type_(type) {
-    CHECK(o_dim >= dimension);
+  const BlockType type_; // TODO(burrimi): Not nice, remove.
+  BlockBase(int dimension, int minimal_dimension, BlockType type) : minimal_dimension_(minimal_dimension), dimension_(dimension), type_(type) {
+    CHECK(dimension >= minimal_dimension);
   };
   virtual ~BlockBase() {}
 
@@ -41,9 +42,23 @@ class BlockBase {
 
   virtual void copyBlockTo(BlockBase* result) const = 0;  // TODO(burrimi): find better way.
 
+  template <typename BlockType>
+  typename BlockType::StorageType& getValue() {
+    BlockType* block = dynamic_cast<BlockType*>(this);
+    CHECK_NOTNULL(block);  // // Check if cast successful
+    return block->getValue();
+  }
+
+  template <typename BlockType>
+  const typename BlockType::StorageType& getValue() const{
+    const BlockType* block = dynamic_cast<const BlockType*>(this);
+    CHECK_NOTNULL(block);  // // Check if cast successful
+    return block->getValue();
+  }
+
   virtual void boxPlus(const Eigen::VectorXd& dx, BlockBase* result) = 0;
   virtual Eigen::VectorXd boxMinus(const BlockBase* y) = 0;
-  virtual Eigen::VectorXd getValue() = 0;
+  virtual Eigen::VectorXd getValueAsVector() = 0;
   virtual void setValue(const VectorXRef& value) = 0;
   virtual std::string getTypeName() = 0;
 
@@ -63,11 +78,13 @@ class BlockBase {
 template <int Dimension>
 class VectorBlock : public BlockBase {
  public:
+  typedef Vector<Dimension> StorageType;
+
   // TODO(burrimi): remove ugly hack for type.
-  VectorBlock(const Vector<Dimension>& value)
+  VectorBlock(const StorageType& value)
       : BlockBase(Dimension, Dimension, static_cast<BlockType>(Dimension + BlockType::kVector1 - 1)), value_(value) {}
 
-  VectorBlock() : VectorBlock(Vector<Dimension>::Zero()) {}
+  VectorBlock() : VectorBlock(StorageType::Zero()) {}
 
   virtual ~VectorBlock() {}
 
@@ -91,20 +108,33 @@ class VectorBlock : public BlockBase {
   virtual Eigen::VectorXd boxMinus(const BlockBase* y) {
     const VectorBlock<Dimension>* y_vector = dynamic_cast<const VectorBlock<Dimension>*>(y);
     CHECK_NOTNULL(y_vector);  // << "Type cast from BlockBase to VectorBlock failed! Did you mix types?";
-    Vector<Dimension> result = value_ - y_vector->value_;
+    StorageType result = value_ - y_vector->value_;
     return result;
   }
 
-  virtual Eigen::VectorXd getValue() { return value_; }
+  virtual Eigen::VectorXd getValueAsVector() { return value_; } // TODO(burrimi): return reference?
 
   virtual void setValue(const VectorXRef& value) {
     CHECK(value.size() == Dimension);
     value_ = value;
   }
 
+  void setValue(const StorageType& value) {
+    value_ = value;
+  }
+
+  StorageType& getValue() {
+    return value_;
+  }
+
+  const StorageType& getValue() const {
+    return value_;
+  }
+
+
   virtual std::string getTypeName() { return "vector" + std::to_string(Dimension); }
 
-  Vector<Dimension> value_;
+  StorageType value_;
 
  private:
 };
