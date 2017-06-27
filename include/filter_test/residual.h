@@ -12,6 +12,7 @@
 
 #include "filter_test/block.h"
 #include "filter_test/timeline.h"
+#include "filter_test/utils/logging.h"
 
 namespace tsif {
 
@@ -21,8 +22,6 @@ class ResidualBase {
   const int dimension_;
   const bool is_mergeable_;
   bool active_;
-  std::vector<BlockType> state1_block_types_;
-  std::vector<BlockType> state2_block_types_;
 
   // TODO(burrimi): Do we need the full timeline or just the map<time,measurement>?
   std::vector<Timeline*> measurement_timelines_;
@@ -41,6 +40,9 @@ class ResidualBase {
                         const int t2_ns, VectorXRef* residual, std::vector<MatrixXRef>* jacobian_wrt_state1,
                         std::vector<MatrixXRef>* jacobian_wrt_state2) = 0;
   virtual std::string getPrintableName() const = 0;
+
+  // This function checks if all input blocks are of correct type.
+  virtual bool inputTypesValid(const std::vector<BlockBase*>& state1, const std::vector<BlockBase*>& state2) = 0;
 
  private:
 };

@@ -18,10 +18,7 @@ class ConstantResidual : public ResidualBase {
   static const int kResidualDimension = 3;
 
  public:
-  ConstantResidual() : ResidualBase(kResidualDimension, kIsMergeable) {
-    state1_block_types_.push_back(BlockType::kVector3);
-    state2_block_types_.push_back(BlockType::kVector3);
-  }
+  ConstantResidual() : ResidualBase(kResidualDimension, kIsMergeable) {}
 
   ~ConstantResidual() {}
 
@@ -38,6 +35,14 @@ class ConstantResidual : public ResidualBase {
   }
 
   virtual std::string getPrintableName() const { return "const residual"; }
+
+  virtual bool inputTypesValid(const std::vector<BlockBase*>& state1, const std::vector<BlockBase*>& state2) {
+    bool all_types_ok = true;
+    all_types_ok &= state1[0]->isBlockTypeCorrect<VectorBlock<3>>();
+    all_types_ok &= state2[0]->isBlockTypeCorrect<VectorBlock<3>>();
+    TSIF_LOGEIF(!all_types_ok, "Constant residual has wrong block types. Check your state indices!");
+    return all_types_ok;
+  }
 
  private:
 };

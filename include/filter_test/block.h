@@ -56,6 +56,15 @@ class BlockBase {
     return block->getValue();
   }
 
+  template <typename BlockType>
+  bool isBlockTypeCorrect() const{
+    const BlockType* block = dynamic_cast<const BlockType*>(this);
+    if(block == nullptr) {
+      return false;
+    }
+    return true;
+  }
+
   virtual void boxPlus(const Eigen::VectorXd& dx, BlockBase* result) = 0;
   virtual Eigen::VectorXd boxMinus(const BlockBase* y) = 0;
   virtual Eigen::VectorXd getValueAsVector() = 0;
@@ -131,8 +140,9 @@ class VectorBlock : public BlockBase {
     return value_;
   }
 
-
-  virtual std::string getTypeName() { return "vector" + std::to_string(Dimension); }
+  virtual std::string getTypeName() {
+    return "vector" + std::to_string(Dimension);
+  }
 
   StorageType value_;
 

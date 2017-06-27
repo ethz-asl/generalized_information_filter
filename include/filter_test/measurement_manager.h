@@ -18,6 +18,7 @@
 
 namespace tsif {
 
+
 class MeasurementManager {
  public:
   MeasurementManager() {}
@@ -26,7 +27,7 @@ class MeasurementManager {
   // Takes ownership of the data.
   void addMeasurement(const int timeline_key, const int timestamp_ns, MeasurementBase* measurement);
 
-  bool shouldIRunTheFilter(const int& timestamp_previous_update_ns, int* timestamp_update_ns) const;
+  bool updateStrategy(const int& timestamp_previous_update_ns, UpdateDescription* update_description) const;
 
   // We assume that timeline id's start with zero. If a timeline does not exist it's created.
   Timeline* getTimelinePtr(int timeline_key);

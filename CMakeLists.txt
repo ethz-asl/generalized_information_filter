@@ -13,7 +13,9 @@ include_directories(${Eigen_INCLUDE_DIRS})
 cs_add_library(filter_test
   src/library/filter.cpp
   src/library/residual.cpp
+  src/library/estimator.cpp
   src/library/measurement_manager.cpp
+  src/library/problem_builder.cpp
   src/library/block.cpp)
 
 cs_add_executable(filter_test_node
@@ -22,7 +24,7 @@ cs_add_executable(filter_test_node
 
 #add_subdirectory(src/test)
 
-#target_link_libraries(filter_test_node filter_test_library)
+target_link_libraries(filter_test_node ${PROJECT_NAME})
 
 catkin_add_gtest(test_state
   src/test/test_state.cpp)

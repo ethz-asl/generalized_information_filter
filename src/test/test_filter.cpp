@@ -6,9 +6,10 @@
  */
 #include "filter_test/constant_residual.h"
 #include "filter_test/constant_velocity_residual.h"
-#include "filter_test/filter.h"
+#include "filter_test/estimator.h"
 #include "filter_test/measurement.h"
 #include "filter_test/position_residual.h"
+#include "filter_test/timeline.h"
 #include "gtest/gtest.h"
 
 namespace tsif {
@@ -17,11 +18,25 @@ enum StateDefinition { kStatePosition = 0, kStateVelocity, kStateOrientation };
 
 enum MeasurementDefinition { kMeasPosition = 0, kMeasImu };
 
+TEST(FilterTest, TimelineTest) {
+  Timeline timeline;
+
+  timeline.addMeasurement(0, new ImuMeasurement(Vector3(1, 1, 1), Vector3(1, 1, 1)));
+  timeline.addMeasurement(10, new ImuMeasurement(Vector3(1, 1, 1), Vector3(1, 1, 1)));
+
+  int timestamp = timeline.getNextMeasurementTimestamp(0);
+
+  CHECK(timestamp==10);
+
+  timestamp = timeline.getNextMeasurementTimestamp(10);
+  CHECK(timestamp==-1) << timestamp;
+}
+
 TEST(FilterTest, SimpleResidualTest) {
   std::vector<BlockType> state_block_types{kVector3, kVector3, kVector2};
   //  std::vector<int> state_names {kPosition, kVelocity, kOrientation};
 
-  Filter testfilter;
+  Estimator testfilter;
   testfilter.defineState(state_block_types);
 
   Eigen::Vector3d test_vec(1, 2, 3);
@@ -67,7 +82,7 @@ TEST(FilterTest, SimpleFilterTest) {
   std::vector<BlockType> state_block_types{kVector3, kVector3};
   //  std::vector<int> state_names {kPosition, kVelocity, kOrientation};
 
-  Filter testfilter;
+  Estimator testfilter;
   testfilter.defineState(state_block_types);
 
   Vector3 initial_position(1, 2, 3);
@@ -95,10 +110,10 @@ TEST(FilterTest, SimpleFilterTest) {
 
   MeasurementBase* position_measurement1 = new PositionMeasurement(Vector3(1, 1, 1));
   testfilter.addMeasurement(kMeasPosition, 140, position_measurement1);
-  MeasurementBase* position_measurement2 = new PositionMeasurement(Vector3(1, 1, 1));
-  testfilter.addMeasurement(kMeasPosition, 150, position_measurement2);
-
-  testfilter.printTimeline();
+//  MeasurementBase* position_measurement2 = new PositionMeasurement(Vector3(1, 1, 1));
+//  testfilter.addMeasurement(kMeasPosition, 150, position_measurement2);
+//
+//  testfilter.printTimeline();
 }
 
 }  // namespace tsif

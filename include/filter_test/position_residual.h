@@ -19,7 +19,6 @@ class PositionResidual : public ResidualBase {
 
  public:
   PositionResidual(const Matrix3& covariance) : ResidualBase(kResidualDimension, kIsMergeable) {
-    state2_block_types_ = {BlockType::kVector3};
     // TODO(burrimi): should we use robust cholesky decomposition (ldlt) to also handle semidefinite?
     Matrix3 L = covariance.llt().matrixL();  // Cholesky decomposition L*L^* = covariance
     sqrt_information_matrix_.setIdentity();
@@ -63,6 +62,13 @@ class PositionResidual : public ResidualBase {
   }
 
   virtual std::string getPrintableName() const { return "Position residual"; }
+
+  virtual bool inputTypesValid(const std::vector<BlockBase*>& state1, const std::vector<BlockBase*>& state2) {
+    bool all_types_ok = true;
+    all_types_ok &= state2[0]->isBlockTypeCorrect<VectorBlock<3>>();
+    TSIF_LOGEIF(!all_types_ok, "Position residual has wrong block types. Check your state indices!");
+    return all_types_ok;
+  }
 
  private:
   Matrix3 sqrt_information_matrix_;

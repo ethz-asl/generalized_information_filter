@@ -29,9 +29,6 @@ class ConstantVelocityResidual : public ResidualBase {
  public:
   ConstantVelocityResidual(const double position_sigma, const double velocity_sigma)
       : ResidualBase(kResidualDimension, kIsMergeable) {
-    state1_block_types_ = {BlockType::kVector3, BlockType::kVector3};
-    state2_block_types_ = {BlockType::kVector3, BlockType::kVector3};
-
     sqrt_information_position_ = 1 / position_sigma;
     sqrt_information_velocity_ = 1 / velocity_sigma;
   }
@@ -55,9 +52,9 @@ class ConstantVelocityResidual : public ResidualBase {
     return true;
   }
 
-  bool predict_implementation(const Vector3& p_k, const Vector3& v_k, Vector3* p_kp1, Vector3* v_kp1) {
-
-  }
+//  bool predict_implementation(const Vector3& p_k, const Vector3& v_k, Vector3* p_kp1, Vector3* v_kp1) {
+//
+//  }
 
   virtual bool evaluate(const std::vector<BlockBase*>& state1, const std::vector<BlockBase*>& state2, const int t1_ns,
                         const int t2_ns, VectorXRef* residual, std::vector<MatrixXRef>* jacobian_wrt_state1,
@@ -96,6 +93,16 @@ class ConstantVelocityResidual : public ResidualBase {
   }
 
   virtual std::string getPrintableName() const { return "const velocity"; }
+
+  virtual bool inputTypesValid(const std::vector<BlockBase*>& state1, const std::vector<BlockBase*>& state2) {
+    bool all_types_ok = true;
+    all_types_ok &= state1[0]->isBlockTypeCorrect<VectorBlock<3>>();
+    all_types_ok &= state1[1]->isBlockTypeCorrect<VectorBlock<3>>();
+    all_types_ok &= state2[0]->isBlockTypeCorrect<VectorBlock<3>>();
+    all_types_ok &= state2[1]->isBlockTypeCorrect<VectorBlock<3>>();
+    TSIF_LOGEIF(!all_types_ok, "Constant velocity residual has wrong block types. Check your state indices!");
+    return all_types_ok;
+  }
 
  private:
   double sqrt_information_position_;

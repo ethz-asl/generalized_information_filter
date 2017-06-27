@@ -34,6 +34,14 @@ typedef Eigen::MatrixXd MatrixX;
 constexpr double kNanoSecondsToSeconds = 1e-9;
 constexpr int kMaxMeasurmenetBufferSize = 1000;
 
+
+struct UpdateDescription {
+  int timestamp_ns;
+  int timestamp_previous_update_ns;
+  std::vector<int> active_timeline_ids;
+};
+
+
 }  // namespace tsif
 
 #endif /* INCLUDE_FILTER_TEST_DEFINES_H_ */

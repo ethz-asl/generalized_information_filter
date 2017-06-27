@@ -103,23 +103,34 @@ void MeasurementManager::printTimeline() const {
   }
 }
 
-bool MeasurementManager::shouldIRunTheFilter(const int& timestamp_previous_update_ns, int* timestamp_update_ns) const {
-  // Find the oldest non mergeable timestamp.
+bool MeasurementManager::updateStrategy(const int& timestamp_previous_update_ns, UpdateDescription* update_description) const {
+  // Find the oldest non mergeable timestamp. In KF filtering this is the measurement.
   // TODO(burrimi): Cache this.
   double oldest_timestamp = std::numeric_limits<double>::max();
-  for (const Timeline& current_timeline : timelines_) {
+  int active_measurement_idx;
+  for (size_t i = 0; i < timelines_.size(); ++i) {
+    const Timeline& current_timeline = timelines_[i];
     if (current_timeline.mergeable_ || current_timeline.isEmpty()) {
       continue;
     }
-    const double& next_timestamp = current_timeline.getNextMeasurementTimestamp(timestamp_previous_update_ns);
+    const int next_timestamp = current_timeline.getNextMeasurementTimestamp(timestamp_previous_update_ns);
+    if(next_timestamp < 0) { // Check if we got a valid timestamp.
+      continue;
+    }
     if (next_timestamp < oldest_timestamp) {
       oldest_timestamp = next_timestamp;
+      active_measurement_idx = i;
     }
   }
+  if(oldest_timestamp==std::numeric_limits<double>::max()) {
+    return false;
+  }
+  update_description->active_timeline_ids.emplace_back(active_measurement_idx);
   // TODO(burrimi): should we also check the oldest timestamp of mergeable residuals?
 
   // Check if all the mergeable measurements have a newer measurement to allow for interpolation.
-  for (const Timeline& current_timeline : timelines_) {
+  for (size_t i = 0; i < timelines_.size(); ++i) {
+    const Timeline& current_timeline = timelines_[i];
     if (current_timeline.isEmpty()) {
       continue;
     }
@@ -129,9 +140,11 @@ bool MeasurementManager::shouldIRunTheFilter(const int& timestamp_previous_updat
     if (current_timeline.getNewestMeasurementTimestamp() < oldest_timestamp) {
       return false;
     }
+    update_description->active_timeline_ids.emplace_back(i);
   }
   // We probably have all the required measurements for performing one step.
-  *timestamp_update_ns = oldest_timestamp;
+  update_description->timestamp_ns = oldest_timestamp;
+  update_description->timestamp_previous_update_ns = timestamp_previous_update_ns;
   return true;
 }
 

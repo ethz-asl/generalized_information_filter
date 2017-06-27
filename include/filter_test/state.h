@@ -92,6 +92,14 @@ class State {
     return state_blocks_[key];
   }
 
+  inline std::vector<BlockBase*> getBlocks(const std::vector<int>& keys) const {
+    std::vector<BlockBase*> blocks;
+    for (const int& current_key : keys) {
+      blocks.emplace_back(getBlock(current_key));
+    }
+    return blocks;
+  }
+
   template <typename BlockType>
   BlockType* getBlock(const int& key) const {
     BlockType* block = dynamic_cast<BlockType*>(getBlock(key));
@@ -173,6 +181,9 @@ class State {
     state_blocks_.push_back(block_to_add);
   }
 };
+
+
+
 
 }  // namespace tsif
 

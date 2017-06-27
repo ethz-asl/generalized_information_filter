@@ -12,91 +12,27 @@
 
 namespace tsif {
 
-bool Filter::defineState(std::vector<BlockType> state_types) {
-  state_types_ = state_types;
-  first_state_.defineState(state_types);
-  second_state_.defineState(state_types);
-  return true;
+void Filter::computeLinearizationPoint(const State& state, const int timestamp_ns) {
+  temporary_second_state_ = state;
 }
 
-bool Filter::addResidual(ResidualBase* residual, std::vector<int> first_keys, std::vector<int> second_keys,
-                         std::vector<int> measurement_keys) {
-  CHECK(first_state_.dimension_ > 0);  // Check if state is defined.
-  ResidualContainer container;
-  container.first_keys = first_keys;
-  container.second_keys = second_keys;
-  container.residual = residual;
-
-  std::vector<Timeline*> timelines = measurement_manager_.getTimelines(measurement_keys, residual->is_mergeable_);
-  residual->setMeasurementTimelines(timelines);
-
-  total_residual_dimension_ += residual->dimension_;
-  residual_containers_.push_back(container);
-  return true;
-}
-
-void Filter::addMeasurement(int timeline_key, int timestamp_ns, MeasurementBase* measurement) {
-  measurement_manager_.addMeasurement(timeline_key, timestamp_ns, measurement);
-
-#ifdef VERBOSE_MODE
-  std::cout << "added " << measurement->getPrintableMeasurement() << " at time " << std::to_string(timestamp_ns)
-            << std::endl;
-#endif
-  int timestamp_update_ns;
-  if (!measurement_manager_.shouldIRunTheFilter(timestamp_previous_update_ns_, &timestamp_update_ns)) {
-    return;
-  }
-
-  if (!first_run_) {
-#ifdef VERBOSE_MODE
-    std::cout << "update at time " << std::to_string(timestamp_update_ns) << std::endl;
-#endif
-    update(timestamp_update_ns);
-    return;
-  }
-
-// This is the first run and we have to initialize everything
-#ifdef VERBOSE_MODE
-  std::cout << "first run at time " << std::to_string(timestamp_update_ns) << std::endl;
-#endif
-  init();
-  update(timestamp_update_ns);
-  first_run_ = false;
-}
-
-void Filter::computeLinearizationPoint(const int timestamp_ns) { second_state_ = first_state_; }
-
-int Filter::preProcessResidual(const int timestamp_ns) {
-  int active_residuals_dimension = 0;
-  for (ResidualContainer& current_residual : residual_containers_) {
-    bool residual_ok = current_residual.residual->prepareResidual(timestamp_previous_update_ns_, timestamp_ns);
-    current_residual.residual->active_ = residual_ok;  // TODO(burrimi): Do this a better way. move to base class?
-
-    if (residual_ok) {
-      active_residuals_dimension += current_residual.residual->dimension_;
-    }
-  }
-
-  return active_residuals_dimension;
-}
-
-void Filter::constructProblem(const int timestamp_ns, const State& first_state, const State& second_state, VectorX* residual_vector, MatrixX* jacobian_wrt_state1, MatrixX* jacobian_wrt_state2) {
+void Filter::constructProblem(const FilterProblemDescription& filter_problem, const State& first_state, const State& second_state, VectorX* residual_vector, MatrixX* jacobian_wrt_state1, MatrixX* jacobian_wrt_state2) {
   int index_residual = 0;
-  for (ResidualContainer& current_residual : residual_containers_) {
-    if (current_residual.residual->active_) {
-      std::vector<BlockBase*> blocks1 = getBlocks(first_state, current_residual.first_keys);
-      std::vector<BlockBase*> blocks2 = getBlocks(second_state, current_residual.second_keys);
+  for (ResidualContainer* residual_container : filter_problem.residual_containers_) {
+    if (residual_container->residual->active_) {
+      std::vector<BlockBase*> blocks1 = first_state.getBlocks(residual_container->first_keys);
+      std::vector<BlockBase*> blocks2 = second_state.getBlocks(residual_container->second_keys);
 
-      const int& residual_dimension = current_residual.residual->dimension_;
-      VectorXRef residual = residual_vector->segment(index_residual, residual_dimension);
+      const int& residual_dimension = residual_container->residual->dimension_;
+      VectorXRef residual_error = residual_vector->segment(index_residual, residual_dimension);
       std::vector<MatrixXRef> jacobian_wrt_state1_blocks =
-          getJacobianBlocks(current_residual.first_keys, index_residual, residual_dimension, jacobian_wrt_state1);
+          getJacobianBlocks(first_state, residual_container->first_keys, index_residual, residual_dimension, jacobian_wrt_state1);
       std::vector<MatrixXRef> jacobian_wrt_state2_blocks =
-          getJacobianBlocks(current_residual.second_keys, index_residual, residual_dimension, jacobian_wrt_state2);
+          getJacobianBlocks(first_state, residual_container->second_keys, index_residual, residual_dimension, jacobian_wrt_state2);
 
       bool residual_ok =
-          current_residual.residual->evaluate(blocks1, blocks2, timestamp_previous_update_ns_, timestamp_ns, &residual,
-                                               &jacobian_wrt_state1_blocks, &jacobian_wrt_state2_blocks);
+          residual_container->residual->evaluate(blocks1, blocks2, filter_problem.timestamp_previous_update_ns, filter_problem.timestamp_ns, &residual_error,
+                                                 &jacobian_wrt_state1_blocks, &jacobian_wrt_state2_blocks);
       if (residual_ok) {
         index_residual += residual_dimension;
       }
@@ -105,28 +41,28 @@ void Filter::constructProblem(const int timestamp_ns, const State& first_state, 
 }
 
 // Most of this function is copied from Bloesch https://github.com/ethz-asl/two_state_information_filter!!!
-void Filter::update(const int timestamp_ns) {
+void Filter::update(const FilterProblemDescription& filter_problem, const State& state, State* updated_state) {
   //  // Compute linearisation point
-  computeLinearizationPoint(timestamp_ns);
+  const int& timestamp_ns = filter_problem.timestamp_ns;
+  computeLinearizationPoint(state, timestamp_ns);
   //
   //  // Check available measurements and prepare residuals
-
-  int active_residuals_dimension = preProcessResidual(timestamp_ns);
+  const int& active_residuals_dimension = filter_problem.residuals_dimension_;
   //  PreProcess();
   //
   // Temporaries
   residual_vector_.resize(active_residuals_dimension);
   residual_vector_.setZero();
-  jacobian_wrt_state1_.resize(active_residuals_dimension, first_state_.minimal_dimension_);
+  jacobian_wrt_state1_.resize(active_residuals_dimension, state.minimal_dimension_);
   jacobian_wrt_state1_.setZero();
-  jacobian_wrt_state2_.resize(active_residuals_dimension, first_state_.minimal_dimension_);
+  jacobian_wrt_state2_.resize(active_residuals_dimension, state.minimal_dimension_);
   jacobian_wrt_state2_.setZero();
 
   double weightedDelta = th_iter_;
-  MatrixX newInf(first_state_.minimal_dimension_, first_state_.minimal_dimension_);
+  MatrixX newInf(state.minimal_dimension_, state.minimal_dimension_);
   size_t update_iteration;
   for (update_iteration = 0; update_iteration < max_iter_ && weightedDelta >= th_iter_; ++update_iteration) {
-    constructProblem(timestamp_ns, first_state_, second_state_, &residual_vector_, &jacobian_wrt_state1_, &jacobian_wrt_state2_);
+    constructProblem(filter_problem, state, temporary_second_state_, &residual_vector_, &jacobian_wrt_state1_, &jacobian_wrt_state2_);
 
     TSIF_LOG("Innovation:\t" << residual_vector_.transpose());
     TSIF_LOG("JacPre:\n" << jacobian_wrt_state1_);
@@ -155,7 +91,7 @@ void Filter::update(const int timestamp_ns) {
     VectorX dx = -I_LDLT.solve(S * residual_vector_);
 
     // Apply Kalman Update
-    second_state_.boxPlus(dx, &second_state_);
+    temporary_second_state_.boxPlus(dx, &temporary_second_state_);
 
     weightedDelta = sqrt((dx.dot(newInf * dx)) / dx.size());
     TSIF_LOG("iter: " << update_iteration << "\tw: " << sqrt((dx.dot(dx)) / dx.size()) << "\twd: " << weightedDelta);
@@ -163,75 +99,27 @@ void Filter::update(const int timestamp_ns) {
 
   TSIF_LOGWIF(weightedDelta >= th_iter_, "Reached maximal iterations:" << update_iteration);
 
-  first_state_ = second_state_;
+  *updated_state = temporary_second_state_;
 
   information_ = newInf;
-  TSIF_LOG("State after Update:\n" << first_state_.printState());
+  TSIF_LOG("State after Update:\n" << state.printState());
   TSIF_LOG("Information matrix:\n" << information_);
 
   //    // Post Processing
   //    PostProcess();
-
-  timestamp_previous_update_ns_ = timestamp_ns;
 }
 
-void Filter::initStateValue(const int key, const VectorXRef& value) { first_state_.setBlock(key, value); }
-
-void Filter::printState() const { std::cout << first_state_.printState() << std::endl; }
-
-void Filter::printTimeline() const { measurement_manager_.printTimeline(); }
-
-void Filter::printResiduals() const {
-  for (size_t i = 0; i < first_state_.numberOfBlocks(); ++i) {
-    std::string state_name = "S" + std::to_string(i);
-    std::cout << padTo(state_name, 5);
-  }
-  std::cout << padTo("residual", 20);
-  for (size_t i = 0; i < first_state_.numberOfBlocks(); ++i) {
-    std::string state_name = "S" + std::to_string(i);
-    std::cout << padTo(state_name, 5);
-  }
-  std::cout << std::endl;
-
-  for (const ResidualContainer& current_residual : residual_containers_) {
-    for (size_t i = 0; i < first_state_.numberOfBlocks(); ++i) {
-      if (vectorContainsValue(current_residual.first_keys, i)) {
-        std::cout << "  X  ";
-      } else {
-        std::cout << "     ";
-      }
-    }
-    std::string residual_name = current_residual.residual->getPrintableName();
-    std::cout << padTo(residual_name, 20);
-    for (size_t i = 0; i < second_state_.numberOfBlocks(); ++i) {
-      if (vectorContainsValue(current_residual.second_keys, i)) {
-        std::cout << "  X  ";
-      } else {
-        std::cout << "     ";
-      }
-    }
-    std::cout << std::endl;
-  }
-}
-
-void Filter::checkResiduals() {
-  for (ResidualContainer& current_residual : residual_containers_) {
-    std::vector<BlockBase*> blocks1 = getBlocks(first_state_, current_residual.first_keys);
-    std::vector<BlockBase*> blocks2 = getBlocks(second_state_, current_residual.second_keys);
-    std::cout << "Checking input types for residual : " << current_residual.residual->getPrintableName() << std::endl;
-    current_residual.residual->inputTypesValid(blocks1, blocks2);
-  }
-}
-
-bool Filter::init() {
-  const int& minimal_state_dimension = first_state_.minimal_dimension_;
+bool Filter::init(const State& state, const int& total_residual_dimension) {
+  CHECK(total_residual_dimension > 0) << "residual dimension: " << std::to_string(total_residual_dimension);
+  const int& minimal_state_dimension = state.minimal_dimension_;
+  temporary_second_state_ = state;
   information_.resize(minimal_state_dimension, minimal_state_dimension);
   information_.setIdentity();
-  residual_vector_.resize(total_residual_dimension_);
+  residual_vector_.resize(total_residual_dimension);
 
   weightedDelta_.resize(minimal_state_dimension);
-  jacobian_wrt_state1_.resize(total_residual_dimension_, minimal_state_dimension);
-  jacobian_wrt_state2_.resize(total_residual_dimension_, minimal_state_dimension);
+  jacobian_wrt_state1_.resize(total_residual_dimension, minimal_state_dimension);
+  jacobian_wrt_state2_.resize(total_residual_dimension, minimal_state_dimension);
   return true;
 }
 
