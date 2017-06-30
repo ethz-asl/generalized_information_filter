@@ -4,9 +4,9 @@
  *  Created on: 02.06.2017
  *      Author: burrimi
  */
-#include "../../include/filter_test/residuals/constant_residual.h"
-#include "../../include/filter_test/residuals/constant_velocity_residual.h"
-#include "../../include/filter_test/residuals/position_residual.h"
+#include "filter_test/residuals/constant_residual.h"
+#include "filter_test/residuals/constant_velocity_residual.h"
+#include "filter_test/residuals/position_residual.h"
 #include "filter_test/estimator.h"
 #include "filter_test/measurement.h"
 #include "filter_test/timeline.h"
