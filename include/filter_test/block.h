@@ -32,6 +32,7 @@ class BlockBase {
  public:
   const int minimal_dimension_;  // Dimension of the tangent space
   const int dimension_;
+//  const bool is_vector_space_;
   const BlockType type_; // TODO(burrimi): Not nice, remove.
   BlockBase(int dimension, int minimal_dimension, BlockType type) : minimal_dimension_(minimal_dimension), dimension_(dimension), type_(type) {
     CHECK(dimension >= minimal_dimension);

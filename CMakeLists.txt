@@ -34,5 +34,9 @@ catkin_add_gtest(test_filter
   src/test/test_filter.cpp)
 target_link_libraries(test_filter ${PROJECT_NAME})
 
+catkin_add_gtest(test_timeline
+  src/test/test_timeline.cpp)
+target_link_libraries(test_timeline ${PROJECT_NAME})
+
 cs_install()
 cs_export()

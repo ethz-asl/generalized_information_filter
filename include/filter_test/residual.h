@@ -36,9 +36,13 @@ class ResidualBase {
 
   virtual bool prepareResidual(const int t1_ns, const int t2_ns) = 0;
 
+  virtual bool predict(const std::vector<BlockBase*>& state, const int t1_ns,
+                         const int t2_ns, std::vector<BlockBase*>* predicted_state, std::vector<MatrixXRef>* jacobian_wrt_state1) = 0;
+
   virtual bool evaluate(const std::vector<BlockBase*>& state1, const std::vector<BlockBase*>& state2, const int t1_ns,
                         const int t2_ns, VectorXRef* residual, std::vector<MatrixXRef>* jacobian_wrt_state1,
                         std::vector<MatrixXRef>* jacobian_wrt_state2) = 0;
+
   virtual std::string getPrintableName() const = 0;
 
   // This function checks if all input blocks are of correct type.

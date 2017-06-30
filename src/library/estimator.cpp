@@ -25,7 +25,21 @@ bool Estimator::addResidual(ResidualBase* residual, std::vector<int> first_keys,
   std::vector<Timeline*> timelines = measurement_manager_.getTimelines(measurement_keys, residual->is_mergeable_);
   residual->setMeasurementTimelines(timelines);
 
-  problem_builder_.addResidual(residual, first_keys, second_keys, measurement_keys);
+  const bool kIsPredictionResidual = false;
+  problem_builder_.addResidual(residual, first_keys, second_keys, measurement_keys, kIsPredictionResidual);
+
+  return true;
+}
+
+bool Estimator::addPredictionResidual(ResidualBase* residual, std::vector<int> first_keys, std::vector<int> second_keys,
+                 std::vector<int> measurement_keys) {
+  CHECK(first_state_.dimension_ > 0);  // Check if state is defined.
+
+  std::vector<Timeline*> timelines = measurement_manager_.getTimelines(measurement_keys, residual->is_mergeable_);
+  residual->setMeasurementTimelines(timelines);
+
+  const bool kIsPredictionResidual = true;
+  problem_builder_.addResidual(residual, first_keys, second_keys, measurement_keys, kIsPredictionResidual);
 
   return true;
 }

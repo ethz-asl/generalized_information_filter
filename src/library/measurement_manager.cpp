@@ -37,8 +37,8 @@ void MeasurementManager::addMeasurement(const int timeline_key, const int timest
 }
 
 void MeasurementManager::printTimeline() const {
-  std::vector<TimedMeasurement::const_iterator> timeline_iterators;
-  std::vector<TimedMeasurement::const_iterator> timeline_iterators_end;
+  std::vector<TimedMeasurements::const_iterator> timeline_iterators;
+  std::vector<TimedMeasurements::const_iterator> timeline_iterators_end;
   int i = 0;
   int num_finished_timelines = 0;
 

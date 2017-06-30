@@ -87,13 +87,15 @@ TEST(FilterTest, SimpleFilterTest) {
 
   Vector3 initial_position(1, 2, 3);
   testfilter.initStateValue(kStatePosition, initial_position);
+  Vector3 initial_velocity(1, 1, 1);
+  testfilter.initStateValue(kStateVelocity, initial_velocity);
 
   testfilter.printState();
 
   ConstantVelocityResidual* test_residual1 = new ConstantVelocityResidual(1, 1);
   std::vector<int> first_keys{kStatePosition, kStateVelocity};
   std::vector<int> second_keys{kStatePosition, kStateVelocity};
-  testfilter.addResidual(test_residual1, first_keys, second_keys);
+  testfilter.addPredictionResidual(test_residual1, first_keys, second_keys);
 
   PositionResidual* test_residual2 = new PositionResidual(Matrix3::Identity());
   first_keys = {};
@@ -108,12 +110,13 @@ TEST(FilterTest, SimpleFilterTest) {
 
   testfilter.printTimeline();
 
-  MeasurementBase* position_measurement1 = new PositionMeasurement(Vector3(1, 1, 1));
-  testfilter.addMeasurement(kMeasPosition, 140, position_measurement1);
-//  MeasurementBase* position_measurement2 = new PositionMeasurement(Vector3(1, 1, 1));
-//  testfilter.addMeasurement(kMeasPosition, 150, position_measurement2);
-//
-//  testfilter.printTimeline();
+  MeasurementBase* position_measurement1 = new PositionMeasurement(Vector3(1.005, 2.005, 3.005));
+  testfilter.addMeasurement(kMeasPosition, 5000000, position_measurement1);
+
+  MeasurementBase* position_measurement2 = new PositionMeasurement(Vector3(1.010, 2.010, 3.010));
+  testfilter.addMeasurement(kMeasPosition, 10000000, position_measurement2);
+
+  testfilter.printTimeline();
 }
 
 }  // namespace tsif

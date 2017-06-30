@@ -39,6 +39,12 @@ class PositionResidual : public ResidualBase {
     return true;
   }
 
+  virtual bool predict(const std::vector<BlockBase*>& state, const int t1_ns,
+                       const int t2_ns, std::vector<BlockBase*>* predicted_state, std::vector<MatrixXRef>* jacobian_wrt_state1) {
+    // TODO(burrimi): implement.
+    assert(true); // TODO(burrimi): Implement.
+    return false;
+  }
 
   virtual bool evaluate(const std::vector<BlockBase*>& state1, const std::vector<BlockBase*>& state2, const int t1_ns,
                         const int t2_ns, VectorXRef* residual, std::vector<MatrixXRef>* jacobian_wrt_state1,
@@ -52,10 +58,10 @@ class PositionResidual : public ResidualBase {
 
     const Vector3& p_kp1 = static_cast<VectorBlock<3>*>(state2[0])->value_;
 
-    residual->template block<3, 1>(0, 0) = sqrt_information_matrix_ * (position_measurement_->position_ - p_kp1);
+    residual->template block<3, 1>(0, 0) = sqrt_information_matrix_ * (p_kp1 - position_measurement_->position_);
 
     if (jacobian_wrt_state2 != NULL) {
-      (*jacobian_wrt_state2)[0].template block<3, 3>(0, 0) = -sqrt_information_matrix_ * Matrix3::Identity();
+      (*jacobian_wrt_state2)[0].template block<3, 3>(0, 0) = sqrt_information_matrix_ * Matrix3::Identity();
     }
 
     return true;

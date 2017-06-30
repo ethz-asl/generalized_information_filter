@@ -54,6 +54,10 @@ class Estimator {
   bool addResidual(ResidualBase* residual, std::vector<int> first_keys, std::vector<int> second_keys,
                    std::vector<int> measurement_keys = std::vector<int>());
 
+  // Same as addResidual but additionally this residual is used to predict the state. This is only needed for the GIF.
+  bool addPredictionResidual(ResidualBase* residual, std::vector<int> first_keys, std::vector<int> second_keys,
+                   std::vector<int> measurement_keys = std::vector<int>());
+
   void addMeasurement(int timeline_key, int timestamp_ns, MeasurementBase* measurement);
 
 

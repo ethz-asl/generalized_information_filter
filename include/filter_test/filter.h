@@ -30,18 +30,23 @@ struct PreparedResidual {
   std::vector<MatrixXRef> jacobian_wrt_state2_blocks;
 };
 
+struct FilterConfig {
+  FilterConfig(): max_update_iterations(10), residual_norm_threshold(0.1){}
+  int max_update_iterations;
+  double residual_norm_threshold;
+};
+
 class Filter {
  public:
-  Filter() : total_residual_dimension_(0) {
-    max_iter_ = 1;
-    th_iter_ = 0.1;
-  }
+  Filter() : total_residual_dimension_(0) { }
 
   ~Filter() {
     for (ResidualContainer& current_residual : residual_containers_) {
       delete current_residual.residual;
     }
   }
+
+  void setConfig(const FilterConfig& config) {config_ = config;}
 
   // state related stuff
   std::vector<BlockType> state_types_;
@@ -55,14 +60,13 @@ class Filter {
   MatrixX jacobian_wrt_state1_;
   MatrixX jacobian_wrt_state2_;
 
-
   // everything related to the residuals
   std::vector<ResidualContainer> residual_containers_;
   std::vector<int> prediction_residual_ids_;
 
   int total_residual_dimension_;
 
-  void computeLinearizationPoint(const State& state, const int timestamp_ns);
+  void predictState(const FilterProblemDescription& filter_problem, const State& state, const int timestamp_previous_update_ns, const int timestamp_ns, State* predicted_state) const;
   void constructProblem(const FilterProblemDescription& filter_problem, const State& first_state, const State& second_state, VectorX* residual_vector, MatrixX* jacobian_wrt_state1, MatrixX* jacobian_wrt_state2);
 
   bool init(const State& state, const int& total_residual_dimension);
@@ -86,10 +90,10 @@ class Filter {
   }
 
 
+  void setMatrixDimensions(const int active_residuals_dimension, const int minimal_state_dimension);
 
-  // CHECK IF NEEDED
-  int max_iter_;
-  double th_iter_;
+
+  FilterConfig config_;
 };
 
 }  // namespace tsif

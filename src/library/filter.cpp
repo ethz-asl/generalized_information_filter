@@ -12,13 +12,23 @@
 
 namespace tsif {
 
-void Filter::computeLinearizationPoint(const State& state, const int timestamp_ns) {
-  temporary_second_state_ = state;
+void Filter::predictState(const FilterProblemDescription& filter_problem, const State& state, const int timestamp_previous_update_ns, const int timestamp_ns, State* predicted_state) const {
+  *predicted_state = state; // For states that don't have a prediction residual, take the previous state.
+
+   for (ResidualContainer* residual_container : filter_problem.update_residuals_) {
+     if (residual_container->residual->active_) {
+       std::vector<BlockBase*> blocks = state.getBlocks(residual_container->first_keys);
+       std::vector<BlockBase*> blocks_predicted = predicted_state->getBlocks(residual_container->second_keys);
+       bool residual_ok =
+           residual_container->residual->predict(blocks, filter_problem.timestamp_previous_update_ns, filter_problem.timestamp_ns, &blocks_predicted, nullptr);
+     }
+   }
+
 }
 
 void Filter::constructProblem(const FilterProblemDescription& filter_problem, const State& first_state, const State& second_state, VectorX* residual_vector, MatrixX* jacobian_wrt_state1, MatrixX* jacobian_wrt_state2) {
   int index_residual = 0;
-  for (ResidualContainer* residual_container : filter_problem.residual_containers_) {
+  for (ResidualContainer* residual_container : filter_problem.update_residuals_) {
     if (residual_container->residual->active_) {
       std::vector<BlockBase*> blocks1 = first_state.getBlocks(residual_container->first_keys);
       std::vector<BlockBase*> blocks2 = second_state.getBlocks(residual_container->second_keys);
@@ -33,6 +43,7 @@ void Filter::constructProblem(const FilterProblemDescription& filter_problem, co
       bool residual_ok =
           residual_container->residual->evaluate(blocks1, blocks2, filter_problem.timestamp_previous_update_ns, filter_problem.timestamp_ns, &residual_error,
                                                  &jacobian_wrt_state1_blocks, &jacobian_wrt_state2_blocks);
+
       if (residual_ok) {
         index_residual += residual_dimension;
       }
@@ -40,28 +51,40 @@ void Filter::constructProblem(const FilterProblemDescription& filter_problem, co
   }
 }
 
+void Filter::setMatrixDimensions(const int active_residuals_dimension, const int minimal_state_dimension) {
+  if(residual_vector_.size() == active_residuals_dimension && jacobian_wrt_state1_.cols() == minimal_state_dimension) {
+    return; // already correct dimensions.
+  }
+
+  residual_vector_.resize(active_residuals_dimension);
+  jacobian_wrt_state1_.resize(active_residuals_dimension, minimal_state_dimension);
+  jacobian_wrt_state2_.resize(active_residuals_dimension, minimal_state_dimension);
+}
+
 // Most of this function is copied from Bloesch https://github.com/ethz-asl/two_state_information_filter!!!
 void Filter::update(const FilterProblemDescription& filter_problem, const State& state, State* updated_state) {
-  //  // Compute linearisation point
+
   const int& timestamp_ns = filter_problem.timestamp_ns;
-  computeLinearizationPoint(state, timestamp_ns);
-  //
-  //  // Check available measurements and prepare residuals
+  TSIF_LOG("State before prediction:\n" << state.getAsVector().transpose());
+
+  predictState(filter_problem, state, filter_problem.timestamp_previous_update_ns, timestamp_ns, &temporary_second_state_);
+
+  TSIF_LOG("State after prediction:\n" << temporary_second_state_.getAsVector().transpose());
+
   const int& active_residuals_dimension = filter_problem.residuals_dimension_;
-  //  PreProcess();
-  //
+
   // Temporaries
-  residual_vector_.resize(active_residuals_dimension);
+  setMatrixDimensions(active_residuals_dimension, state.minimal_dimension_);
+
+  // TODO(burrimi): Probably not needed, remove!
   residual_vector_.setZero();
-  jacobian_wrt_state1_.resize(active_residuals_dimension, state.minimal_dimension_);
   jacobian_wrt_state1_.setZero();
-  jacobian_wrt_state2_.resize(active_residuals_dimension, state.minimal_dimension_);
   jacobian_wrt_state2_.setZero();
 
-  double weightedDelta = th_iter_;
+  double weightedDelta = config_.residual_norm_threshold;
   MatrixX newInf(state.minimal_dimension_, state.minimal_dimension_);
   size_t update_iteration;
-  for (update_iteration = 0; update_iteration < max_iter_ && weightedDelta >= th_iter_; ++update_iteration) {
+  for (update_iteration = 0; update_iteration < config_.max_update_iterations && weightedDelta >= config_.residual_norm_threshold; ++update_iteration) {
     constructProblem(filter_problem, state, temporary_second_state_, &residual_vector_, &jacobian_wrt_state1_, &jacobian_wrt_state2_);
 
     TSIF_LOG("Innovation:\t" << residual_vector_.transpose());
@@ -97,7 +120,7 @@ void Filter::update(const FilterProblemDescription& filter_problem, const State&
     TSIF_LOG("iter: " << update_iteration << "\tw: " << sqrt((dx.dot(dx)) / dx.size()) << "\twd: " << weightedDelta);
   }
 
-  TSIF_LOGWIF(weightedDelta >= th_iter_, "Reached maximal iterations:" << update_iteration);
+  TSIF_LOGWIF(weightedDelta >= config_.residual_norm_threshold, "Reached maximal iterations:" << update_iteration);
 
   *updated_state = temporary_second_state_;
 

@@ -18,11 +18,13 @@ struct ResidualContainer {
   std::vector<int> first_keys;
   std::vector<int> second_keys;
   std::vector<int> measurement_keys;
+  bool use_for_prediction;
   ResidualBase* residual;
 };
 
 struct FilterProblemDescription {
-  std::vector<ResidualContainer*> residual_containers_;
+  std::vector<ResidualContainer*> prediction_residuals_;
+  std::vector<ResidualContainer*> update_residuals_;
   int residuals_dimension_;
   int timestamp_ns;
   int timestamp_previous_update_ns;
@@ -38,13 +40,12 @@ public:
   }
   // everything related to the residuals
   std::vector<ResidualContainer> residual_containers_;
-  std::vector<int> prediction_residual_ids_;
 
   int total_residual_dimension_;
 
   // Adds a residual and takes ownership of the residual.
   bool addResidual(ResidualBase* residual, std::vector<int> first_keys, std::vector<int> second_keys,
-                           std::vector<int> measurement_keys);
+                           std::vector<int> measurement_keys, bool use_for_prediction);
 
   void printResiduals(const State& state) const;
 
