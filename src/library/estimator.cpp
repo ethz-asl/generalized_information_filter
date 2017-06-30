@@ -14,34 +14,31 @@ namespace tsif {
 
 bool Estimator::defineState(std::vector<BlockType> state_types) {
   state_types_ = state_types;
-  first_state_.defineState(state_types);
+  state_.defineState(state_types);
   return true;
 }
 
 bool Estimator::addResidual(ResidualBase* residual, std::vector<int> first_keys, std::vector<int> second_keys,
                             std::vector<int> measurement_keys) {
-  CHECK(first_state_.dimension_ > 0);  // Check if state is defined.
-
-  std::vector<Timeline*> timelines = measurement_manager_.getTimelines(measurement_keys, residual->is_mergeable_);
-  residual->setMeasurementTimelines(timelines);
-
   const bool kIsPredictionResidual = false;
-  problem_builder_.addResidual(residual, first_keys, second_keys, measurement_keys, kIsPredictionResidual);
-
-  return true;
+  return addResidualImplementation(residual, first_keys, second_keys, measurement_keys, kIsPredictionResidual);
 }
 
 bool Estimator::addPredictionResidual(ResidualBase* residual, std::vector<int> first_keys, std::vector<int> second_keys,
                  std::vector<int> measurement_keys) {
-  CHECK(first_state_.dimension_ > 0);  // Check if state is defined.
+  const bool kIsPredictionResidual = true;
+  return addResidualImplementation(residual, first_keys, second_keys, measurement_keys, kIsPredictionResidual);
+}
+
+bool Estimator::addResidualImplementation(ResidualBase* residual, std::vector<int> first_keys, std::vector<int> second_keys,
+                                          std::vector<int> measurement_keys, const bool use_for_prediction) {
+  CHECK(state_.dimension_ > 0);  // Check if state is defined.
+  CHECK(!is_initialized_) << "Extending the state or adding residuals after initialization is not suported yet";
 
   std::vector<Timeline*> timelines = measurement_manager_.getTimelines(measurement_keys, residual->is_mergeable_);
   residual->setMeasurementTimelines(timelines);
 
-  const bool kIsPredictionResidual = true;
-  problem_builder_.addResidual(residual, first_keys, second_keys, measurement_keys, kIsPredictionResidual);
-
-  return true;
+  return problem_builder_.addResidual(residual, first_keys, second_keys, measurement_keys, use_for_prediction);
 }
 
 void Estimator::addMeasurement(int timeline_key, int timestamp_ns, MeasurementBase* measurement) {
@@ -61,36 +58,41 @@ void Estimator::addMeasurement(int timeline_key, int timestamp_ns, MeasurementBa
 void Estimator::runEstimator() {
   UpdateDescription update_description;
   while(measurement_manager_.updateStrategy(timestamp_previous_update_ns_, &update_description)) {
-    if (first_run_) {
+    if (!is_initialized_) {
       // This is the first run and we have to initialize everything
       TSIF_LOG("Init filter at time " << std::to_string(update_description.timestamp_ns));
-      init();
-      first_run_ = false;
+      init(update_description);
+      is_initialized_ = true;
+      timestamp_previous_update_ns_ = update_description.timestamp_ns;
+      return;
     }
 
-    TSIF_LOG("update at time " << std::to_string(update_description.timestamp_ns));
+    TSIF_LOG("predictAndUpdate at time " << std::to_string(update_description.timestamp_ns));
     FilterProblemDescription problem_description = problem_builder_.getFilterProblemDescription(update_description);
-    filter_.update(problem_description, first_state_, &first_state_);
+    filter_.predictAndUpdate(problem_description, state_, &state_);
     timestamp_previous_update_ns_ = update_description.timestamp_ns;
   }
 }
 
-void Estimator::initStateValue(const int key, const VectorXRef& value) { first_state_.setBlock(key, value); }
+void Estimator::initStateValue(const int key, const VectorXRef& value) { state_.setBlock(key, value); }
 
-void Estimator::printState() const { std::cout << first_state_.printState() << std::endl; }
+void Estimator::printState() const { std::cout << state_.print() << std::endl; }
 
 void Estimator::printTimeline() const { measurement_manager_.printTimeline(); }
 
 void Estimator::printResiduals() const {
-  problem_builder_.printResiduals(first_state_);
+  problem_builder_.printResiduals(state_);
 }
 
-void Estimator::checkResiduals() {
-  problem_builder_.checkResiduals(first_state_);
+void Estimator::checkResiduals() const {
+  problem_builder_.checkResiduals(state_);
 }
 
-bool Estimator::init() {
-  filter_.init(first_state_, problem_builder_.getTotalResidualDimension());
+bool Estimator::init(const UpdateDescription& update_description) {
+  information_.resize(state_.minimal_dimension_, state_.minimal_dimension_);
+  information_.setIdentity();
+  filter_.init(state_, problem_builder_.getTotalResidualDimension());
+  state_initializer_->init(measurement_manager_, update_description, &state_, &information_);
   return true;
 }
 

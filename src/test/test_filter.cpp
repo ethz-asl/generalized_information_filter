@@ -18,6 +18,25 @@ enum StateDefinition { kStatePosition = 0, kStateVelocity, kStateOrientation };
 
 enum MeasurementDefinition { kMeasPosition = 0, kMeasImu };
 
+
+class InitStateConstVelocity: public InitStateBase {
+ public:
+  InitStateConstVelocity() {}
+  ~InitStateConstVelocity() {}
+  virtual bool init(const MeasurementManager& measurement_manager, const UpdateDescription& update_description, State* state, MatrixX* information) {
+    const Timeline& position_timeline = measurement_manager.timelines_[kMeasPosition];
+    const PositionMeasurement* position_measurement = position_timeline.getMeasurement<PositionMeasurement>(update_description.timestamp_ns);
+
+    state->template setValue<VectorBlock<3>>(kStatePosition,position_measurement->position_);
+    state->template setValue<VectorBlock<3>>(kStateVelocity,Vector3::Zero());
+
+    information->setIdentity();
+    return true;
+  }
+ private:
+};
+
+
 TEST(FilterTest, TimelineTest) {
   Timeline timeline;
 
@@ -36,7 +55,7 @@ TEST(FilterTest, SimpleResidualTest) {
   std::vector<BlockType> state_block_types{kVector3, kVector3, kVector2};
   //  std::vector<int> state_names {kPosition, kVelocity, kOrientation};
 
-  Estimator testfilter;
+  Estimator testfilter(new DummyInitState());
   testfilter.defineState(state_block_types);
 
   Eigen::Vector3d test_vec(1, 2, 3);
@@ -82,7 +101,7 @@ TEST(FilterTest, SimpleFilterTest) {
   std::vector<BlockType> state_block_types{kVector3, kVector3};
   //  std::vector<int> state_names {kPosition, kVelocity, kOrientation};
 
-  Estimator testfilter;
+  Estimator testfilter(new InitStateConstVelocity());
   testfilter.defineState(state_block_types);
 
   Vector3 initial_position(1, 2, 3);

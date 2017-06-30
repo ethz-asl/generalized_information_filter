@@ -48,6 +48,11 @@ class Timeline {
     }
     return -1;
   }
+  template <typename MeasurementType>
+  inline const MeasurementType* getMeasurement(const int timestamp_ns) const {
+    const MeasurementBase* measurement = getMeasurement(timestamp_ns);
+    return dynamic_cast<const MeasurementType*>(measurement);
+  }
 
   inline const MeasurementBase* getMeasurement(const int timestamp_ns) const {
     const auto& timed_measurement = timed_measurements_.find(timestamp_ns);

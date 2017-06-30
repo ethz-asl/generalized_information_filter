@@ -56,7 +56,6 @@ class Filter {
 
   MatrixX information_;
   VectorX residual_vector_;
-  VectorX weightedDelta_;
   MatrixX jacobian_wrt_state1_;
   MatrixX jacobian_wrt_state2_;
 
@@ -71,7 +70,7 @@ class Filter {
 
   bool init(const State& state, const int& total_residual_dimension);
 
-  void update(const FilterProblemDescription& filter_problem, const State& state, State* updated_state);
+  void predictAndUpdate(const FilterProblemDescription& filter_problem, const State& state, State* updated_state);
 
 
  private:

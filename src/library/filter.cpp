@@ -62,7 +62,7 @@ void Filter::setMatrixDimensions(const int active_residuals_dimension, const int
 }
 
 // Most of this function is copied from Bloesch https://github.com/ethz-asl/two_state_information_filter!!!
-void Filter::update(const FilterProblemDescription& filter_problem, const State& state, State* updated_state) {
+void Filter::predictAndUpdate(const FilterProblemDescription& filter_problem, const State& state, State* updated_state) {
 
   const int& timestamp_ns = filter_problem.timestamp_ns;
   TSIF_LOG("State before prediction:\n" << state.getAsVector().transpose());
@@ -125,7 +125,7 @@ void Filter::update(const FilterProblemDescription& filter_problem, const State&
   *updated_state = temporary_second_state_;
 
   information_ = newInf;
-  TSIF_LOG("State after Update:\n" << state.printState());
+  TSIF_LOG("State after Update:\n" << state.print());
   TSIF_LOG("Information matrix:\n" << information_);
 
   //    // Post Processing
@@ -140,7 +140,6 @@ bool Filter::init(const State& state, const int& total_residual_dimension) {
   information_.setIdentity();
   residual_vector_.resize(total_residual_dimension);
 
-  weightedDelta_.resize(minimal_state_dimension);
   jacobian_wrt_state1_.resize(total_residual_dimension, minimal_state_dimension);
   jacobian_wrt_state2_.resize(total_residual_dimension, minimal_state_dimension);
   return true;

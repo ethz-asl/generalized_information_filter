@@ -38,7 +38,7 @@ TEST(StateTest, SetState) {
   Vector3 test(1, 2, 1);
   first_state.setBlock(kStatePosition, test);
 
-  std::cout << first_state.printState() << std::endl;
+  std::cout << first_state.print() << std::endl;
 
   VectorX state_vector_expected(6);
   state_vector_expected << 1, 2, 1, 0, 0, 0;

@@ -22,29 +22,35 @@
 
 namespace tsif {
 
+// Simple base function to initialize the state. Init() gets called when the first update() is possible.
+// TODO(burrimi): This seems overly complex, should we switch to a callback?
+class InitStateBase {
+public:
+  virtual ~InitStateBase() {}
+  virtual bool init(const MeasurementManager& measurement_manager, const UpdateDescription& update_description, State* state, MatrixX* information) = 0;
+private:
+};
+
+// Dummy state initializer just sets the information matrix to identity and does nothing to the state.
+class DummyInitState: public InitStateBase {
+public:
+  virtual bool init(const MeasurementManager& measurement_manager, const UpdateDescription& update_description, State* state, MatrixX* information) {
+    information->setIdentity();
+    return true;
+  }
+private:
+};
+
 
 class Estimator {
  public:
-  Estimator() :first_run_(true), timestamp_previous_update_ns_(-1) {
+  Estimator(InitStateBase* state_initializer) :is_initialized_(false), timestamp_previous_update_ns_(-1), state_initializer_(state_initializer) {
 
   }
 
-  ~Estimator() {}
-
-  // state related stuff
-  std::vector<BlockType> state_types_;
-  // std::vector<std::string> state_names_;
-
-  State first_state_;
-  MatrixX information_;
-
-
-  ProblemBuilder problem_builder_;
-
-  MeasurementManager measurement_manager_;
-
-  Filter filter_;
-
+  ~Estimator() {
+    delete state_initializer_;
+  }
 
   bool defineState(std::vector<BlockType> state_types);
 
@@ -58,8 +64,10 @@ class Estimator {
   bool addPredictionResidual(ResidualBase* residual, std::vector<int> first_keys, std::vector<int> second_keys,
                    std::vector<int> measurement_keys = std::vector<int>());
 
-  void addMeasurement(int timeline_key, int timestamp_ns, MeasurementBase* measurement);
+  bool addResidualImplementation(ResidualBase* residual, std::vector<int> first_keys, std::vector<int> second_keys,
+                                            std::vector<int> measurement_keys, const bool use_for_prediction);
 
+  void addMeasurement(int timeline_key, int timestamp_ns, MeasurementBase* measurement);
 
   void printState() const;
 
@@ -67,15 +75,30 @@ class Estimator {
 
   void printResiduals() const;
 
-  void checkResiduals();
+  void checkResiduals() const;
 
  private:
 
   void runEstimator();
 
-  bool init();
+  bool init(const UpdateDescription& update_description);
 
-  bool first_run_;
+  MeasurementManager measurement_manager_; // Handles all the measurments and decides when to run the filter. Currently only GIF supported.
+  ProblemBuilder problem_builder_; // Handles the residuals and assembles the FilterProblemDescription which is solved by the filter.
+  Filter filter_; // Filtering algorithm we use. Currently only GIF implemented and hardcoded.
+
+  InitStateBase* state_initializer_;
+
+  bool is_initialized_;
+
+  // defines the state.
+  // TODO(burrimi): State could also automatically be assembled by the residuals in the future.
+  std::vector<BlockType> state_types_;
+
+  // Most recent state and corresponding information (= inverse of covariance matrix).
+  // TODO(burrimi): Replace this with a state buffer, to allow updates in the past.
+  State state_;
+  MatrixX information_;
   int timestamp_previous_update_ns_;
 
 };

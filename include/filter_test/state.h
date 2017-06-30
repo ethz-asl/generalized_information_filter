@@ -164,7 +164,7 @@ class State {
     return state_vector;
   }
 
-  std::string printState() const {
+  std::string print() const {
     std::ostringstream oss;
     for (BlockBase* current_block : state_blocks_) {
       oss << current_block->getTypeName() << "[" << current_block->getValueAsVector().transpose() << "], ";
