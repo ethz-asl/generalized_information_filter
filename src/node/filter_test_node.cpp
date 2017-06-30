@@ -3,14 +3,12 @@
 
 #include <ros/ros.h>
 
-#include "filter_test/constant_residual.h"
-#include "filter_test/constant_velocity_residual.h"
 #include "filter_test/estimator.h"
 #include "filter_test/measurement.h"
-#include "filter_test/position_residual.h"
-
-
 #include <assert.h>
+#include <filter_test/residuals/constant_residual.h>
+#include <filter_test/residuals/constant_velocity_residual.h>
+#include <filter_test/residuals/position_residual.h>
 
 #include <glog/logging.h>
 

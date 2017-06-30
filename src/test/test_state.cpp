@@ -4,11 +4,11 @@
  *  Created on: 02.06.2017
  *      Author: burrimi
  */
-#include "filter_test/constant_residual.h"
-#include "filter_test/constant_velocity_residual.h"
+#include "../../include/filter_test/residuals/constant_residual.h"
+#include "../../include/filter_test/residuals/constant_velocity_residual.h"
+#include "../../include/filter_test/residuals/position_residual.h"
 #include "filter_test/filter.h"
 #include "filter_test/measurement.h"
-#include "filter_test/position_residual.h"
 #include "gtest/gtest.h"
 
 namespace tsif {

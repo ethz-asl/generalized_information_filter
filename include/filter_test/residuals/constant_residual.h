@@ -5,8 +5,8 @@
  *      Author: burrimi
  */
 
-#ifndef INCLUDE_FILTER_TEST_CONSTANT_RESIDUAL_H_
-#define INCLUDE_FILTER_TEST_CONSTANT_RESIDUAL_H_
+#ifndef INCLUDE_FILTER_TEST_RESIDUALS_CONSTANT_RESIDUAL_H_
+#define INCLUDE_FILTER_TEST_RESIDUALS_CONSTANT_RESIDUAL_H_
 
 #include "filter_test/residual.h"
 
@@ -56,4 +56,4 @@ class ConstantResidual : public ResidualBase {
 
 }  // namespace tsif
 
-#endif /* INCLUDE_FILTER_TEST_CONSTANT_RESIDUAL_H_ */
+#endif /* INCLUDE_FILTER_TEST_RESIDUALS_CONSTANT_RESIDUAL_H_ */
