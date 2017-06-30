@@ -17,8 +17,15 @@ namespace tsif {
 // We assume that the residuals are embedded in a vector space (i.e. tangent space for manifolds).
 class ConstantVelocityResidual : public ResidualBase {
 
+  enum BlockIndex {
+    kPositionBlock = 0,
+    kVelocityBlock
+  };
+  static const int kResidualPositionOffset = 3;
+  static const int kResidualVelocityOffset = 3;
+
   struct InternalState {
-    InternalState(const std::vector<BlockBase*>& state):p(state[0]->getValue<VectorBlock<3>>()),v(state[1]->getValue<VectorBlock<3>>()) {}
+    InternalState(const std::vector<BlockBase*>& state):p(state[kPositionBlock]->getValue<VectorBlock<3>>()),v(state[kVelocityBlock]->getValue<VectorBlock<3>>()) {}
     InternalState(Vector3& p1, Vector3& v1):p(p1),v(v1) {}
     Vector3& p;
     Vector3& v;
@@ -46,10 +53,10 @@ class ConstantVelocityResidual : public ResidualBase {
     CHECK_NOTNULL(predicted_state);
     const double dt = kNanoSecondsToSeconds * (t2_ns - t1_ns);
 
-    const Vector3& p_k = state[0]->getValue<VectorBlock<3>>();
-    const Vector3& v_k = state[1]->getValue<VectorBlock<3>>();
-    Vector3& p_kp1 = (*predicted_state)[0]->getValue<VectorBlock<3>>();
-    Vector3& v_kp1 = (*predicted_state)[1]->getValue<VectorBlock<3>>();
+    const Vector3& p_k = state[kPositionBlock]->getValue<VectorBlock<3>>();
+    const Vector3& v_k = state[kVelocityBlock]->getValue<VectorBlock<3>>();
+    Vector3& p_kp1 = (*predicted_state)[kPositionBlock]->getValue<VectorBlock<3>>();
+    Vector3& v_kp1 = (*predicted_state)[kVelocityBlock]->getValue<VectorBlock<3>>();
 
     p_kp1 = p_k + dt * v_k;
     v_kp1 = v_k;
@@ -57,12 +64,12 @@ class ConstantVelocityResidual : public ResidualBase {
     // For vector spaces this is identical to the one in evaluate().
     if (jacobian_wrt_state1 != NULL) {
       // d(r(...))/d(p_k)
-      (*jacobian_wrt_state1)[0].template block<3, 3>(0, 0) = Matrix3::Identity();
-      (*jacobian_wrt_state1)[0].template block<3, 3>(3, 0) = Matrix3::Zero();
+      (*jacobian_wrt_state1)[kPositionBlock].template block<3, 3>(kResidualPositionOffset, 0) = Matrix3::Identity();
+      (*jacobian_wrt_state1)[kPositionBlock].template block<3, 3>(kResidualVelocityOffset, 0) = Matrix3::Zero();
 
       // d(r(...))/d(v_k)
-      (*jacobian_wrt_state1)[1].template block<3, 3>(0, 0) = dt * Matrix3::Identity();
-      (*jacobian_wrt_state1)[1].template block<3, 3>(3, 0) = Matrix3::Identity();
+      (*jacobian_wrt_state1)[kVelocityBlock].template block<3, 3>(kResidualPositionOffset, 0) = dt * Matrix3::Identity();
+      (*jacobian_wrt_state1)[kVelocityBlock].template block<3, 3>(kResidualVelocityOffset, 0) = Matrix3::Identity();
     }
 
     return true;
@@ -72,10 +79,10 @@ class ConstantVelocityResidual : public ResidualBase {
   virtual bool evaluate(const std::vector<BlockBase*>& state1, const std::vector<BlockBase*>& state2, const int t1_ns,
                         const int t2_ns, VectorXRef* residual, std::vector<MatrixXRef>* jacobian_wrt_state1,
                         std::vector<MatrixXRef>* jacobian_wrt_state2) {
-    const Vector3& p_k = state1[0]->getValue<VectorBlock<3>>();
-    const Vector3& v_k = state1[1]->getValue<VectorBlock<3>>();
-    const Vector3& p_kp1 = state2[0]->getValue<VectorBlock<3>>();
-    const Vector3& v_kp1 = state2[1]->getValue<VectorBlock<3>>();
+    const Vector3& p_k = state1[kPositionBlock]->getValue<VectorBlock<3>>();
+    const Vector3& v_k = state1[kVelocityBlock]->getValue<VectorBlock<3>>();
+    const Vector3& p_kp1 = state2[kPositionBlock]->getValue<VectorBlock<3>>();
+    const Vector3& v_kp1 = state2[kVelocityBlock]->getValue<VectorBlock<3>>();
 
     if (residual == NULL) {
       return false;
@@ -87,22 +94,22 @@ class ConstantVelocityResidual : public ResidualBase {
 
     if (jacobian_wrt_state1 != NULL) {
       // d(r(...))/d(p_k)
-      (*jacobian_wrt_state1)[0].template block<3, 3>(0, 0) = sqrt_information_position_ * Matrix3::Identity();
-      (*jacobian_wrt_state1)[0].template block<3, 3>(3, 0) = Matrix3::Zero();
+      (*jacobian_wrt_state1)[kPositionBlock].template block<3, 3>(kResidualPositionOffset, 0) = sqrt_information_position_ * Matrix3::Identity();
+      (*jacobian_wrt_state1)[kPositionBlock].template block<3, 3>(kResidualVelocityOffset, 0) = Matrix3::Zero();
 
       // d(r(...))/d(v_k)
-      (*jacobian_wrt_state1)[1].template block<3, 3>(0, 0) = sqrt_information_position_ * dt * Matrix3::Identity();
-      (*jacobian_wrt_state1)[1].template block<3, 3>(3, 0) = sqrt_information_velocity_ * Matrix3::Identity();
+      (*jacobian_wrt_state1)[kVelocityBlock].template block<3, 3>(kResidualPositionOffset, 0) = sqrt_information_position_ * dt * Matrix3::Identity();
+      (*jacobian_wrt_state1)[kVelocityBlock].template block<3, 3>(kResidualVelocityOffset, 0) = sqrt_information_velocity_ * Matrix3::Identity();
     }
 
     if (jacobian_wrt_state2 != NULL) {
       // d(r(...))/d(p_kp1)
-      (*jacobian_wrt_state2)[0].template block<3, 3>(0, 0) = -sqrt_information_position_ * Matrix3::Identity();
-      (*jacobian_wrt_state2)[0].template block<3, 3>(3, 0) = Matrix3::Zero();
+      (*jacobian_wrt_state2)[kPositionBlock].template block<3, 3>(kResidualPositionOffset, 0) = -sqrt_information_position_ * Matrix3::Identity();
+      (*jacobian_wrt_state2)[kPositionBlock].template block<3, 3>(kResidualVelocityOffset, 0) = Matrix3::Zero();
 
       // d(r(...))/d(v_kp1)
-      (*jacobian_wrt_state2)[1].template block<3, 3>(0, 0) = Matrix3::Zero();
-      (*jacobian_wrt_state2)[1].template block<3, 3>(3, 0) = -sqrt_information_velocity_ * Matrix3::Identity();
+      (*jacobian_wrt_state2)[kVelocityBlock].template block<3, 3>(kResidualPositionOffset, 0) = Matrix3::Zero();
+      (*jacobian_wrt_state2)[kVelocityBlock].template block<3, 3>(kResidualVelocityOffset, 0) = -sqrt_information_velocity_ * Matrix3::Identity();
     }
 
     return true;
@@ -112,10 +119,10 @@ class ConstantVelocityResidual : public ResidualBase {
 
   virtual bool inputTypesValid(const std::vector<BlockBase*>& state1, const std::vector<BlockBase*>& state2) {
     bool all_types_ok = true;
-    all_types_ok &= state1[0]->isBlockTypeCorrect<VectorBlock<3>>();
-    all_types_ok &= state1[1]->isBlockTypeCorrect<VectorBlock<3>>();
-    all_types_ok &= state2[0]->isBlockTypeCorrect<VectorBlock<3>>();
-    all_types_ok &= state2[1]->isBlockTypeCorrect<VectorBlock<3>>();
+    all_types_ok &= state1[kPositionBlock]->isBlockTypeCorrect<VectorBlock<3>>();
+    all_types_ok &= state1[kVelocityBlock]->isBlockTypeCorrect<VectorBlock<3>>();
+    all_types_ok &= state2[kPositionBlock]->isBlockTypeCorrect<VectorBlock<3>>();
+    all_types_ok &= state2[kVelocityBlock]->isBlockTypeCorrect<VectorBlock<3>>();
     TSIF_LOGEIF(!all_types_ok, "Constant velocity residual has wrong block types. Check your state indices!");
     return all_types_ok;
   }
