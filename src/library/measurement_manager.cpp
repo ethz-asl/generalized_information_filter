@@ -196,7 +196,7 @@ bool MeasurementManager::updateStrategy(
   }
 
   measurement_buffer->timelines.resize(timelines_.size());
-  measurement_buffer->active_timeline_ids.emplace_back(active_measurement_idx);
+
   const TimedMeasurement& measurement =
       timelines_.at(active_measurement_idx)
           .getTimedMeasurement(oldest_timestamp);
@@ -219,7 +219,6 @@ bool MeasurementManager::updateStrategy(
     if (current_timeline.getNewestMeasurementTimestamp() < oldest_timestamp) {
       return false;
     }
-    measurement_buffer->active_timeline_ids.emplace_back(i);
     extractRelevantMeasurements(
         current_timeline, timestamp_previous_update_ns, oldest_timestamp,
         &measurement_buffer->timelines[i],

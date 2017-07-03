@@ -31,8 +31,8 @@ void Filter::predictState(
           measurement_buffer.getTimedMeasurementVectors(
               residual_container->measurement_keys);
       bool residual_ok = residual_container->residual->predict(
-          blocks, measurements, filter_problem.timestamp_previous_update_ns,
-          filter_problem.timestamp_ns, &blocks_predicted, nullptr);
+          blocks, measurements, measurement_buffer.timestamp_previous_update_ns,
+          measurement_buffer.timestamp_ns, &blocks_predicted, nullptr);
     }
   }
 }
@@ -67,8 +67,8 @@ void Filter::constructProblem(
 
       bool residual_ok = residual_container->residual->evaluate(
           blocks1, blocks2, measurements,
-          filter_problem.timestamp_previous_update_ns,
-          filter_problem.timestamp_ns, &residual_error,
+          measurement_buffer.timestamp_previous_update_ns,
+          measurement_buffer.timestamp_ns, &residual_error,
           &jacobian_wrt_state1_blocks, &jacobian_wrt_state2_blocks);
 
       if (residual_ok) {
@@ -98,12 +98,12 @@ void Filter::predictAndUpdate(
     const MeasurementBuffer& measurement_buffer,
     const FilterProblemDescription& filter_problem, const State& state,
     State* updated_state) {
-  const int& timestamp_ns = filter_problem.timestamp_ns;
+  const int& timestamp_ns = measurement_buffer.timestamp_ns;
   TSIF_LOG("State before prediction:\n" << state.getAsVector().transpose());
 
   predictState(
       measurement_buffer, filter_problem, state,
-      filter_problem.timestamp_previous_update_ns, timestamp_ns,
+      measurement_buffer.timestamp_previous_update_ns, timestamp_ns,
       &temporary_second_state_);
 
   TSIF_LOG(

@@ -23,10 +23,10 @@ class ConstantResidual : public ResidualBase {
 
   ~ConstantResidual() {}
 
-  virtual bool prepareResidual(const int t1_ns, const int t2_ns) {
-    // this residual has nothing to prepare.
-    return true;
-  }
+//  virtual bool prepareResidual(const int t1_ns, const int t2_ns) {
+//    // this residual has nothing to prepare.
+//    return true;
+//  }
 
   virtual bool predict(
       const std::vector<BlockBase*>& state,

@@ -39,7 +39,7 @@ class ResidualBase {
 
   //  void setMeasurementTimelines(std::vector<Timeline*> timelines);
 
-  virtual bool prepareResidual(const int t1_ns, const int t2_ns) = 0;
+//  virtual bool prepareResidual(const int t1_ns, const int t2_ns) = 0;
 
   virtual bool predict(
       const std::vector<BlockBase*>& state,

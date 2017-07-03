@@ -27,6 +27,15 @@ struct MeasurementBuffer {
     }
   }
 
+  bool areMeasurementsAvailable(const std::vector<int> keys) const {
+    for(const int key:keys) {
+      if(timelines[key].empty()) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   std::vector<const TimedMeasurementVector*> getTimedMeasurementVectors(
       const std::vector<int> keys) const {
     std::vector<const TimedMeasurementVector*> measurement_buffers;
@@ -37,22 +46,24 @@ struct MeasurementBuffer {
     return measurement_buffers;
   }
 
-  void print() {
+  void print() const {
     if (timelines.empty())
       return;
-    std::cout << "Update description start: " << timestamp_previous_update_ns
+    std::cout << "Measurement buffer start: " << timestamp_previous_update_ns
               << " end: " << timestamp_ns << std::endl;
+    int i = 0;
     for (TimedMeasurementVector& timeline : timelines) {
-      std::cout << "S: ";
+      std::cout << "Timeline " << i << " : ";
       for (TimedMeasurement& meas : timeline) {
         std::cout << meas.first << " ";
       }
       std::cout << std::endl;
+      ++i;
     }
   }
+
   int timestamp_ns;
   int timestamp_previous_update_ns;
-  std::vector<int> active_timeline_ids;
 
   // Buffered measurements. The index is the measurement_key.
   // TODO(burrimi): Switch to map?

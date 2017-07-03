@@ -26,8 +26,6 @@ struct FilterProblemDescription {
   std::vector<ResidualContainer*> prediction_residuals_;
   std::vector<ResidualContainer*> update_residuals_;
   int residuals_dimension_;
-  int timestamp_ns;
-  int timestamp_previous_update_ns;
 };
 
 class ProblemBuilder {
