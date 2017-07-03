@@ -145,7 +145,7 @@ bool MeasurementManager::extractRelevantMeasurements(const Timeline& timeline, c
   return true;
 }
 
-bool MeasurementManager::updateStrategy(const int& timestamp_previous_update_ns, UpdateDescription* update_description) const {
+bool MeasurementManager::updateStrategy(const int& timestamp_previous_update_ns, MeasurementBuffer* measurement_buffer) const {
   // Find the oldest non mergeable timestamp. In KF filtering this is the measurement.
   // TODO(burrimi): Cache this.
   double oldest_timestamp = std::numeric_limits<double>::max();
@@ -168,10 +168,10 @@ bool MeasurementManager::updateStrategy(const int& timestamp_previous_update_ns,
     return false;
   }
 
-  update_description->timelines.resize(timelines_.size());
-  update_description->active_timeline_ids.emplace_back(active_measurement_idx);
+  measurement_buffer->timelines.resize(timelines_.size());
+  measurement_buffer->active_timeline_ids.emplace_back(active_measurement_idx);
   const TimedMeasurement& measurement = timelines_.at(active_measurement_idx).getTimedMeasurement(oldest_timestamp);
-  update_description->timelines[active_measurement_idx].emplace_back(measurement);
+  measurement_buffer->timelines[active_measurement_idx].emplace_back(measurement);
 
   // TODO(burrimi): should we also check the oldest timestamp of mergeable residuals?
 
@@ -187,14 +187,14 @@ bool MeasurementManager::updateStrategy(const int& timestamp_previous_update_ns,
     if (current_timeline.getNewestMeasurementTimestamp() < oldest_timestamp) {
       return false;
     }
-    update_description->active_timeline_ids.emplace_back(i);
-    extractRelevantMeasurements(current_timeline, timestamp_previous_update_ns, oldest_timestamp, &update_description->timelines[i], &update_description->managed_measurements);
+    measurement_buffer->active_timeline_ids.emplace_back(i);
+    extractRelevantMeasurements(current_timeline, timestamp_previous_update_ns, oldest_timestamp, &measurement_buffer->timelines[i], &measurement_buffer->managed_measurements);
   }
   // We probably have all the required measurements for performing one step.
 
 
-  update_description->timestamp_ns = oldest_timestamp;
-  update_description->timestamp_previous_update_ns = timestamp_previous_update_ns;
+  measurement_buffer->timestamp_ns = oldest_timestamp;
+  measurement_buffer->timestamp_previous_update_ns = timestamp_previous_update_ns;
 
   return true;
 }

@@ -54,7 +54,7 @@ public:
 
   int getTotalResidualDimension() const {return total_residual_dimension_;}
 
-  FilterProblemDescription getFilterProblemDescription(const UpdateDescription& update_description);
+  FilterProblemDescription getFilterProblemDescription(const MeasurementBuffer& measurement_buffer);
 
 private:
 

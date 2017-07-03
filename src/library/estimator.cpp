@@ -55,21 +55,21 @@ void Estimator::addMeasurement(int timeline_key, int timestamp_ns, MeasurementBa
 }
 
 void Estimator::runEstimator() {
-  UpdateDescription update_description;
-  while(measurement_manager_.updateStrategy(timestamp_previous_update_ns_, &update_description)) {
+  MeasurementBuffer measurement_buffer;
+  while(measurement_manager_.updateStrategy(timestamp_previous_update_ns_, &measurement_buffer)) {
     if (!is_initialized_) {
       // This is the first run and we have to initialize everything
-      TSIF_LOG("Init filter at time " << std::to_string(update_description.timestamp_ns));
-      init(update_description);
+      TSIF_LOG("Init filter at time " << std::to_string(measurement_buffer.timestamp_ns));
+      init(measurement_buffer);
       is_initialized_ = true;
-      timestamp_previous_update_ns_ = update_description.timestamp_ns;
+      timestamp_previous_update_ns_ = measurement_buffer.timestamp_ns;
       return;
     }
 
-    TSIF_LOG("predictAndUpdate at time " << std::to_string(update_description.timestamp_ns));
-    FilterProblemDescription problem_description = problem_builder_.getFilterProblemDescription(update_description);
-    filter_.predictAndUpdate(update_description, problem_description, state_, &state_);
-    timestamp_previous_update_ns_ = update_description.timestamp_ns;
+    TSIF_LOG("predictAndUpdate at time " << std::to_string(measurement_buffer.timestamp_ns));
+    FilterProblemDescription problem_description = problem_builder_.getFilterProblemDescription(measurement_buffer);
+    filter_.predictAndUpdate(measurement_buffer, problem_description, state_, &state_);
+    timestamp_previous_update_ns_ = measurement_buffer.timestamp_ns;
   }
 }
 
@@ -87,11 +87,11 @@ void Estimator::checkResiduals() const {
   problem_builder_.checkResiduals(state_);
 }
 
-bool Estimator::init(const UpdateDescription& update_description) {
+bool Estimator::init(const MeasurementBuffer& measurement_buffer) {
   information_.resize(state_.minimal_dimension_, state_.minimal_dimension_);
   information_.setIdentity();
   filter_.init(state_, problem_builder_.getTotalResidualDimension());
-  state_initializer_->init(measurement_manager_, update_description, &state_, &information_);
+  state_initializer_->init(measurement_manager_, measurement_buffer, &state_, &information_);
   return true;
 }
 

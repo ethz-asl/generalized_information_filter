@@ -92,14 +92,14 @@ void ProblemBuilder::checkResiduals(const State& state) const {
 }
 
 // TODO(burrimi): This function currently ignores the available measurements and just iterates through all the residuals to check wether they are active.
-FilterProblemDescription ProblemBuilder::getFilterProblemDescription(const UpdateDescription& update_description) {
+FilterProblemDescription ProblemBuilder::getFilterProblemDescription(const MeasurementBuffer& measurement_buffer) {
   FilterProblemDescription filter_problem_description;
-  filter_problem_description.timestamp_ns=update_description.timestamp_ns;
-  filter_problem_description.timestamp_previous_update_ns=update_description.timestamp_previous_update_ns;
+  filter_problem_description.timestamp_ns=measurement_buffer.timestamp_ns;
+  filter_problem_description.timestamp_previous_update_ns=measurement_buffer.timestamp_previous_update_ns;
 
   int active_residuals_dimension = 0;
   for (ResidualContainer& current_residual : residual_containers_) {
-    bool residual_ok = current_residual.residual->prepareResidual(update_description.timestamp_previous_update_ns, update_description.timestamp_ns);
+    bool residual_ok = current_residual.residual->prepareResidual(measurement_buffer.timestamp_previous_update_ns, measurement_buffer.timestamp_ns);
     current_residual.residual->active_ = residual_ok;  // TODO(burrimi): Do this a better way. move to base class?
 
     if (residual_ok) {

@@ -27,14 +27,14 @@ namespace tsif {
 class InitStateBase {
 public:
   virtual ~InitStateBase() {}
-  virtual bool init(const MeasurementManager& measurement_manager, const UpdateDescription& update_description, State* state, MatrixX* information) = 0;
+  virtual bool init(const MeasurementManager& measurement_manager, const MeasurementBuffer& measurement_buffer, State* state, MatrixX* information) = 0;
 private:
 };
 
 // Dummy state initializer just sets the information matrix to identity and does nothing to the state.
 class DummyInitState: public InitStateBase {
 public:
-  virtual bool init(const MeasurementManager& measurement_manager, const UpdateDescription& update_description, State* state, MatrixX* information) {
+  virtual bool init(const MeasurementManager& measurement_manager, const MeasurementBuffer& measurement_buffer, State* state, MatrixX* information) {
     information->setIdentity();
     return true;
   }
@@ -71,6 +71,10 @@ class Estimator {
 
   void printState() const;
 
+  VectorX getStateAsVector() {return state_.getAsVector();}
+
+  State getState() {return state_;}
+
   void printTimeline() const;
 
   void printResiduals() const;
@@ -81,7 +85,7 @@ class Estimator {
 
   void runEstimator();
 
-  bool init(const UpdateDescription& update_description);
+  bool init(const MeasurementBuffer& measurement_buffer);
 
   MeasurementManager measurement_manager_; // Handles all the measurments and decides when to run the filter. Currently only GIF supported.
   ProblemBuilder problem_builder_; // Handles the residuals and assembles the FilterProblemDescription which is solved by the filter.

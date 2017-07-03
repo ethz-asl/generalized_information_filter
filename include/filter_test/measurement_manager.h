@@ -18,8 +18,8 @@
 
 namespace tsif {
 
-struct UpdateDescription {
-  ~UpdateDescription() {
+struct MeasurementBuffer {
+  ~MeasurementBuffer() {
      if(!managed_measurements.empty()) {
        for(TimedMeasurement& measurement:managed_measurements) {
          delete measurement.second;
@@ -50,9 +50,12 @@ struct UpdateDescription {
   int timestamp_ns;
   int timestamp_previous_update_ns;
   std::vector<int> active_timeline_ids;
-  TimedMeasurementVector managed_measurements;
 
+  // Buffered measurements. The index is the measurement_key.
+  // TODO(burrimi): Switch to map?
   std::vector<TimedMeasurementVector> timelines;
+
+  TimedMeasurementVector managed_measurements; // Buffer for temporary measurements that get deleted once out of scope.
 };
 
 
@@ -66,7 +69,7 @@ class MeasurementManager {
 
 
 
-  bool updateStrategy(const int& timestamp_previous_update_ns, UpdateDescription* update_description) const;
+  bool updateStrategy(const int& timestamp_previous_update_ns, MeasurementBuffer* update_description) const;
 
   // We assume that timeline id's start with zero. If a timeline does not exist it's created.
   Timeline* getTimelinePtr(int timeline_key);

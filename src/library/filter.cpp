@@ -12,14 +12,14 @@
 
 namespace tsif {
 
-void Filter::predictState(const UpdateDescription& update_description, const FilterProblemDescription& filter_problem, const State& state, const int timestamp_previous_update_ns, const int timestamp_ns, State* predicted_state) const {
+void Filter::predictState(const MeasurementBuffer& measurement_buffer, const FilterProblemDescription& filter_problem, const State& state, const int timestamp_previous_update_ns, const int timestamp_ns, State* predicted_state) const {
   *predicted_state = state; // For states that don't have a prediction residual, take the previous state.
 
    for (ResidualContainer* residual_container : filter_problem.update_residuals_) {
      if (residual_container->residual->active_) {
        std::vector<BlockBase*> blocks = state.getBlocks(residual_container->first_keys);
        std::vector<BlockBase*> blocks_predicted = predicted_state->getBlocks(residual_container->second_keys);
-       std::vector<const TimedMeasurementVector*> measurements = update_description.getTimedMeasurementVectors(residual_container->measurement_keys);
+       std::vector<const TimedMeasurementVector*> measurements = measurement_buffer.getTimedMeasurementVectors(residual_container->measurement_keys);
        bool residual_ok =
            residual_container->residual->predict(blocks, measurements, filter_problem.timestamp_previous_update_ns, filter_problem.timestamp_ns, &blocks_predicted, nullptr);
      }
@@ -27,7 +27,7 @@ void Filter::predictState(const UpdateDescription& update_description, const Fil
 
 }
 
-void Filter::constructProblem(const UpdateDescription& update_description, const FilterProblemDescription& filter_problem, const State& first_state, const State& second_state, VectorX* residual_vector, MatrixX* jacobian_wrt_state1, MatrixX* jacobian_wrt_state2) {
+void Filter::constructProblem(const MeasurementBuffer& measurement_buffer, const FilterProblemDescription& filter_problem, const State& first_state, const State& second_state, VectorX* residual_vector, MatrixX* jacobian_wrt_state1, MatrixX* jacobian_wrt_state2) {
   int index_residual = 0;
   for (ResidualContainer* residual_container : filter_problem.update_residuals_) {
     if (residual_container->residual->active_) {
@@ -41,7 +41,7 @@ void Filter::constructProblem(const UpdateDescription& update_description, const
       std::vector<MatrixXRef> jacobian_wrt_state2_blocks =
           getJacobianBlocks(first_state, residual_container->second_keys, index_residual, residual_dimension, jacobian_wrt_state2);
 
-      std::vector<const TimedMeasurementVector*> measurements = update_description.getTimedMeasurementVectors(residual_container->measurement_keys);
+      std::vector<const TimedMeasurementVector*> measurements = measurement_buffer.getTimedMeasurementVectors(residual_container->measurement_keys);
 
       bool residual_ok =
           residual_container->residual->evaluate(blocks1, blocks2, measurements, filter_problem.timestamp_previous_update_ns, filter_problem.timestamp_ns, &residual_error,
@@ -65,12 +65,12 @@ void Filter::setMatrixDimensions(const int active_residuals_dimension, const int
 }
 
 // Most of this function is copied from Bloesch https://github.com/ethz-asl/two_state_information_filter!!!
-void Filter::predictAndUpdate(const UpdateDescription& update_description, const FilterProblemDescription& filter_problem, const State& state, State* updated_state) {
+void Filter::predictAndUpdate(const MeasurementBuffer& measurement_buffer, const FilterProblemDescription& filter_problem, const State& state, State* updated_state) {
 
   const int& timestamp_ns = filter_problem.timestamp_ns;
   TSIF_LOG("State before prediction:\n" << state.getAsVector().transpose());
 
-  predictState(update_description, filter_problem, state, filter_problem.timestamp_previous_update_ns, timestamp_ns, &temporary_second_state_);
+  predictState(measurement_buffer, filter_problem, state, filter_problem.timestamp_previous_update_ns, timestamp_ns, &temporary_second_state_);
 
   TSIF_LOG("State after prediction:\n" << temporary_second_state_.getAsVector().transpose());
 
@@ -88,7 +88,7 @@ void Filter::predictAndUpdate(const UpdateDescription& update_description, const
   MatrixX newInf(state.minimal_dimension_, state.minimal_dimension_);
   size_t update_iteration;
   for (update_iteration = 0; update_iteration < config_.max_update_iterations && weightedDelta >= config_.residual_norm_threshold; ++update_iteration) {
-    constructProblem(update_description, filter_problem, state, temporary_second_state_, &residual_vector_, &jacobian_wrt_state1_, &jacobian_wrt_state2_);
+    constructProblem(measurement_buffer, filter_problem, state, temporary_second_state_, &residual_vector_, &jacobian_wrt_state1_, &jacobian_wrt_state2_);
 
     TSIF_LOG("Innovation:\t" << residual_vector_.transpose());
     TSIF_LOG("JacPre:\n" << jacobian_wrt_state1_);

@@ -22,9 +22,9 @@ class InitStateConstVelocity: public InitStateBase {
  public:
   InitStateConstVelocity() {}
   ~InitStateConstVelocity() {}
-  virtual bool init(const MeasurementManager& measurement_manager, const UpdateDescription& update_description, State* state, MatrixX* information) {
+  virtual bool init(const MeasurementManager& measurement_manager, const MeasurementBuffer& measurement_buffer, State* state, MatrixX* information) {
     const Timeline& position_timeline = measurement_manager.timelines_[kMeasPosition];
-    const PositionMeasurement* position_measurement = position_timeline.getMeasurement<PositionMeasurement>(update_description.timestamp_ns);
+    const PositionMeasurement* position_measurement = position_timeline.getMeasurement<PositionMeasurement>(measurement_buffer.timestamp_ns);
 
     state->template setValue<VectorBlock<3>>(kStatePosition,position_measurement->position_);
     state->template setValue<VectorBlock<3>>(kStateVelocity,Vector3::Zero());
