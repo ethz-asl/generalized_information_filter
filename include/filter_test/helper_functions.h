@@ -12,9 +12,12 @@
 
 namespace tsif {
 
-inline std::string padTo(const std::string& str, const size_t num, const char paddingChar = ' ') {
+inline std::string padTo(
+    const std::string& str, const size_t num, const char paddingChar = ' ') {
   std::string padded_string = str;
-  if (num > str.size()) padded_string.insert(padded_string.size(), num - padded_string.size(), paddingChar);
+  if (num > str.size())
+    padded_string.insert(
+        padded_string.size(), num - padded_string.size(), paddingChar);
   return padded_string;
 }
 

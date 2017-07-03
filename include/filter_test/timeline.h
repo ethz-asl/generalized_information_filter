@@ -20,18 +20,21 @@ using TimedMeasurement = std::pair<int, MeasurementBase*>;
 using TimedMeasurementMap = std::map<int, MeasurementBase*>;
 using TimedMeasurementVector = std::vector<TimedMeasurement>;
 
-
 class Timeline {
  public:
-  // If a timeline is not mergeable then we have to apply the measurement before continuing.
-  // This is usually the case for traditional measurements in a Kalman filter (they are not mergeable).
+  // If a timeline is not mergeable then we have to apply the measurement before
+  // continuing.
+  // This is usually the case for traditional measurements in a Kalman filter
+  // (they are not mergeable).
   bool mergeable_ = true;
   TimedMeasurementMap timed_measurements_;
   void addMeasurement(const int timestamp_ns, MeasurementBase* measurement) {
-    while (kMaxMeasurmenetBufferSize <= timed_measurements_.size()) {  // remove oldest if buffer is full
+    while (kMaxMeasurmenetBufferSize <=
+           timed_measurements_.size()) {  // remove oldest if buffer is full
       deleteMeasurement(timed_measurements_.begin());
     }
-    timed_measurements_.emplace_hint(timed_measurements_.end(), timestamp_ns, measurement);
+    timed_measurements_.emplace_hint(
+        timed_measurements_.end(), timestamp_ns, measurement);
   }
   void deleteOlderThen(const int timestamp_ns);  // TODO(burrimi):implement.
   ~Timeline() {
@@ -40,9 +43,12 @@ class Timeline {
       delete timed_measurement.second;
     }
   }
-  inline int getOldestMeasurementTimestamp() const { return timed_measurements_.begin()->first; }
+  inline int getOldestMeasurementTimestamp() const {
+    return timed_measurements_.begin()->first;
+  }
 
-  // Finds the first measurement where measurement timestamp > timestamp_ns. Returns -1 in case no newer measurement exists.
+  // Finds the first measurement where measurement timestamp > timestamp_ns.
+  // Returns -1 in case no newer measurement exists.
   inline int getNextMeasurementTimestamp(const int timestamp_ns) const {
     const auto it = timed_measurements_.upper_bound(timestamp_ns);
     if (it != timed_measurements_.end()) {
@@ -72,13 +78,17 @@ class Timeline {
 
   void interpolateAndAddAt(const int timestamp_ns) {
     auto it_next = timed_measurements_.lower_bound(timestamp_ns);
-    if(it_next->first != timestamp_ns) {
+    if (it_next->first != timestamp_ns) {
       auto it_previous = it_next;
       --it_previous;
       MeasurementBase* next_measurement = it_next->second;
-      MeasurementBase* interpolated_measurement = it_previous->second->split(*next_measurement, it_previous->first, timestamp_ns, it_next->first);
+      MeasurementBase* interpolated_measurement = it_previous->second->split(
+          *next_measurement, it_previous->first, timestamp_ns, it_next->first);
       addMeasurement(timestamp_ns, interpolated_measurement);
-      TSIF_LOG("Split measurements at " + std::to_string(it_previous->first) + " and " + std::to_string(it_next->first) + " at " + std::to_string(timestamp_ns));
+      TSIF_LOG(
+          "Split measurements at " + std::to_string(it_previous->first) +
+          " and " + std::to_string(it_next->first) + " at " +
+          std::to_string(timestamp_ns));
     }
   }
 
@@ -86,55 +96,63 @@ class Timeline {
   MeasurementBase* getInterpolatedMeasurement(const int timestamp_ns) {
     auto it_next = timed_measurements_.lower_bound(timestamp_ns);
     MeasurementBase* interpolated_measurement;
-    if(it_next->first != timestamp_ns) {
+    if (it_next->first != timestamp_ns) {
       auto it_previous = it_next;
       --it_previous;
       MeasurementBase* next_measurement = it_next->second;
-      interpolated_measurement = it_previous->second->split(*next_measurement, it_previous->first, timestamp_ns, it_next->first);
+      interpolated_measurement = it_previous->second->split(
+          *next_measurement, it_previous->first, timestamp_ns, it_next->first);
     }
     return interpolated_measurement;
   }
 
-//  // This function returns a vector of measurements in the requested range. If measurements at the boarder don't exist they are interpolated and added to the timeline.
-//  // time      x   x   x   x   x   x   x
-//  // min/max     ^               ^
-//  // return      x x   x   x   x x
-//  std::vector<TimedMeasurement> getMeasurementsInRange(const int timestamp_min_ns, const int timestamp_max_ns) {
-//    std::vector<TimedMeasurement> timed_measurements;
-//    if(getOldestMeasurementTimestamp() > timestamp_min_ns || getNewestMeasurementTimestamp() < timestamp_max_ns) {
-//      return timed_measurements;
-//    }
-//
-//    // Create interpolated measurements at beginning of time interval.
-//    interpolateAndAddAt(timestamp_min_ns);
-//    interpolateAndAddAt(timestamp_max_ns);
-//
-//    auto it_next = timed_measurements_.lower_bound(timestamp_min_ns);
-//    while(it_next->first <= timestamp_max_ns) {
-//      timed_measurements.emplace_back(*it_next);
-//      ++it_next;
-//    }
-//
-//    return timed_measurements;
-//  }
+  //  // This function returns a vector of measurements in the requested range.
+  //  If measurements at the boarder don't exist they are interpolated and added
+  //  to the timeline.
+  //  // time      x   x   x   x   x   x   x
+  //  // min/max     ^               ^
+  //  // return      x x   x   x   x x
+  //  std::vector<TimedMeasurement> getMeasurementsInRange(const int
+  //  timestamp_min_ns, const int timestamp_max_ns) {
+  //    std::vector<TimedMeasurement> timed_measurements;
+  //    if(getOldestMeasurementTimestamp() > timestamp_min_ns ||
+  //    getNewestMeasurementTimestamp() < timestamp_max_ns) {
+  //      return timed_measurements;
+  //    }
+  //
+  //    // Create interpolated measurements at beginning of time interval.
+  //    interpolateAndAddAt(timestamp_min_ns);
+  //    interpolateAndAddAt(timestamp_max_ns);
+  //
+  //    auto it_next = timed_measurements_.lower_bound(timestamp_min_ns);
+  //    while(it_next->first <= timestamp_max_ns) {
+  //      timed_measurements.emplace_back(*it_next);
+  //      ++it_next;
+  //    }
+  //
+  //    return timed_measurements;
+  //  }
 
-
-  // This function returns a vector of measurements in the requested range including the first that is smaller or equal min_ns and the last that is bigger or equal max_ns.
+  // This function returns a vector of measurements in the requested range
+  // including the first that is smaller or equal min_ns and the last that is
+  // bigger or equal max_ns.
   // time      x   x   x   x   x   x   x
   // min/max     ^               ^
   // return    x   x   x   x   x   x
-  std::vector<TimedMeasurement> getMeasurementsInRange(const int timestamp_min_ns, const int timestamp_max_ns) const {
+  std::vector<TimedMeasurement> getMeasurementsInRange(
+      const int timestamp_min_ns, const int timestamp_max_ns) const {
     std::vector<TimedMeasurement> timed_measurements;
-    if(getOldestMeasurementTimestamp() > timestamp_min_ns || getNewestMeasurementTimestamp() < timestamp_max_ns) {
+    if (getOldestMeasurementTimestamp() > timestamp_min_ns ||
+        getNewestMeasurementTimestamp() < timestamp_max_ns) {
       return timed_measurements;
     }
 
     auto it_next = timed_measurements_.lower_bound(timestamp_min_ns);
-    if(it_next->first != timestamp_min_ns) {
+    if (it_next->first != timestamp_min_ns) {
       --it_next;
     }
 
-    while(it_next->first < timestamp_max_ns) {
+    while (it_next->first < timestamp_max_ns) {
       timed_measurements.emplace_back(*it_next);
       ++it_next;
     }
@@ -143,10 +161,15 @@ class Timeline {
     return timed_measurements;
   }
 
-
-  inline int getNewestMeasurementTimestamp() const { return timed_measurements_.rbegin()->first; }
-  inline int getNumMeasurements() const { return timed_measurements_.size(); }
-  inline bool isEmpty() const { return timed_measurements_.empty(); }
+  inline int getNewestMeasurementTimestamp() const {
+    return timed_measurements_.rbegin()->first;
+  }
+  inline int getNumMeasurements() const {
+    return timed_measurements_.size();
+  }
+  inline bool isEmpty() const {
+    return timed_measurements_.empty();
+  }
   inline void deleteMeasurement(const TimedMeasurementMap::iterator& iterator) {
     delete iterator->second;              // Free memory.
     timed_measurements_.erase(iterator);  // Remove from buffer.

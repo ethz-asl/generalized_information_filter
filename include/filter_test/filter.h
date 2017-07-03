@@ -15,12 +15,10 @@
 #include "filter_test/defines.h"
 #include "filter_test/helper_functions.h"
 #include "filter_test/measurement_manager.h"
-#include "filter_test/problem_builder.h" // TODO(burrimi):remove this dependency. ResidualContainer
+#include "filter_test/problem_builder.h"  // TODO(burrimi):remove this dependency. ResidualContainer
 #include "filter_test/state.h"
 
 namespace tsif {
-
-
 
 struct PreparedResidual {
   std::vector<BlockBase*> blocks1;
@@ -31,14 +29,14 @@ struct PreparedResidual {
 };
 
 struct FilterConfig {
-  FilterConfig(): max_update_iterations(10), residual_norm_threshold(0.1){}
+  FilterConfig() : max_update_iterations(10), residual_norm_threshold(0.1) {}
   int max_update_iterations;
   double residual_norm_threshold;
 };
 
 class Filter {
  public:
-  Filter() : total_residual_dimension_(0) { }
+  Filter() : total_residual_dimension_(0) {}
 
   ~Filter() {
     for (ResidualContainer& current_residual : residual_containers_) {
@@ -46,7 +44,9 @@ class Filter {
     }
   }
 
-  void setConfig(const FilterConfig& config) {config_ = config;}
+  void setConfig(const FilterConfig& config) {
+    config_ = config;
+  }
 
   // state related stuff
   std::vector<BlockType> state_types_;
@@ -65,32 +65,45 @@ class Filter {
 
   int total_residual_dimension_;
 
-  void predictState(const MeasurementBuffer& measurement_buffer, const FilterProblemDescription& filter_problem, const State& state, const int timestamp_previous_update_ns, const int timestamp_ns, State* predicted_state) const;
-  void constructProblem(const MeasurementBuffer& measurement_buffer, const FilterProblemDescription& filter_problem, const State& first_state, const State& second_state, VectorX* residual_vector, MatrixX* jacobian_wrt_state1, MatrixX* jacobian_wrt_state2);
+  void predictState(
+      const MeasurementBuffer& measurement_buffer,
+      const FilterProblemDescription& filter_problem, const State& state,
+      const int timestamp_previous_update_ns, const int timestamp_ns,
+      State* predicted_state) const;
+  void constructProblem(
+      const MeasurementBuffer& measurement_buffer,
+      const FilterProblemDescription& filter_problem, const State& first_state,
+      const State& second_state, VectorX* residual_vector,
+      MatrixX* jacobian_wrt_state1, MatrixX* jacobian_wrt_state2);
 
   bool init(const State& state, const int& total_residual_dimension);
 
-  void predictAndUpdate(const MeasurementBuffer& measurement_buffer, const FilterProblemDescription& filter_problem, const State& state, State* updated_state);
-
+  void predictAndUpdate(
+      const MeasurementBuffer& measurement_buffer,
+      const FilterProblemDescription& filter_problem, const State& state,
+      State* updated_state);
 
  private:
-
-  inline std::vector<MatrixXRef> getJacobianBlocks(const State& state, const std::vector<int>& keys,
-                                                   const int& residual_index, const int& residual_dimension, MatrixX* jacobian) {
+  inline std::vector<MatrixXRef> getJacobianBlocks(
+      const State& state, const std::vector<int>& keys,
+      const int& residual_index, const int& residual_dimension,
+      MatrixX* jacobian) {
     std::vector<MatrixXRef> jacobian_blocks;
     for (const int& current_key : keys) {
-      //    MatrixXRef test = jacobian.block(residual_index, current_key, residual_dimension,
+      //    MatrixXRef test = jacobian.block(residual_index, current_key,
+      //    residual_dimension,
       //    first_state_.minimal_dimension_);
-      const int& state_index = state.getAccumulatedMinimalDimension(current_key);
-      jacobian_blocks.emplace_back(
-          jacobian->block(residual_index, state_index, residual_dimension, state.minimal_dimension_));
+      const int& state_index =
+          state.getAccumulatedMinimalDimension(current_key);
+      jacobian_blocks.emplace_back(jacobian->block(
+          residual_index, state_index, residual_dimension,
+          state.minimal_dimension_));
     }
     return jacobian_blocks;
   }
 
-
-  void setMatrixDimensions(const int active_residuals_dimension, const int minimal_state_dimension);
-
+  void setMatrixDimensions(
+      const int active_residuals_dimension, const int minimal_state_dimension);
 
   FilterConfig config_;
 };

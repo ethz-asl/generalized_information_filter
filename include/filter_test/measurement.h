@@ -12,7 +12,6 @@
 
 #include "filter_test/defines.h"
 
-
 namespace tsif {
 
 class MeasurementBase {
@@ -23,8 +22,11 @@ class MeasurementBase {
 
   virtual MeasurementBase* clone() const = 0;
 
-  virtual MeasurementBase* split(const MeasurementBase& next_measurement, const int timestamp_ns, const int timestamp_split_ns, const int timestamp_next_ns) {
-    CHECK(false) << "splitting this measurement is not implemented. Type: " + getPrintableMeasurement();
+  virtual MeasurementBase* split(
+      const MeasurementBase& next_measurement, const int timestamp_ns,
+      const int timestamp_split_ns, const int timestamp_next_ns) {
+    CHECK(false) << "splitting this measurement is not implemented. Type: " +
+                        getPrintableMeasurement();
     return nullptr;
   }
 
@@ -40,10 +42,13 @@ class PositionMeasurement : public MeasurementBase {
   virtual ~PositionMeasurement() {}
 
   virtual MeasurementBase* clone() const {
-    return new PositionMeasurement(static_cast<const PositionMeasurement&>(*this));  // call the copy ctor.
+    return new PositionMeasurement(
+        static_cast<const PositionMeasurement&>(*this));  // call the copy ctor.
   }
 
-  virtual std::string getPrintableMeasurement() const { return "Position"; }
+  virtual std::string getPrintableMeasurement() const {
+    return "Position";
+  }
   const Vector3 position_;
 
  private:
@@ -57,15 +62,20 @@ class ImuMeasurement : public MeasurementBase {
   virtual ~ImuMeasurement() {}
 
   virtual MeasurementBase* clone() const {
-    return new ImuMeasurement(static_cast<const ImuMeasurement&>(*this));  // call the copy ctor.
+    return new ImuMeasurement(
+        static_cast<const ImuMeasurement&>(*this));  // call the copy ctor.
   }
 
-  virtual MeasurementBase* split(const MeasurementBase& next_measurement, const int timestamp_ns, const int timestamp_split_ns, const int timestamp_next_ns) {
-    //TODO(burrimi): linear interpolation?
+  virtual MeasurementBase* split(
+      const MeasurementBase& next_measurement, const int timestamp_ns,
+      const int timestamp_split_ns, const int timestamp_next_ns) {
+    // TODO(burrimi): linear interpolation?
     return this->clone();
   }
 
-  virtual std::string getPrintableMeasurement() const { return "IMU"; }
+  virtual std::string getPrintableMeasurement() const {
+    return "IMU";
+  }
   const Vector3 acceleration_;
   const Vector3 angular_velocity_;
 

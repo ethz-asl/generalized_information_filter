@@ -3,12 +3,12 @@
 
 #include <ros/ros.h>
 
-#include "filter_test/estimator.h"
-#include "filter_test/measurement.h"
 #include <assert.h>
 #include <filter_test/residuals/constant_residual.h>
 #include <filter_test/residuals/constant_velocity_residual.h>
 #include <filter_test/residuals/position_residual.h>
+#include "filter_test/estimator.h"
+#include "filter_test/measurement.h"
 
 #include <glog/logging.h>
 
@@ -18,23 +18,30 @@ enum StateDefinition { kStatePosition = 0, kStateVelocity, kStateOrientation };
 
 enum MeasurementDefinition { kMeasPosition = 0, kMeasImu };
 
-class InitStateConstVelocity: public InitStateBase {
+class InitStateConstVelocity : public InitStateBase {
  public:
   InitStateConstVelocity() {}
   ~InitStateConstVelocity() {}
-  virtual bool init(const MeasurementManager& measurement_manager, const MeasurementBuffer& measurement_buffer, State* state, MatrixX* information) {
-    const Timeline& position_timeline = measurement_manager.timelines_[kMeasPosition];
-    const PositionMeasurement* position_measurement = position_timeline.getMeasurement<PositionMeasurement>(measurement_buffer.timestamp_ns);
+  virtual bool init(
+      const MeasurementManager& measurement_manager,
+      const MeasurementBuffer& measurement_buffer, State* state,
+      MatrixX* information) {
+    const Timeline& position_timeline =
+        measurement_manager.timelines_[kMeasPosition];
+    const PositionMeasurement* position_measurement =
+        position_timeline.getMeasurement<PositionMeasurement>(
+            measurement_buffer.timestamp_ns);
 
-    state->template setValue<VectorBlock<3>>(kStatePosition,position_measurement->position_);
-    state->template setValue<VectorBlock<3>>(kStateVelocity,Vector3::Zero());
+    state->template setValue<VectorBlock<3>>(
+        kStatePosition, position_measurement->position_);
+    state->template setValue<VectorBlock<3>>(kStateVelocity, Vector3::Zero());
 
     information->setIdentity();
     return true;
   }
+
  private:
 };
-
 
 int main(int argc, char** argv) {
   // Initialize Google's logging library.
@@ -66,15 +73,18 @@ int main(int argc, char** argv) {
   second_keys = {kStatePosition};
   std::vector<int> measurement_keys{kMeasPosition};
 
-  test_estimator.addResidual(test_residual2, first_keys, second_keys, measurement_keys);
+  test_estimator.addResidual(
+      test_residual2, first_keys, second_keys, measurement_keys);
 
   test_estimator.printResiduals();
   test_estimator.checkResiduals();
   test_estimator.printTimeline();
 
-  MeasurementBase* position_measurement1 = new PositionMeasurement(Vector3(1, 1, 1));
+  MeasurementBase* position_measurement1 =
+      new PositionMeasurement(Vector3(1, 1, 1));
   test_estimator.addMeasurement(kMeasPosition, 140, position_measurement1);
-  MeasurementBase* position_measurement2 = new PositionMeasurement(Vector3(1, 1, 1));
+  MeasurementBase* position_measurement2 =
+      new PositionMeasurement(Vector3(1, 1, 1));
   test_estimator.addMeasurement(kMeasPosition, 150, position_measurement2);
 
   test_estimator.printTimeline();

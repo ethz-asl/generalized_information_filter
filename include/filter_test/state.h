@@ -29,20 +29,24 @@ class State {
     }
   }
 
-  // Copy constructor clones the other state and takes care of allocating the new blocks
+  // Copy constructor clones the other state and takes care of allocating the
+  // new blocks
   State(const State& other) : dimension_(0), minimal_dimension_(0) {
     cloneState(other);
   }
 
   State& operator=(const State& other) {
     // check for self-assignment
-    if (&other == this) return *this;
+    if (&other == this)
+      return *this;
 
     // reuse storage when possible
-    // TODO(burrimi): Do better check! For now we assume that the same dimension is probably the same state :/
+    // TODO(burrimi): Do better check! For now we assume that the same dimension
+    // is probably the same state :/
     if (dimension_ == other.dimension_) {
       BlockVector::iterator block_iterator = state_blocks_.begin();
-      BlockVector::const_iterator other_block_iterator = other.state_blocks_.begin();
+      BlockVector::const_iterator other_block_iterator =
+          other.state_blocks_.begin();
       while (other_block_iterator != other.state_blocks_.end()) {
         (*other_block_iterator)->copyBlockTo(*block_iterator);
         ++block_iterator;
@@ -51,7 +55,8 @@ class State {
       return *this;
     }
 
-    // At this point the state is probably empty and we have to allocate the blocks
+    // At this point the state is probably empty and we have to allocate the
+    // blocks
     cloneState(other);
     return *this;
   }
@@ -113,21 +118,26 @@ class State {
 
   void boxPlus(const VectorXRef& dx, State* result_state) const {
     CHECK_NOTNULL(result_state);
-    CHECK(minimal_dimension_ == dx.size());  // Check if dimension of dx is valid.
+    CHECK(
+        minimal_dimension_ == dx.size());  // Check if dimension of dx is valid.
 
-    // Convenience function: if we have an empty state we clone the current state to create it.
-    if(result_state->dimension_ == 0) {
+    // Convenience function: if we have an empty state we clone the current
+    // state to create it.
+    if (result_state->dimension_ == 0) {
       result_state->cloneState(*this);
     }
 
     CHECK(dimension_ == result_state->dimension_)
         << "Dimension of first state" << dimension_ << " result state "
-        << result_state->dimension_;  // Check if dimension of result_state is valid.
+        << result_state
+               ->dimension_;  // Check if dimension of result_state is valid.
     int accumulated_dimension = 0;
 
     BlockVector::iterator block_iterator = result_state->state_blocks_.begin();
     for (BlockBase* current_block : state_blocks_) {
-      current_block->boxPlus(dx.segment(accumulated_dimension, current_block->minimal_dimension_), (*block_iterator));
+      current_block->boxPlus(
+          dx.segment(accumulated_dimension, current_block->minimal_dimension_),
+          (*block_iterator));
       accumulated_dimension += current_block->minimal_dimension_;
       ++block_iterator;
     }
@@ -135,8 +145,10 @@ class State {
 
   // calculates this - other = dx
   void boxMinus(const State& other, VectorX* dx) const {
-//    CHECK_NOTNULL(dx);
-    CHECK(minimal_dimension_ == dx->size());  // Check if dimension of dx is valid.
+    //    CHECK_NOTNULL(dx);
+    CHECK(
+        minimal_dimension_ ==
+        dx->size());  // Check if dimension of dx is valid.
 
     CHECK(dimension_ == other.dimension_)
         << "Dimension of first state " << dimension_ << " other state "
@@ -145,20 +157,23 @@ class State {
     int index = 0;
     BlockVector::const_iterator block_iterator = other.state_blocks_.begin();
     for (BlockBase* current_block : state_blocks_) {
-      dx->segment(index, current_block->minimal_dimension_) = current_block->boxMinus((*block_iterator));
+      dx->segment(index, current_block->minimal_dimension_) =
+          current_block->boxMinus((*block_iterator));
       index += current_block->minimal_dimension_;
       ++block_iterator;
     }
   }
 
-
-  inline int getAccumulatedMinimalDimension(const int& key) const { return accumulated_minimal_dimensions_[key]; }
+  inline int getAccumulatedMinimalDimension(const int& key) const {
+    return accumulated_minimal_dimensions_[key];
+  }
 
   VectorX getAsVector() const {
     VectorX state_vector(dimension_);
     int index = 0;
     for (BlockBase* current_block : state_blocks_) {
-      state_vector.segment(index, current_block->dimension_) = current_block->getValueAsVector();
+      state_vector.segment(index, current_block->dimension_) =
+          current_block->getValueAsVector();
       index += current_block->dimension_;
     }
     return state_vector;
@@ -167,7 +182,8 @@ class State {
   std::string print() const {
     std::ostringstream oss;
     for (BlockBase* current_block : state_blocks_) {
-      oss << current_block->getTypeName() << "[" << current_block->getValueAsVector().transpose() << "], ";
+      oss << current_block->getTypeName() << "["
+          << current_block->getValueAsVector().transpose() << "], ";
     }
     return oss.str();
   }
@@ -181,9 +197,6 @@ class State {
     state_blocks_.push_back(block_to_add);
   }
 };
-
-
-
 
 }  // namespace tsif
 

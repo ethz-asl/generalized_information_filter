@@ -12,7 +12,8 @@
 
 namespace tsif {
 
-// We assume that the residuals are embedded in a vector space (i.e. tangent space for manifolds).
+// We assume that the residuals are embedded in a vector space (i.e. tangent
+// space for manifolds).
 class ConstantResidual : public ResidualBase {
   static const bool kIsMergeable = true;
   static const int kResidualDimension = 3;
@@ -27,27 +28,41 @@ class ConstantResidual : public ResidualBase {
     return true;
   }
 
-  virtual bool predict(const std::vector<BlockBase*>& state, const std::vector<const TimedMeasurementVector*>& measurement_vectors, const int t1_ns,
-                       const int t2_ns, std::vector<BlockBase*>* predicted_state, std::vector<MatrixXRef>* jacobian_wrt_state1) {
+  virtual bool predict(
+      const std::vector<BlockBase*>& state,
+      const std::vector<const TimedMeasurementVector*>& measurement_vectors,
+      const int t1_ns, const int t2_ns,
+      std::vector<BlockBase*>* predicted_state,
+      std::vector<MatrixXRef>* jacobian_wrt_state1) {
     // TODO(burrimi): implement.
-    assert(true); // TODO(burrimi): Implement.
+    assert(true);  // TODO(burrimi): Implement.
     return false;
   }
 
-  virtual bool evaluate(const std::vector<BlockBase*>& state1, const std::vector<BlockBase*>& state2, const std::vector<const TimedMeasurementVector*>& measurement_vectors, const int t1_ns,
-                        const int t2_ns, VectorXRef* residual, std::vector<MatrixXRef>* jacobian_wrt_state1,
-                        std::vector<MatrixXRef>* jacobian_wrt_state2) {
-    assert(true); // TODO(burrimi): Implement.
+  virtual bool evaluate(
+      const std::vector<BlockBase*>& state1,
+      const std::vector<BlockBase*>& state2,
+      const std::vector<const TimedMeasurementVector*>& measurement_vectors,
+      const int t1_ns, const int t2_ns, VectorXRef* residual,
+      std::vector<MatrixXRef>* jacobian_wrt_state1,
+      std::vector<MatrixXRef>* jacobian_wrt_state2) {
+    assert(true);  // TODO(burrimi): Implement.
     return false;
   }
 
-  virtual std::string getPrintableName() const { return "const residual"; }
+  virtual std::string getPrintableName() const {
+    return "const residual";
+  }
 
-  virtual bool inputTypesValid(const std::vector<BlockBase*>& state1, const std::vector<BlockBase*>& state2) {
+  virtual bool inputTypesValid(
+      const std::vector<BlockBase*>& state1,
+      const std::vector<BlockBase*>& state2) {
     bool all_types_ok = true;
     all_types_ok &= state1[0]->isBlockTypeCorrect<VectorBlock<3>>();
     all_types_ok &= state2[0]->isBlockTypeCorrect<VectorBlock<3>>();
-    TSIF_LOGEIF(!all_types_ok, "Constant residual has wrong block types. Check your state indices!");
+    TSIF_LOGEIF(
+        !all_types_ok,
+        "Constant residual has wrong block types. Check your state indices!");
     return all_types_ok;
   }
 

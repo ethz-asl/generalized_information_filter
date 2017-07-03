@@ -8,12 +8,11 @@
 #ifndef INCLUDE_FILTER_TEST_PROBLEM_BUILDER_H_
 #define INCLUDE_FILTER_TEST_PROBLEM_BUILDER_H_
 
-#include "filter_test/state.h"
-#include "filter_test/residual.h"
 #include "filter_test/measurement_manager.h"
+#include "filter_test/residual.h"
+#include "filter_test/state.h"
 
 namespace tsif {
-
 
 struct ResidualContainer {
   std::vector<int> first_keys;
@@ -32,8 +31,8 @@ struct FilterProblemDescription {
 };
 
 class ProblemBuilder {
-public:
-  ProblemBuilder():total_residual_dimension_(0) {}
+ public:
+  ProblemBuilder() : total_residual_dimension_(0) {}
   ~ProblemBuilder() {
     for (ResidualContainer& current_residual : residual_containers_) {
       delete current_residual.residual;
@@ -45,23 +44,25 @@ public:
   int total_residual_dimension_;
 
   // Adds a residual and takes ownership of the residual.
-  bool addResidual(ResidualBase* residual, std::vector<int> first_keys, std::vector<int> second_keys,
-                           std::vector<int> measurement_keys, bool use_for_prediction);
+  bool addResidual(
+      ResidualBase* residual, std::vector<int> first_keys,
+      std::vector<int> second_keys, std::vector<int> measurement_keys,
+      bool use_for_prediction);
 
   void printResiduals(const State& state) const;
 
   void checkResiduals(const State& state) const;
 
-  int getTotalResidualDimension() const {return total_residual_dimension_;}
+  int getTotalResidualDimension() const {
+    return total_residual_dimension_;
+  }
 
-  FilterProblemDescription getFilterProblemDescription(const MeasurementBuffer& measurement_buffer);
+  FilterProblemDescription getFilterProblemDescription(
+      const MeasurementBuffer& measurement_buffer);
 
-private:
-
+ private:
 };
 
 }  // namespace tsif
-
-
 
 #endif /* INCLUDE_FILTER_TEST_PROBLEM_BUILDER_H_ */

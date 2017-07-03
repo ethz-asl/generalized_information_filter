@@ -4,11 +4,11 @@
  *  Created on: 02.06.2017
  *      Author: burrimi
  */
+#include "filter_test/filter.h"
+#include "filter_test/measurement.h"
 #include "filter_test/residuals/constant_residual.h"
 #include "filter_test/residuals/constant_velocity_residual.h"
 #include "filter_test/residuals/position_residual.h"
-#include "filter_test/filter.h"
-#include "filter_test/measurement.h"
 #include "gtest/gtest.h"
 
 namespace tsif {
@@ -26,7 +26,6 @@ TEST(StateTest, DefineState) {
 
   EXPECT_TRUE(first_state.dimension_ == 6);
   EXPECT_TRUE(first_state.minimal_dimension_ == 6);
-
 }
 
 TEST(StateTest, SetState) {
@@ -75,7 +74,6 @@ TEST(StateTest, CopyAndAssignOperator) {
   EXPECT_TRUE(third_state.getAsVector() == state_vector_expected);
 }
 
-
 TEST(StateTest, BoxPlus) {
   std::vector<BlockType> state_block_types{kVector3, kVector1, kVector2};
 
@@ -106,7 +104,7 @@ TEST(StateTest, BoxPlus) {
 
 }  // namespace tsif
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

@@ -12,17 +12,16 @@
 
 namespace tsif {
 
-
 namespace common {
 
 template <typename Scalar>
 Eigen::Matrix<Scalar, 3, 3> skew(const Eigen::Matrix<Scalar, 3, 1>& vector) {
   Eigen::Matrix<Scalar, 3, 3> skew_matrix;
-  skew_matrix << 0, -vector(2), vector(1), vector(2), 0, -vector(0), -vector(1), vector(0), 0;
+  skew_matrix << 0, -vector(2), vector(1), vector(2), 0, -vector(0), -vector(1),
+      vector(0), 0;
   return skew_matrix;
 }
 }  // namespace common
-
 
 namespace eigen_quaternion_helpers {
 const int kLocalSize = 3;
