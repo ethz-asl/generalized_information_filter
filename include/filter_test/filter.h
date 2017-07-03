@@ -65,8 +65,8 @@ class Filter {
 
   int total_residual_dimension_;
 
-  void predictState(const FilterProblemDescription& filter_problem, const State& state, const int timestamp_previous_update_ns, const int timestamp_ns, State* predicted_state) const;
-  void constructProblem(const FilterProblemDescription& filter_problem, const State& first_state, const State& second_state, VectorX* residual_vector, MatrixX* jacobian_wrt_state1, MatrixX* jacobian_wrt_state2);
+  void predictState(const UpdateDescription& update_description, const FilterProblemDescription& filter_problem, const State& state, const int timestamp_previous_update_ns, const int timestamp_ns, State* predicted_state) const;
+  void constructProblem(const UpdateDescription& update_description, const FilterProblemDescription& filter_problem, const State& first_state, const State& second_state, VectorX* residual_vector, MatrixX* jacobian_wrt_state1, MatrixX* jacobian_wrt_state2);
 
   bool init(const State& state, const int& total_residual_dimension);
 

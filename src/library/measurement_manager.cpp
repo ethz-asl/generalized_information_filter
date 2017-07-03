@@ -20,7 +20,7 @@ Timeline* MeasurementManager::getTimelinePtr(int timeline_key) {
 }
 
 // Returns all the Timelines requested. If timeline does not exist it gets created.
-std::vector<Timeline*> MeasurementManager::getTimelines(std::vector<int> timeline_keys, bool is_mergeable) {
+std::vector<Timeline*> MeasurementManager::prepareTimelines(std::vector<int> timeline_keys, bool is_mergeable) {
   std::vector<Timeline*> timelines;
   for (int current_key : timeline_keys) {
     Timeline* current_timeline = getTimelinePtr(current_key);
@@ -170,9 +170,8 @@ bool MeasurementManager::updateStrategy(const int& timestamp_previous_update_ns,
 
   update_description->timelines.resize(timelines_.size());
   update_description->active_timeline_ids.emplace_back(active_measurement_idx);
-  MeasurementBase* measurement;// = timelines_.at(active_measurement_idx).getMeasurement(oldest_timestamp);
-  TimedMeasurement test(oldest_timestamp, measurement);
-  update_description->timelines[active_measurement_idx].emplace_back(test);
+  const TimedMeasurement& measurement = timelines_.at(active_measurement_idx).getTimedMeasurement(oldest_timestamp);
+  update_description->timelines[active_measurement_idx].emplace_back(measurement);
 
   // TODO(burrimi): should we also check the oldest timestamp of mergeable residuals?
 

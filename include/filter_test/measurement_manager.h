@@ -27,6 +27,15 @@ struct UpdateDescription {
      }
   }
 
+  std::vector<const TimedMeasurementVector*> getTimedMeasurementVectors(const std::vector<int> keys) const{
+    std::vector<const TimedMeasurementVector*> measurement_buffers;
+    for(int current_key:keys) {
+      measurement_buffers.emplace_back(&(timelines[current_key]));
+    }
+
+    return measurement_buffers;
+  }
+
   void print() {
     if(timelines.empty()) return;
     std::cout << "Update description start: " << timestamp_previous_update_ns << " end: " << timestamp_ns << std::endl;
@@ -61,7 +70,7 @@ class MeasurementManager {
 
   // We assume that timeline id's start with zero. If a timeline does not exist it's created.
   Timeline* getTimelinePtr(int timeline_key);
-  std::vector<Timeline*> getTimelines(std::vector<int> timeline_keys, bool is_mergeable);
+  std::vector<Timeline*> prepareTimelines(std::vector<int> timeline_keys, bool is_mergeable);
 
   void printTimeline() const;
 

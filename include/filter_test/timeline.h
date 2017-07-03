@@ -64,6 +64,12 @@ class Timeline {
     return NULL;
   }
 
+  inline TimedMeasurement getTimedMeasurement(const int timestamp_ns) const {
+    const auto& timed_measurement = timed_measurements_.find(timestamp_ns);
+    CHECK(timed_measurement != timed_measurements_.end());
+    return *timed_measurement;
+  }
+
   void interpolateAndAddAt(const int timestamp_ns) {
     auto it_next = timed_measurements_.lower_bound(timestamp_ns);
     if(it_next->first != timestamp_ns) {

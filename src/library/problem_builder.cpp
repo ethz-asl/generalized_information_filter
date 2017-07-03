@@ -18,6 +18,7 @@ bool ProblemBuilder::addResidual(ResidualBase* residual, std::vector<int> first_
   ResidualContainer container;
   container.first_keys = first_keys;
   container.second_keys = second_keys;
+  container.measurement_keys = measurement_keys;
   container.residual = residual;
   container.use_for_prediction = use_for_prediction;
 

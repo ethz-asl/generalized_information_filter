@@ -35,8 +35,7 @@ bool Estimator::addResidualImplementation(ResidualBase* residual, std::vector<in
   CHECK(state_.dimension_ > 0);  // Check if state is defined.
   CHECK(!is_initialized_) << "Extending the state or adding residuals after initialization is not suported yet";
 
-  std::vector<Timeline*> timelines = measurement_manager_.getTimelines(measurement_keys, residual->is_mergeable_);
-  residual->setMeasurementTimelines(timelines);
+  measurement_manager_.prepareTimelines(measurement_keys, residual->is_mergeable_);
 
   return problem_builder_.addResidual(residual, first_keys, second_keys, measurement_keys, use_for_prediction);
 }

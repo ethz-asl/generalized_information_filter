@@ -10,7 +10,7 @@
 namespace tsif {
 
 
-void ResidualBase::setMeasurementTimelines(std::vector<Timeline*> timelines) { measurement_timelines_ = timelines; }
+// void ResidualBase::setMeasurementTimelines(std::vector<Timeline*> timelines) { measurement_timelines_ = timelines; }
 
 
 }  // namespace tsif

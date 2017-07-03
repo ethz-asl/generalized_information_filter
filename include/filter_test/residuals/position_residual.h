@@ -28,37 +28,46 @@ class PositionResidual : public ResidualBase {
   ~PositionResidual() {}
 
   virtual bool prepareResidual(const int t1_ns, const int t2_ns) {
-    const MeasurementBase* measurement = measurement_timelines_[0]->getMeasurement(t2_ns);
-    if (measurement == NULL) {
-      return false;
-    }
-    position_measurement_ = dynamic_cast<const PositionMeasurement*>(measurement);
-    if (position_measurement_ == NULL) {  // Check if cast was successful.
-      return false;
-    }
     return true;
   }
 
-  virtual bool predict(const std::vector<BlockBase*>& state, const int t1_ns,
+  virtual bool predict(const std::vector<BlockBase*>& state, const std::vector<const TimedMeasurementVector*>& measurement_vectors, const int t1_ns,
                        const int t2_ns, std::vector<BlockBase*>* predicted_state, std::vector<MatrixXRef>* jacobian_wrt_state1) {
     // TODO(burrimi): implement.
     assert(true); // TODO(burrimi): Implement.
     return false;
   }
 
-  virtual bool evaluate(const std::vector<BlockBase*>& state1, const std::vector<BlockBase*>& state2, const int t1_ns,
+  inline Vector3 getPositionMeasurement(const std::vector<const TimedMeasurementVector*>& measurement_vectors, const int t2_ns) {
+    CHECK(!measurement_vectors.empty());
+
+    const TimedMeasurementVector* position_measurements = measurement_vectors[0];
+    CHECK(!position_measurements->empty());
+
+    const TimedMeasurement& current_measurement = (*position_measurements)[0];
+    CHECK(current_measurement.first == t2_ns);
+
+    const PositionMeasurement* position_measurement = dynamic_cast<const PositionMeasurement*>(current_measurement.second);
+    CHECK_NOTNULL(position_measurement);
+
+    const Vector3 position_measured = position_measurement->position_;
+
+    return position_measured;
+  }
+
+  virtual bool evaluate(const std::vector<BlockBase*>& state1, const std::vector<BlockBase*>& state2, const std::vector<const TimedMeasurementVector*>& measurement_vectors, const int t1_ns,
                         const int t2_ns, VectorXRef* residual, std::vector<MatrixXRef>* jacobian_wrt_state1,
                         std::vector<MatrixXRef>* jacobian_wrt_state2) {
     if (residual == NULL) {
       return false;
     }
-    if (position_measurement_ == NULL) {  // this should not happen!
-      return false;
-    }
+
+    const Vector3 position_measured = getPositionMeasurement(measurement_vectors, t2_ns);
+//    const Vector3 position_measured(0,0,0);
 
     const Vector3& p_kp1 = static_cast<VectorBlock<3>*>(state2[0])->value_;
 
-    residual->template block<3, 1>(0, 0) = sqrt_information_matrix_ * (p_kp1 - position_measurement_->position_);
+    residual->template block<3, 1>(0, 0) = sqrt_information_matrix_ * (p_kp1 - position_measured);
 
     if (jacobian_wrt_state2 != NULL) {
       (*jacobian_wrt_state2)[0].template block<3, 3>(0, 0) = sqrt_information_matrix_ * Matrix3::Identity();
@@ -78,7 +87,6 @@ class PositionResidual : public ResidualBase {
 
  private:
   Matrix3 sqrt_information_matrix_;
-  const PositionMeasurement* position_measurement_;
 };
 
 }  // namespace tsif
