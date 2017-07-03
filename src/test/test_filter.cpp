@@ -4,6 +4,7 @@
  *  Created on: 02.06.2017
  *      Author: burrimi
  */
+
 #include "filter_test/residuals/constant_residual.h"
 #include "filter_test/residuals/constant_velocity_residual.h"
 #include "filter_test/residuals/position_residual.h"
@@ -93,7 +94,10 @@ TEST(FilterTest, SimpleResidualTest) {
   testfilter.addMeasurement(kMeasPosition, 140, position_measurement);
   MeasurementBase* imu_measurement3 = new ImuMeasurement(Vector3(1, 1, 1), Vector3(1, 1, 1));
   testfilter.addMeasurement(kMeasImu, 170, imu_measurement3);
-
+  MeasurementBase* position_measurement2 = new PositionMeasurement(Vector3(1, 1, 1));
+  testfilter.addMeasurement(kMeasPosition, 180, position_measurement2);
+  MeasurementBase* imu_measurement4 = new ImuMeasurement(Vector3(1, 1, 1), Vector3(1, 1, 1));
+  testfilter.addMeasurement(kMeasImu, 190, imu_measurement4);
   testfilter.printTimeline();
 }
 
@@ -103,13 +107,6 @@ TEST(FilterTest, SimpleFilterTest) {
 
   Estimator testfilter(new InitStateConstVelocity());
   testfilter.defineState(state_block_types);
-
-  Vector3 initial_position(1, 2, 3);
-  testfilter.initStateValue(kStatePosition, initial_position);
-  Vector3 initial_velocity(1, 1, 1);
-  testfilter.initStateValue(kStateVelocity, initial_velocity);
-
-  testfilter.printState();
 
   ConstantVelocityResidual* test_residual1 = new ConstantVelocityResidual(1, 1);
   std::vector<int> first_keys{kStatePosition, kStateVelocity};

@@ -37,8 +37,8 @@ void MeasurementManager::addMeasurement(const int timeline_key, const int timest
 }
 
 void MeasurementManager::printTimeline() const {
-  std::vector<TimedMeasurements::const_iterator> timeline_iterators;
-  std::vector<TimedMeasurements::const_iterator> timeline_iterators_end;
+  std::vector<TimedMeasurementMap::const_iterator> timeline_iterators;
+  std::vector<TimedMeasurementMap::const_iterator> timeline_iterators_end;
   int i = 0;
   int num_finished_timelines = 0;
 
@@ -103,6 +103,48 @@ void MeasurementManager::printTimeline() const {
   }
 }
 
+// Warning: This function allocates a new measurement which is not managed!
+bool MeasurementManager::splitMeasurements(const TimedMeasurement& measurement_start, const TimedMeasurement& measurement_end, const int timestamp_split_ns, TimedMeasurement* measurement_split) const {
+  // Check if we have to split
+  if(measurement_start.first != timestamp_split_ns || measurement_end.first != timestamp_split_ns) {
+    measurement_split->first = timestamp_split_ns;
+    measurement_split->second = measurement_start.second->split(*measurement_end.second, measurement_start.first, timestamp_split_ns, measurement_end.first);
+    return true;
+  }
+  return false;
+}
+
+// This function returns a vector of measurements in the requested range. If measurements at the boarder don't exist they are interpolated and added to the memory_manager for deallocation.
+// time      x   x   x   x   x   x   x
+// min/max     ^               ^
+// return      x x   x   x   x x
+bool MeasurementManager::extractRelevantMeasurements(const Timeline& timeline, const int timestamp_start_ns, const int timestamp_end_ns, std::vector<TimedMeasurement>* measurements, std::vector<TimedMeasurement>* memory_manager) const {
+  CHECK_NOTNULL(measurements);
+  CHECK_NOTNULL(memory_manager);
+
+  std::vector<TimedMeasurement>& measurement_buffer = *measurements;
+  measurement_buffer = timeline.getMeasurementsInRange(timestamp_start_ns, timestamp_end_ns);
+
+  if(measurement_buffer.size() < 2) {
+    return false;
+  }
+
+  TimedMeasurement temp_measurement;
+  // Replace first measurement in buffer with split measurement
+  if(splitMeasurements(measurement_buffer[0], measurement_buffer[1], timestamp_start_ns, &temp_measurement)) {
+    measurement_buffer[0] = temp_measurement;
+    memory_manager->emplace_back(temp_measurement);
+  }
+
+  const size_t& last_idx = measurement_buffer.size() - 1;
+  // Replace last measurement in buffer with split measurement
+  if(splitMeasurements(measurement_buffer[last_idx-1], measurement_buffer[last_idx], timestamp_end_ns, &temp_measurement)) {
+    measurement_buffer[last_idx] = temp_measurement;
+    memory_manager->emplace_back(temp_measurement);
+  }
+  return true;
+}
+
 bool MeasurementManager::updateStrategy(const int& timestamp_previous_update_ns, UpdateDescription* update_description) const {
   // Find the oldest non mergeable timestamp. In KF filtering this is the measurement.
   // TODO(burrimi): Cache this.
@@ -125,7 +167,13 @@ bool MeasurementManager::updateStrategy(const int& timestamp_previous_update_ns,
   if(oldest_timestamp==std::numeric_limits<double>::max()) {
     return false;
   }
+
+  update_description->timelines.resize(timelines_.size());
   update_description->active_timeline_ids.emplace_back(active_measurement_idx);
+  MeasurementBase* measurement;// = timelines_.at(active_measurement_idx).getMeasurement(oldest_timestamp);
+  TimedMeasurement test(oldest_timestamp, measurement);
+  update_description->timelines[active_measurement_idx].emplace_back(test);
+
   // TODO(burrimi): should we also check the oldest timestamp of mergeable residuals?
 
   // Check if all the mergeable measurements have a newer measurement to allow for interpolation.
@@ -141,10 +189,14 @@ bool MeasurementManager::updateStrategy(const int& timestamp_previous_update_ns,
       return false;
     }
     update_description->active_timeline_ids.emplace_back(i);
+    extractRelevantMeasurements(current_timeline, timestamp_previous_update_ns, oldest_timestamp, &update_description->timelines[i], &update_description->managed_measurements);
   }
   // We probably have all the required measurements for performing one step.
+
+
   update_description->timestamp_ns = oldest_timestamp;
   update_description->timestamp_previous_update_ns = timestamp_previous_update_ns;
+
   return true;
 }
 

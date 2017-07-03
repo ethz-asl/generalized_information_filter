@@ -10,6 +10,7 @@
 
 #include "filter_test/state.h"
 #include "filter_test/residual.h"
+#include "filter_test/measurement_manager.h"
 
 namespace tsif {
 

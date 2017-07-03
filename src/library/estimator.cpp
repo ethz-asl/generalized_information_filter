@@ -69,7 +69,7 @@ void Estimator::runEstimator() {
 
     TSIF_LOG("predictAndUpdate at time " << std::to_string(update_description.timestamp_ns));
     FilterProblemDescription problem_description = problem_builder_.getFilterProblemDescription(update_description);
-    filter_.predictAndUpdate(problem_description, state_, &state_);
+    filter_.predictAndUpdate(update_description, problem_description, state_, &state_);
     timestamp_previous_update_ns_ = update_description.timestamp_ns;
   }
 }

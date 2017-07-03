@@ -70,7 +70,7 @@ class Filter {
 
   bool init(const State& state, const int& total_residual_dimension);
 
-  void predictAndUpdate(const FilterProblemDescription& filter_problem, const State& state, State* updated_state);
+  void predictAndUpdate(const UpdateDescription& update_description, const FilterProblemDescription& filter_problem, const State& state, State* updated_state);
 
 
  private:

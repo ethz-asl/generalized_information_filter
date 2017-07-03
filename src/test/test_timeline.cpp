@@ -50,7 +50,7 @@ TEST(TimelineTest, TimelineGetRange) {
 
   CHECK(measurements.size()==2);
 
-  CHECK(measurements[0].first==5);
+  CHECK(measurements[0].first==0);
   CHECK(measurements[1].first==10);
 
   timeline.addMeasurement(20, new ImuMeasurement(Vector3(1, 1, 1), Vector3(1, 1, 1)));
@@ -59,9 +59,10 @@ TEST(TimelineTest, TimelineGetRange) {
 
   CHECK(measurements.size()==3);
 
-  CHECK(measurements[0].first==5);
+  CHECK(measurements[0].first==0);
   CHECK(measurements[1].first==10);
-  CHECK(measurements[2].first==15);
+  CHECK(measurements[2].first==20);
+
 }
 
 

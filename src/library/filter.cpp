@@ -62,7 +62,7 @@ void Filter::setMatrixDimensions(const int active_residuals_dimension, const int
 }
 
 // Most of this function is copied from Bloesch https://github.com/ethz-asl/two_state_information_filter!!!
-void Filter::predictAndUpdate(const FilterProblemDescription& filter_problem, const State& state, State* updated_state) {
+void Filter::predictAndUpdate(const UpdateDescription& update_description, const FilterProblemDescription& filter_problem, const State& state, State* updated_state) {
 
   const int& timestamp_ns = filter_problem.timestamp_ns;
   TSIF_LOG("State before prediction:\n" << state.getAsVector().transpose());
