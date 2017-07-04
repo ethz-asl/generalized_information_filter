@@ -118,8 +118,9 @@ void Estimator::checkResiduals() const {
 
 bool Estimator::init(const MeasurementBuffer& measurement_buffer) {
   information_.resize(state_.minimal_dimension_, state_.minimal_dimension_);
-  information_.setIdentity();
+  information_.setZero();
   filter_.init(state_, problem_builder_.getTotalResidualDimension());
+  // Call custom initialization to initialize state and information matrix.
   state_initializer_->init(
       measurement_manager_, measurement_buffer, &state_, &information_);
   return true;
