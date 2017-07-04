@@ -103,7 +103,8 @@ FilterProblemDescription ProblemBuilder::getFilterProblemDescription(
 
   int active_residuals_dimension = 0;
   for (ResidualContainer& current_residual : residual_containers_) {
-    bool residual_ok = measurement_buffer.areMeasurementsAvailable(current_residual.measurement_keys);
+    bool residual_ok = measurement_buffer.areMeasurementsAvailable(
+        current_residual.measurement_keys);
 
     current_residual.residual->active_ = residual_ok;  // TODO(burrimi): Do this
                                                        // a better way. move to

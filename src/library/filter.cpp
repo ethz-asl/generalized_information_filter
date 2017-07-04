@@ -15,7 +15,6 @@ namespace tsif {
 void Filter::predictState(
     const MeasurementBuffer& measurement_buffer,
     const FilterProblemDescription& filter_problem, const State& state,
-    const int timestamp_previous_update_ns, const int timestamp_ns,
     State* predicted_state) const {
   *predicted_state = state;  // For states that don't have a prediction
                              // residual, take the previous state.
@@ -97,14 +96,13 @@ void Filter::setMatrixDimensions(
 void Filter::predictAndUpdate(
     const MeasurementBuffer& measurement_buffer,
     const FilterProblemDescription& filter_problem, const State& state,
-    State* updated_state) {
+    const MatrixX& information, State* updated_state,
+    MatrixX* updated_information) {
   const int& timestamp_ns = measurement_buffer.timestamp_ns;
   TSIF_LOG("State before prediction:\n" << state.getAsVector().transpose());
 
   predictState(
-      measurement_buffer, filter_problem, state,
-      measurement_buffer.timestamp_previous_update_ns, timestamp_ns,
-      &temporary_second_state_);
+      measurement_buffer, filter_problem, state, &temporary_second_state_);
 
   TSIF_LOG(
       "State after prediction:\n"
@@ -136,7 +134,7 @@ void Filter::predictAndUpdate(
 
     // Compute Kalman Update // TODO use more efficient form
     MatrixX D =
-        information_ + jacobian_wrt_state1_.transpose() * jacobian_wrt_state1_;
+        information + jacobian_wrt_state1_.transpose() * jacobian_wrt_state1_;
     MatrixX J(active_residuals_dimension, active_residuals_dimension);
     J.setIdentity();
 #if TSIF_VERBOSE > 0
@@ -180,9 +178,9 @@ void Filter::predictAndUpdate(
 
   *updated_state = temporary_second_state_;
 
-  information_ = newInf;
+  *updated_information = newInf;
   TSIF_LOG("State after Update:\n" << state.print());
-  TSIF_LOG("Information matrix:\n" << information_);
+  TSIF_LOG("Information matrix:\n" << *updated_information);
 
   //    // Post Processing
   //    PostProcess();
@@ -193,8 +191,6 @@ bool Filter::init(const State& state, const int& total_residual_dimension) {
       << "residual dimension: " << std::to_string(total_residual_dimension);
   const int& minimal_state_dimension = state.minimal_dimension_;
   temporary_second_state_ = state;
-  information_.resize(minimal_state_dimension, minimal_state_dimension);
-  information_.setIdentity();
   residual_vector_.resize(total_residual_dimension);
 
   jacobian_wrt_state1_.resize(

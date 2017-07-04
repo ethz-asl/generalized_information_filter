@@ -28,8 +28,8 @@ struct MeasurementBuffer {
   }
 
   bool areMeasurementsAvailable(const std::vector<int> keys) const {
-    for(const int key:keys) {
-      if(timelines[key].empty()) {
+    for (const int key : keys) {
+      if (timelines[key].empty()) {
         return false;
       }
     }
@@ -52,9 +52,9 @@ struct MeasurementBuffer {
     std::cout << "Measurement buffer start: " << timestamp_previous_update_ns
               << " end: " << timestamp_ns << std::endl;
     int i = 0;
-    for (TimedMeasurementVector& timeline : timelines) {
+    for (const TimedMeasurementVector& timeline : timelines) {
       std::cout << "Timeline " << i << " : ";
-      for (TimedMeasurement& meas : timeline) {
+      for (const TimedMeasurement& meas : timeline) {
         std::cout << meas.first << " ";
       }
       std::cout << std::endl;

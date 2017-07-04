@@ -52,9 +52,8 @@ class Filter {
   std::vector<BlockType> state_types_;
   // std::vector<std::string> state_names_;
 
+  // Temporary variables
   State temporary_second_state_;
-
-  MatrixX information_;
   VectorX residual_vector_;
   MatrixX jacobian_wrt_state1_;
   MatrixX jacobian_wrt_state2_;
@@ -68,8 +67,8 @@ class Filter {
   void predictState(
       const MeasurementBuffer& measurement_buffer,
       const FilterProblemDescription& filter_problem, const State& state,
-      const int timestamp_previous_update_ns, const int timestamp_ns,
       State* predicted_state) const;
+
   void constructProblem(
       const MeasurementBuffer& measurement_buffer,
       const FilterProblemDescription& filter_problem, const State& first_state,
@@ -81,7 +80,8 @@ class Filter {
   void predictAndUpdate(
       const MeasurementBuffer& measurement_buffer,
       const FilterProblemDescription& filter_problem, const State& state,
-      State* updated_state);
+      const MatrixX& information, State* updated_state,
+      MatrixX* updated_information);
 
  private:
   inline std::vector<MatrixXRef> getJacobianBlocks(

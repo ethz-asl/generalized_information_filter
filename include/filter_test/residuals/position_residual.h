@@ -31,9 +31,9 @@ class PositionResidual : public ResidualBase {
 
   ~PositionResidual() {}
 
-//  virtual bool prepareResidual(const int t1_ns, const int t2_ns) {
-//    return true;
-//  }
+  //  virtual bool prepareResidual(const int t1_ns, const int t2_ns) {
+  //    return true;
+  //  }
 
   virtual bool predict(
       const std::vector<BlockBase*>& state,

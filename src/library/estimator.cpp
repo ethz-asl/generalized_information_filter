@@ -90,7 +90,8 @@ void Estimator::runEstimator() {
     FilterProblemDescription problem_description =
         problem_builder_.getFilterProblemDescription(measurement_buffer);
     filter_.predictAndUpdate(
-        measurement_buffer, problem_description, state_, &state_);
+        measurement_buffer, problem_description, state_, information_, &state_,
+        &information_);
     timestamp_previous_update_ns_ = measurement_buffer.timestamp_ns;
   }
 }
