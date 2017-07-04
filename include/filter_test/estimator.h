@@ -80,11 +80,6 @@ class Estimator {
       std::vector<int> second_keys,
       std::vector<int> measurement_keys = std::vector<int>());
 
-  bool addResidualImplementation(
-      ResidualBase* residual, std::vector<int> first_keys,
-      std::vector<int> second_keys, std::vector<int> measurement_keys,
-      const bool use_for_prediction);
-
   void addMeasurement(
       int timeline_key, int timestamp_ns, MeasurementBase* measurement);
 
@@ -105,6 +100,12 @@ class Estimator {
   void checkResiduals() const;
 
  private:
+  bool addResidualImplementation(
+      ResidualBase* residual, std::vector<int> first_keys,
+      std::vector<int> second_keys, std::vector<int> measurement_keys,
+      const bool use_for_prediction);
+
+
   void runEstimator();
 
   bool init(const MeasurementBuffer& measurement_buffer);

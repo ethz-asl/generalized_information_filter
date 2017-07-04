@@ -40,6 +40,7 @@ bool Estimator::addResidualImplementation(
     ResidualBase* residual, std::vector<int> first_keys,
     std::vector<int> second_keys, std::vector<int> measurement_keys,
     const bool use_for_prediction) {
+  CHECK_NOTNULL(residual);
   CHECK(state_.dimension_ > 0);  // Check if state is defined.
   CHECK(!is_initialized_) << "Extending the state or adding residuals after "
                              "initialization is not suported yet";
@@ -53,6 +54,7 @@ bool Estimator::addResidualImplementation(
 
 void Estimator::addMeasurement(
     int timeline_key, int timestamp_ns, MeasurementBase* measurement) {
+  CHECK_NOTNULL(measurement);
   if (timestamp_previous_update_ns_ > timestamp_ns) {
     std::cout
         << "timestamp of measurement is older than current estimator time."
