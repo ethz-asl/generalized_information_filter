@@ -25,7 +25,7 @@ class MeasurementManager {
 
   // Takes ownership of the data.
   void addMeasurement(
-      const int timeline_key, const int64_t timestamp_ns,
+      const size_t timeline_key, const int64_t timestamp_ns,
       MeasurementBase* measurement);
 
   bool updateStrategy(
@@ -34,13 +34,13 @@ class MeasurementManager {
 
   // We assume that timeline id's start with zero. If a timeline does not exist
   // it's created.
-  Timeline* getTimelinePtr(int timeline_key);
+  Timeline* getTimelinePtr(size_t timeline_key);
   std::vector<Timeline*> prepareTimelines(
-      const std::vector<int>& timeline_keys, const bool is_mergeable);
+      const std::vector<size_t>& timeline_keys, const bool is_mergeable);
 
   void printTimeline() const;
 
-  inline const Timeline& getTimeline(const int key) const {
+  inline const Timeline& getTimeline(const size_t key) const {
     CHECK(key < timelines_.size());
     return timelines_[key];
   }

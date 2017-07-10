@@ -50,7 +50,7 @@ class ConstantResidual : public ResidualBase {
     return false;
   }
 
-  virtual std::string getPrintableName() const {
+  virtual std::string getName() const {
     return "const residual";
   }
 

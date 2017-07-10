@@ -12,7 +12,7 @@ namespace tsif {
 
 // We assume that timeline id's start with zero. If a timeline does not exist
 // it's created.
-Timeline* MeasurementManager::getTimelinePtr(int timeline_key) {
+Timeline* MeasurementManager::getTimelinePtr(size_t timeline_key) {
   // Check if timeline for that sensor id already exists.
   while (timeline_key >= timelines_.size()) {
     timelines_.emplace_back(Timeline());
@@ -23,9 +23,9 @@ Timeline* MeasurementManager::getTimelinePtr(int timeline_key) {
 // Returns all the Timelines requested. If timeline does not exist it gets
 // created.
 std::vector<Timeline*> MeasurementManager::prepareTimelines(
-    const std::vector<int>& timeline_keys, const bool is_mergeable) {
+    const std::vector<size_t>& timeline_keys, const bool is_mergeable) {
   std::vector<Timeline*> timelines;
-  for (const int current_key : timeline_keys) {
+  for (const size_t current_key : timeline_keys) {
     Timeline* current_timeline = getTimelinePtr(current_key);
     current_timeline->mergeable_ &= is_mergeable;
     timelines.emplace_back(current_timeline);
@@ -34,7 +34,7 @@ std::vector<Timeline*> MeasurementManager::prepareTimelines(
 }
 
 void MeasurementManager::addMeasurement(
-    const int timeline_key, const int64_t timestamp_ns,
+    const size_t timeline_key, const int64_t timestamp_ns,
     MeasurementBase* measurement) {
   CHECK(timeline_key < timelines_.size())
       << "Timeline key does not exist. This probably means that the "
@@ -45,8 +45,8 @@ void MeasurementManager::addMeasurement(
 void MeasurementManager::printTimeline() const {
   std::vector<TimedMeasurementMap::const_iterator> timeline_iterators;
   std::vector<TimedMeasurementMap::const_iterator> timeline_iterators_end;
-  int i = 0;
-  int num_finished_timelines = 0;
+  size_t i = 0;
+  size_t num_finished_timelines = 0;
 
   std::cout << padTo("", 20);
   for (const Timeline& current_timeline : timelines_) {
@@ -76,7 +76,7 @@ void MeasurementManager::printTimeline() const {
   size_t num_timelines = timeline_iterators.size();
   while (num_finished_timelines < num_timelines) {
     num_finished_timelines = 0;
-    int smallest_timeline = 0;
+    size_t smallest_timeline = 0;
     double oldest_timestamp = std::numeric_limits<double>::max();
     for (size_t i = 0; i < num_timelines; ++i) {
       if (timeline_iterators[i] == timeline_iterators_end[i]) {
@@ -175,13 +175,13 @@ bool MeasurementManager::updateStrategy(
   // measurement.
   // TODO(burrimi): Cache this.
   double oldest_timestamp = std::numeric_limits<double>::max();
-  int active_measurement_idx;
+  size_t active_measurement_idx;
   for (size_t i = 0; i < timelines_.size(); ++i) {
     const Timeline& current_timeline = timelines_[i];
     if (current_timeline.mergeable_ || current_timeline.isEmpty()) {
       continue;
     }
-    const int next_timestamp = current_timeline.getNextMeasurementTimestamp(
+    const int64_t next_timestamp = current_timeline.getNextMeasurementTimestamp(
         timestamp_previous_update_ns);
     if (next_timestamp < 0) {  // Check if we got a valid timestamp.
       continue;

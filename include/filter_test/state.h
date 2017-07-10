@@ -73,38 +73,38 @@ class State {
     }
   }
 
-  void setBlock(const int key, const VectorXRef& value) {
+  void setBlock(const size_t key, const VectorXRef& value) {
     getBlock(key)->setValue(value);
   }
 
   template <typename BlockType>
-  void setValue(const int key, const typename BlockType::StorageType& value) {
+  void setValue(const size_t key, const typename BlockType::StorageType& value) {
     BlockType* block = dynamic_cast<BlockType*>(getBlock(key));
     CHECK_NOTNULL(block);  // Check if cast successful
     block->setValue(value);
   }
 
   template <typename BlockType>
-  typename BlockType::StorageType& getValue(const int key) {
+  typename BlockType::StorageType& getValue(const size_t key) {
     BlockType* block = getBlock(key);
     return block->template getValue<BlockType>();
   }
 
-  inline BlockBase* getBlock(const int key) const {
+  inline BlockBase* getBlock(const size_t key) const {
     CHECK(state_blocks_.size() > key);  // Check if key is valid.
     return state_blocks_[key];
   }
 
-  inline std::vector<BlockBase*> getBlocks(const std::vector<int>& keys) const {
+  inline std::vector<BlockBase*> getBlocks(const std::vector<size_t>& keys) const {
     std::vector<BlockBase*> blocks;
-    for (const int& current_key : keys) {
+    for (const size_t& current_key : keys) {
       blocks.emplace_back(getBlock(current_key));
     }
     return blocks;
   }
 
   template <typename BlockType>
-  BlockType* getBlock(const int key) const {
+  BlockType* getBlock(const size_t key) const {
     BlockType* block = dynamic_cast<BlockType*>(getBlock(key));
     CHECK_NOTNULL(block);  // Check if key is valid.
     return block;
@@ -163,7 +163,7 @@ class State {
     }
   }
 
-  inline int getAccumulatedMinimalDimension(const int key) const {
+  inline int getAccumulatedMinimalDimension(const size_t key) const {
     CHECK(key < accumulated_minimal_dimensions_.size());
     return accumulated_minimal_dimensions_[key];
   }

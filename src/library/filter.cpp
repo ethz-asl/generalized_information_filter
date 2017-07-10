@@ -119,7 +119,7 @@ void Filter::predictAndUpdate(
 
   double weightedDelta = config_.residual_norm_threshold;
   MatrixX newInf(state.minimal_dimension_, state.minimal_dimension_);
-  size_t update_iteration;
+  int update_iteration;
   for (update_iteration = 0; update_iteration < config_.max_update_iterations &&
                              weightedDelta >= config_.residual_norm_threshold;
        ++update_iteration) {

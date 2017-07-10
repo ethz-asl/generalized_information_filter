@@ -11,8 +11,8 @@
 namespace tsif {
 
 bool ProblemBuilder::addResidual(
-    ResidualBase* residual, std::vector<int> first_keys,
-    std::vector<int> second_keys, std::vector<int> measurement_keys,
+    ResidualBase* residual, std::vector<size_t> first_keys,
+    std::vector<size_t> second_keys, std::vector<size_t> measurement_keys,
     bool use_for_prediction) {
   ResidualContainer container;
   container.first_keys = first_keys;
@@ -49,7 +49,7 @@ void ProblemBuilder::printResiduals(const State& state) const {
         std::cout << "     ";
       }
     }
-    std::string residual_name = current_residual.residual->getPrintableName();
+    std::string residual_name = current_residual.residual->getName();
     std::cout << padTo(residual_name, 20);
 
     for (size_t i = 0; i < state.numberOfBlocks(); ++i) {
@@ -92,7 +92,7 @@ void ProblemBuilder::checkResiduals(const State& state) const {
     std::vector<BlockBase*> blocks2 =
         state.getBlocks(current_residual.second_keys);
     std::cout << "Checking input types for residual : "
-              << current_residual.residual->getPrintableName() << std::endl;
+              << current_residual.residual->getName() << std::endl;
     current_residual.residual->inputTypesValid(blocks1, blocks2);
   }
 }

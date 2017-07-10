@@ -26,7 +26,7 @@ TEST(TimelineTest, TimelineGetNextMeasurement) {
   timeline.addMeasurement(
       10, new ImuMeasurement(Vector3(1, 1, 1), Vector3(1, 1, 1)));
 
-  int timestamp = timeline.getNextMeasurementTimestamp(0);
+  int64_t timestamp = timeline.getNextMeasurementTimestamp(0);
 
   EXPECT_TRUE(timestamp == 10);
 

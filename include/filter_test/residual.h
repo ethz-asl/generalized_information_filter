@@ -34,7 +34,7 @@ class ResidualBase {
 
   //  void setMeasurementTimelines(std::vector<Timeline*> timelines);
 
-  //  virtual bool prepareResidual(const int t1_ns, const int t2_ns) = 0;
+  //  virtual bool prepareResidual(const int64_t t1_ns, const int64_t t2_ns) = 0;
 
   // Predicts the state. The jacobians are only evaluated if the
   // jacobian_wrt_state1 is not null.
@@ -59,7 +59,7 @@ class ResidualBase {
       std::vector<MatrixXRef>* jacobian_wrt_state1,
       std::vector<MatrixXRef>* jacobian_wrt_state2) = 0;
 
-  virtual std::string getPrintableName() const = 0;
+  virtual std::string getName() const = 0;
 
   // This function checks if all input blocks are of correct type.
   virtual bool inputTypesValid(

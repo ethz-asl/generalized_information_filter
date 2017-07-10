@@ -19,9 +19,9 @@ bool Estimator::defineState(std::vector<BlockTypeId> state_types) {
 }
 
 bool Estimator::addResidual(
-    ResidualBase* residual, const std::vector<int>& first_keys,
-    const std::vector<int>& second_keys,
-    const std::vector<int>& measurement_keys) {
+    ResidualBase* residual, const std::vector<size_t>& first_keys,
+    const std::vector<size_t>& second_keys,
+    const std::vector<size_t>& measurement_keys) {
   const bool kIsPredictionResidual = false;
   return addResidualImplementation(
       residual, first_keys, second_keys, measurement_keys,
@@ -29,9 +29,9 @@ bool Estimator::addResidual(
 }
 
 bool Estimator::addPredictionResidual(
-    ResidualBase* residual, const std::vector<int>& first_keys,
-    const std::vector<int>& second_keys,
-    const std::vector<int>& measurement_keys) {
+    ResidualBase* residual, const std::vector<size_t>& first_keys,
+    const std::vector<size_t>& second_keys,
+    const std::vector<size_t>& measurement_keys) {
   const bool kIsPredictionResidual = true;
   return addResidualImplementation(
       residual, first_keys, second_keys, measurement_keys,
@@ -39,9 +39,9 @@ bool Estimator::addPredictionResidual(
 }
 
 bool Estimator::addResidualImplementation(
-    ResidualBase* residual, const std::vector<int>& first_keys,
-    const std::vector<int>& second_keys,
-    const std::vector<int>& measurement_keys, const bool use_for_prediction) {
+    ResidualBase* residual, const std::vector<size_t>& first_keys,
+    const std::vector<size_t>& second_keys,
+    const std::vector<size_t>& measurement_keys, const bool use_for_prediction) {
   CHECK_NOTNULL(residual);
   CHECK(state_.dimension_ > 0);  // Check if state is defined.
   CHECK(!is_initialized_) << "Extending the state or adding residuals after "
@@ -55,7 +55,7 @@ bool Estimator::addResidualImplementation(
 }
 
 void Estimator::addMeasurement(
-    int timeline_key, int64_t timestamp_ns, MeasurementBase* measurement) {
+    size_t timeline_key, int64_t timestamp_ns, MeasurementBase* measurement) {
   CHECK_NOTNULL(measurement);
   if (timestamp_previous_update_ns_ > timestamp_ns) {
     std::cout
@@ -100,7 +100,7 @@ void Estimator::runEstimator() {
   }
 }
 
-void Estimator::initStateValue(const int key, const VectorXRef& value) {
+void Estimator::initStateValue(const size_t key, const VectorXRef& value) {
   state_.setBlock(key, value);
 }
 

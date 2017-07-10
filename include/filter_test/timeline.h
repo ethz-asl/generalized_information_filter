@@ -40,13 +40,13 @@ class Timeline {
       delete timed_measurement.second;
     }
   }
-  inline int getOldestMeasurementTimestamp() const {
+  inline int64_t getOldestMeasurementTimestamp() const {
     return timed_measurements_.begin()->first;
   }
 
   // Finds the first measurement where measurement timestamp > timestamp_ns.
   // Returns -1 in case no newer measurement exists.
-  inline int getNextMeasurementTimestamp(const int64_t timestamp_ns) const {
+  inline int64_t getNextMeasurementTimestamp(const int64_t timestamp_ns) const {
     const auto it = timed_measurements_.upper_bound(timestamp_ns);
     if (it != timed_measurements_.end()) {
       return it->first;
@@ -118,8 +118,8 @@ class Timeline {
   //  // time      x   x   x   x   x   x   x
   //  // min/max     ^               ^
   //  // return      x x   x   x   x x
-  //  std::vector<TimedMeasurement> getMeasurementsInRange(const int
-  //  timestamp_min_ns, const int timestamp_max_ns) {
+  //  std::vector<TimedMeasurement> getMeasurementsInRange(const int64_t
+  //  timestamp_min_ns, const int64_t timestamp_max_ns) {
   //    std::vector<TimedMeasurement> timed_measurements;
   //    if(getOldestMeasurementTimestamp() > timestamp_min_ns ||
   //    getNewestMeasurementTimestamp() < timestamp_max_ns) {
@@ -167,10 +167,10 @@ class Timeline {
     return timed_measurements;
   }
 
-  inline int getNewestMeasurementTimestamp() const {
+  inline int64_t getNewestMeasurementTimestamp() const {
     return timed_measurements_.rbegin()->first;
   }
-  inline int getNumMeasurements() const {
+  inline size_t getNumMeasurements() const {
     return timed_measurements_.size();
   }
   inline bool isEmpty() const {

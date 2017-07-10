@@ -143,7 +143,7 @@ class ConstantVelocityResidual : public ResidualBase {
     return true;
   }
 
-  virtual std::string getPrintableName() const {
+  virtual std::string getName() const {
     return "const velocity";
   }
 

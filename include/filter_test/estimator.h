@@ -64,24 +64,24 @@ class Estimator {
 
   bool defineState(std::vector<BlockTypeId> state_types);
 
-  void initStateValue(const int key, const VectorXRef& value);
+  void initStateValue(const size_t key, const VectorXRef& value);
 
   // Adds a residual. The problem_builder takes ownership of this residual and
   // takes care of cleaning it up.
   bool addResidual(
-      ResidualBase* residual, const std::vector<int>& first_keys,
-      const std::vector<int>& second_keys,
-      const std::vector<int>& measurement_keys = std::vector<int>());
+      ResidualBase* residual, const std::vector<size_t>& first_keys,
+      const std::vector<size_t>& second_keys,
+      const std::vector<size_t>& measurement_keys = std::vector<size_t>());
 
   // Same as addResidual but additionally this residual is used to predict the
   // state. This is only needed for the GIF.
   bool addPredictionResidual(
-      ResidualBase* residual, const std::vector<int>& first_keys,
-      const std::vector<int>& second_keys,
-      const std::vector<int>& measurement_keys = std::vector<int>());
+      ResidualBase* residual, const std::vector<size_t>& first_keys,
+      const std::vector<size_t>& second_keys,
+      const std::vector<size_t>& measurement_keys = std::vector<size_t>());
 
   void addMeasurement(
-      const int timeline_key, const int64_t timestamp_ns,
+      const size_t timeline_key, const int64_t timestamp_ns,
       MeasurementBase* measurement);
 
   void printState() const;
@@ -102,9 +102,9 @@ class Estimator {
 
  private:
   bool addResidualImplementation(
-      ResidualBase* residual, const std::vector<int>& first_keys,
-      const std::vector<int>& second_keys,
-      const std::vector<int>& measurement_keys, const bool use_for_prediction);
+      ResidualBase* residual, const std::vector<size_t>& first_keys,
+      const std::vector<size_t>& second_keys,
+      const std::vector<size_t>& measurement_keys, const bool use_for_prediction);
 
   void runEstimator();
 

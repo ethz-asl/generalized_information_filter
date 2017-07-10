@@ -19,8 +19,8 @@ namespace tsif {
 
 class MeasurementBase;
 
-using TimedMeasurement = std::pair<int, MeasurementBase*>;
-using TimedMeasurementMap = std::map<int, MeasurementBase*>;
+using TimedMeasurement = std::pair<int64_t, MeasurementBase*>;
+using TimedMeasurementMap = std::map<int64_t, MeasurementBase*>;
 using TimedMeasurementVector = std::vector<TimedMeasurement>;
 
 class MeasurementBase {
@@ -53,8 +53,8 @@ struct MeasurementBuffer {
     }
   }
 
-  bool areMeasurementsAvailable(const std::vector<int>& keys) const {
-    for (const int key : keys) {
+  bool areMeasurementsAvailable(const std::vector<size_t>& keys) const {
+    for (const size_t key : keys) {
       if (key >= timelines.size()) {
         return false;
       }
@@ -66,9 +66,9 @@ struct MeasurementBuffer {
   }
 
   std::vector<const TimedMeasurementVector*> getTimedMeasurementVectors(
-      const std::vector<int>& keys) const {
+      const std::vector<size_t>& keys) const {
     std::vector<const TimedMeasurementVector*> measurement_buffers;
-    for (int key : keys) {
+    for (const size_t key : keys) {
       CHECK(key < timelines.size());
       measurement_buffers.emplace_back(&(timelines[key]));
     }
@@ -81,7 +81,7 @@ struct MeasurementBuffer {
       return;
     std::cout << "Measurement buffer start: " << timestamp_previous_update_ns
               << " end: " << timestamp_ns << std::endl;
-    int i = 0;
+    size_t i = 0;
     for (const TimedMeasurementVector& timeline : timelines) {
       std::cout << "Timeline " << i << " : ";
       for (const TimedMeasurement& meas : timeline) {

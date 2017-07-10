@@ -53,7 +53,7 @@ int main(int argc, char** argv) {
   ros::NodeHandle nh("~");
 
   std::vector<BlockTypeId> state_block_types{kVector3, kVector3};
-  //  std::vector<int> state_names {kPosition, kVelocity, kOrientation};
+  //  std::vector<size_t> state_names {kPosition, kVelocity, kOrientation};
 
   Estimator test_estimator(new InitStateConstVelocity());
   test_estimator.defineState(state_block_types);

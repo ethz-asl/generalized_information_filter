@@ -15,9 +15,9 @@
 namespace tsif {
 
 struct ResidualContainer {
-  std::vector<int> first_keys;
-  std::vector<int> second_keys;
-  std::vector<int> measurement_keys;
+  std::vector<size_t> first_keys;
+  std::vector<size_t> second_keys;
+  std::vector<size_t> measurement_keys;
   bool use_for_prediction;
   ResidualBase* residual;
 };
@@ -39,8 +39,8 @@ class ProblemBuilder {
 
   // Adds a residual and takes ownership of the residual.
   bool addResidual(
-      ResidualBase* residual, std::vector<int> first_keys,
-      std::vector<int> second_keys, std::vector<int> measurement_keys,
+      ResidualBase* residual, std::vector<size_t> first_keys,
+      std::vector<size_t> second_keys, std::vector<size_t> measurement_keys,
       bool use_for_prediction);
 
   void printResiduals(const State& state) const;

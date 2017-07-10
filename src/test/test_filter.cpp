@@ -52,7 +52,7 @@ TEST(FilterTest, TimelineTest) {
   timeline.addMeasurement(
       10, new ImuMeasurement(Vector3(1, 1, 1), Vector3(1, 1, 1)));
 
-  int timestamp = timeline.getNextMeasurementTimestamp(0);
+  int64_t timestamp = timeline.getNextMeasurementTimestamp(0);
 
   EXPECT_TRUE(timestamp == 10);
 
@@ -62,7 +62,7 @@ TEST(FilterTest, TimelineTest) {
 
 TEST(FilterTest, SimpleResidualTest) {
   std::vector<BlockTypeId> state_block_types{kVector3, kVector3, kVector2};
-  //  std::vector<int> state_names {kPosition, kVelocity, kOrientation};
+  //  std::vector<size_t> state_names {kPosition, kVelocity, kOrientation};
 
   Estimator testfilter(new DummyInitState());
   testfilter.defineState(state_block_types);
@@ -73,9 +73,9 @@ TEST(FilterTest, SimpleResidualTest) {
   testfilter.printState();
 
   ConstantResidual* test_residual = new ConstantResidual();
-  std::vector<int> first_keys{kStatePosition};
-  std::vector<int> second_keys{kStatePosition};
-  std::vector<int> measurement_keys{kMeasImu};
+  std::vector<size_t> first_keys{kStatePosition};
+  std::vector<size_t> second_keys{kStatePosition};
+  std::vector<size_t> measurement_keys{kMeasImu};
   testfilter.addResidual(
       test_residual, first_keys, second_keys, measurement_keys);
 
@@ -119,20 +119,20 @@ TEST(FilterTest, SimpleResidualTest) {
 
 TEST(FilterTest, SimpleFilterTest) {
   std::vector<BlockTypeId> state_block_types{kVector3, kVector3};
-  //  std::vector<int> state_names {kPosition, kVelocity, kOrientation};
+  //  std::vector<size_t> state_names {kPosition, kVelocity, kOrientation};
 
   Estimator testfilter(new InitStateConstVelocity());
   testfilter.defineState(state_block_types);
 
   ConstantVelocityResidual* test_residual1 = new ConstantVelocityResidual(1, 1);
-  std::vector<int> first_keys{kStatePosition, kStateVelocity};
-  std::vector<int> second_keys{kStatePosition, kStateVelocity};
+  std::vector<size_t> first_keys{kStatePosition, kStateVelocity};
+  std::vector<size_t> second_keys{kStatePosition, kStateVelocity};
   testfilter.addPredictionResidual(test_residual1, first_keys, second_keys);
 
   PositionResidual* test_residual2 = new PositionResidual(Matrix3::Identity());
   first_keys = {};
   second_keys = {kStatePosition};
-  std::vector<int> measurement_keys{kMeasPosition};
+  std::vector<size_t> measurement_keys{kMeasPosition};
 
   testfilter.addResidual(
       test_residual2, first_keys, second_keys, measurement_keys);

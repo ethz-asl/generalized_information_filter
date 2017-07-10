@@ -68,11 +68,11 @@ class Filter {
 
  private:
   inline std::vector<MatrixXRef> getJacobianBlocks(
-      const State& state, const std::vector<int>& keys,
+      const State& state, const std::vector<size_t>& keys,
       const int residual_index, const int residual_dimension,
       MatrixX* jacobian) {
     std::vector<MatrixXRef> jacobian_blocks;
-    for (const int& current_key : keys) {
+    for (const size_t& current_key : keys) {
       const int& state_index =
           state.getAccumulatedMinimalDimension(current_key);
       jacobian_blocks.emplace_back(jacobian->block(
