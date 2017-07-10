@@ -8,11 +8,20 @@
 #ifndef INCLUDE_FILTER_TEST_MEASUREMENT_H_
 #define INCLUDE_FILTER_TEST_MEASUREMENT_H_
 
+#include <iostream>
+#include <map>
+
 #include "glog/logging.h"
 
 #include "filter_test/defines.h"
 
 namespace tsif {
+
+class MeasurementBase;
+
+using TimedMeasurement = std::pair<int, MeasurementBase*>;
+using TimedMeasurementMap = std::map<int, MeasurementBase*>;
+using TimedMeasurementVector = std::vector<TimedMeasurement>;
 
 class MeasurementBase {
  public:
@@ -23,16 +32,76 @@ class MeasurementBase {
   virtual MeasurementBase* clone() const = 0;
 
   virtual MeasurementBase* split(
-      const MeasurementBase& next_measurement, const int timestamp_ns,
-      const int timestamp_split_ns, const int timestamp_next_ns) {
+      const MeasurementBase& next_measurement, const int64_t timestamp_ns,
+      const int64_t timestamp_split_ns, const int64_t timestamp_next_ns) {
     CHECK(false) << "splitting this measurement is not implemented. Type: " +
-                        getPrintableMeasurement();
+                        getMeasurementName();
     return nullptr;
   }
 
-  virtual std::string getPrintableMeasurement() const = 0;
+  virtual std::string getMeasurementName() const = 0;
 
  private:
+};
+
+struct MeasurementBuffer {
+  ~MeasurementBuffer() {
+    if (!managed_measurements.empty()) {
+      for (TimedMeasurement& measurement : managed_measurements) {
+        delete measurement.second;
+      }
+    }
+  }
+
+  bool areMeasurementsAvailable(const std::vector<int>& keys) const {
+    for (const int key : keys) {
+      if (key >= timelines.size()) {
+        return false;
+      }
+      if (timelines[key].empty()) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  std::vector<const TimedMeasurementVector*> getTimedMeasurementVectors(
+      const std::vector<int>& keys) const {
+    std::vector<const TimedMeasurementVector*> measurement_buffers;
+    for (int key : keys) {
+      CHECK(key < timelines.size());
+      measurement_buffers.emplace_back(&(timelines[key]));
+    }
+
+    return measurement_buffers;
+  }
+
+  void print() const {
+    if (timelines.empty())
+      return;
+    std::cout << "Measurement buffer start: " << timestamp_previous_update_ns
+              << " end: " << timestamp_ns << std::endl;
+    int i = 0;
+    for (const TimedMeasurementVector& timeline : timelines) {
+      std::cout << "Timeline " << i << " : ";
+      for (const TimedMeasurement& meas : timeline) {
+        std::cout << meas.first << " ";
+      }
+      std::cout << std::endl;
+      ++i;
+    }
+  }
+
+  int64_t timestamp_ns = -1;
+  int64_t timestamp_previous_update_ns = -1;
+
+  // Buffered measurements. The index is the measurement_key.
+  // TODO(burrimi): Switch to map?
+  std::vector<TimedMeasurementVector> timelines;
+
+  TimedMeasurementVector managed_measurements;  // Buffer for temporary
+                                                // measurements that get deleted
+                                                // once out of scope.
 };
 
 class PositionMeasurement : public MeasurementBase {
@@ -46,9 +115,10 @@ class PositionMeasurement : public MeasurementBase {
         static_cast<const PositionMeasurement&>(*this));  // call the copy ctor.
   }
 
-  virtual std::string getPrintableMeasurement() const {
+  virtual std::string getMeasurementName() const {
     return "Position";
   }
+
   const Vector3 position_;
 
  private:
@@ -67,13 +137,13 @@ class ImuMeasurement : public MeasurementBase {
   }
 
   virtual MeasurementBase* split(
-      const MeasurementBase& next_measurement, const int timestamp_ns,
-      const int timestamp_split_ns, const int timestamp_next_ns) {
+      const MeasurementBase& next_measurement, const int64_t timestamp_ns,
+      const int64_t timestamp_split_ns, const int64_t timestamp_next_ns) {
     // TODO(burrimi): linear interpolation?
     return this->clone();
   }
 
-  virtual std::string getPrintableMeasurement() const {
+  virtual std::string getMeasurementName() const {
     return "IMU";
   }
   const Vector3 acceleration_;

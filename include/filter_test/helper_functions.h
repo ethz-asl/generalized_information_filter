@@ -21,7 +21,9 @@ inline std::string padTo(
   return padded_string;
 }
 
-inline bool vectorContainsValue(const std::vector<int>& vec, int value) {
+// Find a value in the vector. If you use this function often maybe consider
+// switching to a set!
+inline bool vectorContainsValue(const std::vector<int>& vec, const int value) {
   return std::find(vec.begin(), vec.end(), value) != vec.end();
 }
 

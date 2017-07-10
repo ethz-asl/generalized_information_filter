@@ -28,7 +28,7 @@ class InitStateConstVelocity : public InitStateBase {
       const MeasurementBuffer& measurement_buffer, State* state,
       MatrixX* information) {
     const Timeline& position_timeline =
-        measurement_manager.timelines_[kMeasPosition];
+        measurement_manager.getTimeline(kMeasPosition);
     const PositionMeasurement* position_measurement =
         position_timeline.getMeasurement<PositionMeasurement>(
             measurement_buffer.timestamp_ns);
@@ -54,14 +54,14 @@ TEST(FilterTest, TimelineTest) {
 
   int timestamp = timeline.getNextMeasurementTimestamp(0);
 
-  CHECK(timestamp == 10);
+  EXPECT_TRUE(timestamp == 10);
 
   timestamp = timeline.getNextMeasurementTimestamp(10);
-  CHECK(timestamp == -1) << timestamp;
+  EXPECT_TRUE(timestamp == -1) << timestamp;
 }
 
 TEST(FilterTest, SimpleResidualTest) {
-  std::vector<BlockType> state_block_types{kVector3, kVector3, kVector2};
+  std::vector<BlockTypeId> state_block_types{kVector3, kVector3, kVector2};
   //  std::vector<int> state_names {kPosition, kVelocity, kOrientation};
 
   Estimator testfilter(new DummyInitState());
@@ -118,7 +118,7 @@ TEST(FilterTest, SimpleResidualTest) {
 }
 
 TEST(FilterTest, SimpleFilterTest) {
-  std::vector<BlockType> state_block_types{kVector3, kVector3};
+  std::vector<BlockTypeId> state_block_types{kVector3, kVector3};
   //  std::vector<int> state_names {kPosition, kVelocity, kOrientation};
 
   Estimator testfilter(new InitStateConstVelocity());

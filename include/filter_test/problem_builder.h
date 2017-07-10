@@ -8,7 +8,7 @@
 #ifndef INCLUDE_FILTER_TEST_PROBLEM_BUILDER_H_
 #define INCLUDE_FILTER_TEST_PROBLEM_BUILDER_H_
 
-#include "filter_test/measurement_manager.h"
+#include "filter_test/measurement.h"
 #include "filter_test/residual.h"
 #include "filter_test/state.h"
 
@@ -36,10 +36,6 @@ class ProblemBuilder {
       delete current_residual.residual;
     }
   }
-  // everything related to the residuals
-  std::vector<ResidualContainer> residual_containers_;
-
-  int total_residual_dimension_;
 
   // Adds a residual and takes ownership of the residual.
   bool addResidual(
@@ -59,6 +55,10 @@ class ProblemBuilder {
       const MeasurementBuffer& measurement_buffer);
 
  private:
+  // everything related to the residuals
+  std::vector<ResidualContainer> residual_containers_;
+
+  int total_residual_dimension_;
 };
 
 }  // namespace tsif

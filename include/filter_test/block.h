@@ -18,7 +18,7 @@
 
 namespace tsif {
 
-enum BlockType {
+enum BlockTypeId {
   kVector1 = 0,  // Vector types need to be in correct order, otherwise type
                  // checks won't work!
   kVector2,
@@ -26,19 +26,21 @@ enum BlockType {
   kVector4,
   kVector5,
   kVector6,
-  kSO3
+  kSO1,
+  kSO2,
+  kSO3,
+  kUnitVector3
 };
 
 class BlockBase {
  public:
   const int minimal_dimension_;  // Dimension of the tangent space
   const int dimension_;
-  //  const bool is_vector_space_;
-  const BlockType type_;  // TODO(burrimi): Not nice, remove.
-  BlockBase(int dimension, int minimal_dimension, BlockType type)
+  const bool is_vector_space_;
+  BlockBase(int dimension, int minimal_dimension, bool is_vector_space)
       : minimal_dimension_(minimal_dimension),
         dimension_(dimension),
-        type_(type) {
+        is_vector_space_(is_vector_space) {
     CHECK(dimension >= minimal_dimension);
   };
   virtual ~BlockBase() {}
@@ -80,28 +82,14 @@ class BlockBase {
  private:
 };
 
-// template <class Derived>
-// class BlockHelper : public BlockBase
-//{
-// public:
-//  virtual BlockBase* clone() const
-//  {
-//    return new Derived(static_cast<const Derived&>(*this)); // call the copy
-//    ctor.
-//  }
-//};
-
 template <int Dimension>
 class VectorBlock : public BlockBase {
  public:
   typedef Vector<Dimension> StorageType;
 
-  // TODO(burrimi): remove ugly hack for type.
+  static const bool kIsVectorSpace = true;
   VectorBlock(const StorageType& value)
-      : BlockBase(
-            Dimension, Dimension,
-            static_cast<BlockType>(Dimension + BlockType::kVector1 - 1)),
-        value_(value) {}
+      : BlockBase(Dimension, Dimension, kIsVectorSpace), value_(value) {}
 
   VectorBlock() : VectorBlock(StorageType::Zero()) {}
 
@@ -168,7 +156,7 @@ class VectorBlock : public BlockBase {
 };
 
 namespace block_helper {
-BlockBase* createBlockByType(BlockType block_type);
+BlockBase* createBlockByType(BlockTypeId block_type);
 }  // namespace block_helper
 
 }  // namespace tsif

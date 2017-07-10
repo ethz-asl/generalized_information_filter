@@ -23,9 +23,9 @@ Timeline* MeasurementManager::getTimelinePtr(int timeline_key) {
 // Returns all the Timelines requested. If timeline does not exist it gets
 // created.
 std::vector<Timeline*> MeasurementManager::prepareTimelines(
-    std::vector<int> timeline_keys, bool is_mergeable) {
+    const std::vector<int>& timeline_keys, const bool is_mergeable) {
   std::vector<Timeline*> timelines;
-  for (int current_key : timeline_keys) {
+  for (const int current_key : timeline_keys) {
     Timeline* current_timeline = getTimelinePtr(current_key);
     current_timeline->mergeable_ &= is_mergeable;
     timelines.emplace_back(current_timeline);
@@ -34,7 +34,7 @@ std::vector<Timeline*> MeasurementManager::prepareTimelines(
 }
 
 void MeasurementManager::addMeasurement(
-    const int timeline_key, const int timestamp_ns,
+    const int timeline_key, const int64_t timestamp_ns,
     MeasurementBase* measurement) {
   CHECK(timeline_key < timelines_.size())
       << "Timeline key does not exist. This probably means that the "
@@ -113,7 +113,7 @@ void MeasurementManager::printTimeline() const {
 // Warning: This function allocates a new measurement which is not managed!
 bool MeasurementManager::splitMeasurements(
     const TimedMeasurement& measurement_start,
-    const TimedMeasurement& measurement_end, const int timestamp_split_ns,
+    const TimedMeasurement& measurement_end, const int64_t timestamp_split_ns,
     TimedMeasurement* measurement_split) const {
   // Check if we have to split
   if (measurement_start.first != timestamp_split_ns ||
@@ -134,8 +134,8 @@ bool MeasurementManager::splitMeasurements(
 // min/max     ^               ^
 // return      x x   x   x   x x
 bool MeasurementManager::extractRelevantMeasurements(
-    const Timeline& timeline, const int timestamp_start_ns,
-    const int timestamp_end_ns, std::vector<TimedMeasurement>* measurements,
+    const Timeline& timeline, const int64_t timestamp_start_ns,
+    const int64_t timestamp_end_ns, std::vector<TimedMeasurement>* measurements,
     std::vector<TimedMeasurement>* memory_manager) const {
   CHECK_NOTNULL(measurements);
   CHECK_NOTNULL(memory_manager);
@@ -169,7 +169,7 @@ bool MeasurementManager::extractRelevantMeasurements(
 }
 
 bool MeasurementManager::updateStrategy(
-    const int& timestamp_previous_update_ns,
+    const int64_t timestamp_previous_update_ns,
     MeasurementBuffer* measurement_buffer) const {
   // Find the oldest non mergeable timestamp. In KF filtering this is the
   // measurement.

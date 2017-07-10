@@ -32,27 +32,30 @@ class ResidualBase {
       : dimension_(dimension), is_mergeable_(is_mergeable), active_(false) {}
   virtual ~ResidualBase() {}
 
-  bool inputTypesValid(
-      const std::vector<BlockBase*>& state1,
-      const std::vector<BlockBase*>& state2)
-      const;  // Do some sanity checks if all types match
-
   //  void setMeasurementTimelines(std::vector<Timeline*> timelines);
 
   //  virtual bool prepareResidual(const int t1_ns, const int t2_ns) = 0;
 
+  // Predicts the state. The jacobians are only evaluated if the
+  // jacobian_wrt_state1 is not null.
+  // The state and jacobian blocks contain only the relevant blocks for that
+  // particular residual and not the full state!
   virtual bool predict(
       const std::vector<BlockBase*>& state,
       const std::vector<const TimedMeasurementVector*>& measurement_vectors,
-      const int t1_ns, const int t2_ns,
+      const int64_t t1_ns, const int64_t t2_ns,
       std::vector<BlockBase*>* predicted_state,
       std::vector<MatrixXRef>* jacobian_wrt_state1) = 0;
 
+  // evaluates the residual. The jacobians are only evaluated if the
+  // jacobian_wrt_state* is not null.
+  // The state and jacobian blocks contain only the relevant blocks for that
+  // particular residual and not the full state!
   virtual bool evaluate(
       const std::vector<BlockBase*>& state1,
       const std::vector<BlockBase*>& state2,
       const std::vector<const TimedMeasurementVector*>& measurement_vectors,
-      const int t1_ns, const int t2_ns, VectorXRef* residual,
+      const int64_t t1_ns, const int64_t t2_ns, VectorXRef* residual,
       std::vector<MatrixXRef>* jacobian_wrt_state1,
       std::vector<MatrixXRef>* jacobian_wrt_state2) = 0;
 

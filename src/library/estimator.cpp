@@ -12,15 +12,16 @@
 
 namespace tsif {
 
-bool Estimator::defineState(std::vector<BlockType> state_types) {
+bool Estimator::defineState(std::vector<BlockTypeId> state_types) {
   state_types_ = state_types;
   state_.defineState(state_types);
   return true;
 }
 
 bool Estimator::addResidual(
-    ResidualBase* residual, std::vector<int> first_keys,
-    std::vector<int> second_keys, std::vector<int> measurement_keys) {
+    ResidualBase* residual, const std::vector<int>& first_keys,
+    const std::vector<int>& second_keys,
+    const std::vector<int>& measurement_keys) {
   const bool kIsPredictionResidual = false;
   return addResidualImplementation(
       residual, first_keys, second_keys, measurement_keys,
@@ -28,8 +29,9 @@ bool Estimator::addResidual(
 }
 
 bool Estimator::addPredictionResidual(
-    ResidualBase* residual, std::vector<int> first_keys,
-    std::vector<int> second_keys, std::vector<int> measurement_keys) {
+    ResidualBase* residual, const std::vector<int>& first_keys,
+    const std::vector<int>& second_keys,
+    const std::vector<int>& measurement_keys) {
   const bool kIsPredictionResidual = true;
   return addResidualImplementation(
       residual, first_keys, second_keys, measurement_keys,
@@ -37,9 +39,9 @@ bool Estimator::addPredictionResidual(
 }
 
 bool Estimator::addResidualImplementation(
-    ResidualBase* residual, std::vector<int> first_keys,
-    std::vector<int> second_keys, std::vector<int> measurement_keys,
-    const bool use_for_prediction) {
+    ResidualBase* residual, const std::vector<int>& first_keys,
+    const std::vector<int>& second_keys,
+    const std::vector<int>& measurement_keys, const bool use_for_prediction) {
   CHECK_NOTNULL(residual);
   CHECK(state_.dimension_ > 0);  // Check if state is defined.
   CHECK(!is_initialized_) << "Extending the state or adding residuals after "
@@ -53,19 +55,19 @@ bool Estimator::addResidualImplementation(
 }
 
 void Estimator::addMeasurement(
-    int timeline_key, int timestamp_ns, MeasurementBase* measurement) {
+    int timeline_key, int64_t timestamp_ns, MeasurementBase* measurement) {
   CHECK_NOTNULL(measurement);
   if (timestamp_previous_update_ns_ > timestamp_ns) {
     std::cout
         << "timestamp of measurement is older than current estimator time."
         << " State buffer not yet implemented, dropping measurement: "
-        << measurement->getPrintableMeasurement() << " at time "
+        << measurement->getMeasurementName() << " at time "
         << std::to_string(timestamp_ns) << std::endl;
     return;
   }
 
   TSIF_LOG(
-      "added " << measurement->getPrintableMeasurement() << " at time "
+      "added " << measurement->getMeasurementName() << " at time "
                << std::to_string(timestamp_ns));
   measurement_manager_.addMeasurement(timeline_key, timestamp_ns, measurement);
   runEstimator();

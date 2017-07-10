@@ -43,7 +43,7 @@ class ConstantVelocityResidual : public ResidualBase {
 
   ~ConstantVelocityResidual() {}
 
-  //  virtual bool prepareResidual(const int t1_ns, const int t2_ns) {
+  //  virtual bool prepareResidual(const int64_t t1_ns, const int64_t t2_ns) {
   //    // this residual has nothing to prepare.
   //    return true;
   //  }
@@ -51,7 +51,7 @@ class ConstantVelocityResidual : public ResidualBase {
   virtual bool predict(
       const std::vector<BlockBase*>& state,
       const std::vector<const TimedMeasurementVector*>& measurement_vectors,
-      const int t1_ns, const int t2_ns,
+      const int64_t t1_ns, const int64_t t2_ns,
       std::vector<BlockBase*>* predicted_state,
       std::vector<MatrixXRef>* jacobian_wrt_state1) {
     CHECK_NOTNULL(predicted_state);
@@ -89,7 +89,7 @@ class ConstantVelocityResidual : public ResidualBase {
       const std::vector<BlockBase*>& state1,
       const std::vector<BlockBase*>& state2,
       const std::vector<const TimedMeasurementVector*>& measurement_vectors,
-      const int t1_ns, const int t2_ns, VectorXRef* residual,
+      const int64_t t1_ns, const int64_t t2_ns, VectorXRef* residual,
       std::vector<MatrixXRef>* jacobian_wrt_state1,
       std::vector<MatrixXRef>* jacobian_wrt_state2) {
     const Vector3& p_k = state1[kPositionBlock]->getValue<VectorBlock<3>>();

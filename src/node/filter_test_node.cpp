@@ -27,7 +27,7 @@ class InitStateConstVelocity : public InitStateBase {
       const MeasurementBuffer& measurement_buffer, State* state,
       MatrixX* information) {
     const Timeline& position_timeline =
-        measurement_manager.timelines_[kMeasPosition];
+        measurement_manager.getTimeline(kMeasPosition);
     const PositionMeasurement* position_measurement =
         position_timeline.getMeasurement<PositionMeasurement>(
             measurement_buffer.timestamp_ns);
@@ -52,7 +52,7 @@ int main(int argc, char** argv) {
   // Start the node resource managers (communication, time, etc)
   ros::NodeHandle nh("~");
 
-  std::vector<BlockType> state_block_types{kVector3, kVector3};
+  std::vector<BlockTypeId> state_block_types{kVector3, kVector3};
   //  std::vector<int> state_names {kPosition, kVelocity, kOrientation};
 
   Estimator test_estimator(new InitStateConstVelocity());
