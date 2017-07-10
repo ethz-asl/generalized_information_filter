@@ -16,8 +16,6 @@ class State {
   using BlockVector = std::vector<BlockBase*>;
 
  public:
-  BlockVector state_blocks_;
-  std::vector<int> accumulated_minimal_dimensions_;
   int dimension_;
   int minimal_dimension_;
 
@@ -32,7 +30,7 @@ class State {
   // Copy constructor clones the other state and takes care of allocating the
   // new blocks
   State(const State& other) : dimension_(0), minimal_dimension_(0) {
-    cloneState(other);
+    copyFrom(other);
   }
 
   State& operator=(const State& other) {
@@ -57,56 +55,56 @@ class State {
 
     // At this point the state is probably empty and we have to allocate the
     // blocks
-    cloneState(other);
+    copyFrom(other);
     return *this;
   }
 
-  inline void cloneState(const State& other) {
+  inline void copyFrom(const State& other) {
     for (BlockBase* current_block : other.state_blocks_) {
       BlockBase* new_block = current_block->clone();
       addBlock(new_block);
     }
   }
 
-  void defineState(std::vector<BlockType> block_types) {
-    for (BlockType current_type : block_types) {
+  void defineState(std::vector<BlockTypeId> block_types) {
+    for (BlockTypeId current_type : block_types) {
       BlockBase* current_block = block_helper::createBlockByType(current_type);
       addBlock(current_block);
     }
   }
 
-  void setBlock(const int key, const VectorXRef& value) {
+  void setBlock(const size_t key, const VectorXRef& value) {
     getBlock(key)->setValue(value);
   }
 
   template <typename BlockType>
-  void setValue(const int key, const typename BlockType::StorageType& value) {
+  void setValue(const size_t key, const typename BlockType::StorageType& value) {
     BlockType* block = dynamic_cast<BlockType*>(getBlock(key));
     CHECK_NOTNULL(block);  // Check if cast successful
     block->setValue(value);
   }
 
   template <typename BlockType>
-  typename BlockType::StorageType& getValue(const int key) {
+  typename BlockType::StorageType& getValue(const size_t key) {
     BlockType* block = getBlock(key);
     return block->template getValue<BlockType>();
   }
 
-  inline BlockBase* getBlock(const int& key) const {
+  inline BlockBase* getBlock(const size_t key) const {
     CHECK(state_blocks_.size() > key);  // Check if key is valid.
     return state_blocks_[key];
   }
 
-  inline std::vector<BlockBase*> getBlocks(const std::vector<int>& keys) const {
+  inline std::vector<BlockBase*> getBlocks(const std::vector<size_t>& keys) const {
     std::vector<BlockBase*> blocks;
-    for (const int& current_key : keys) {
+    for (const size_t& current_key : keys) {
       blocks.emplace_back(getBlock(current_key));
     }
     return blocks;
   }
 
   template <typename BlockType>
-  BlockType* getBlock(const int& key) const {
+  BlockType* getBlock(const size_t key) const {
     BlockType* block = dynamic_cast<BlockType*>(getBlock(key));
     CHECK_NOTNULL(block);  // Check if key is valid.
     return block;
@@ -124,7 +122,7 @@ class State {
     // Convenience function: if we have an empty state we clone the current
     // state to create it.
     if (result_state->dimension_ == 0) {
-      result_state->cloneState(*this);
+      result_state->copyFrom(*this);
     }
 
     CHECK(dimension_ == result_state->dimension_)
@@ -143,9 +141,10 @@ class State {
     }
   }
 
-  // calculates this - other = dx
+  // calculates this boxminus other = dx
   void boxMinus(const State& other, VectorX* dx) const {
-    //    CHECK_NOTNULL(dx);
+    CHECK_NOTNULL(dx);
+
     CHECK(
         minimal_dimension_ ==
         dx->size());  // Check if dimension of dx is valid.
@@ -164,7 +163,8 @@ class State {
     }
   }
 
-  inline int getAccumulatedMinimalDimension(const int& key) const {
+  inline int getAccumulatedMinimalDimension(const size_t key) const {
+    CHECK(key < accumulated_minimal_dimensions_.size());
     return accumulated_minimal_dimensions_[key];
   }
 
@@ -188,14 +188,17 @@ class State {
     return oss.str();
   }
 
-  // note
  private:
   inline void addBlock(BlockBase* block_to_add) {
+    CHECK_NOTNULL(block_to_add);
     accumulated_minimal_dimensions_.push_back(dimension_);
     dimension_ += block_to_add->dimension_;
     minimal_dimension_ += block_to_add->minimal_dimension_;
     state_blocks_.push_back(block_to_add);
   }
+
+  BlockVector state_blocks_;
+  std::vector<int> accumulated_minimal_dimensions_;
 };
 
 }  // namespace tsif

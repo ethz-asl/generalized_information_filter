@@ -4,7 +4,7 @@
 namespace tsif {
 
 namespace block_helper {
-BlockBase* createBlockByType(BlockType block_type) {
+BlockBase* createBlockByType(BlockTypeId block_type) {
   switch (block_type) {
     case kVector1:
       return new VectorBlock<1>();

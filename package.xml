@@ -20,6 +20,7 @@
   <!-- Dependencies needed after this package is compiled. -->
   <depend>roscpp</depend>
   <depend>cmake_modules</depend>
+  <depend>eigen_checks</depend>
   <depend>glog_catkin</depend>
 
 </package>

@@ -26,12 +26,12 @@ TEST(TimelineTest, TimelineGetNextMeasurement) {
   timeline.addMeasurement(
       10, new ImuMeasurement(Vector3(1, 1, 1), Vector3(1, 1, 1)));
 
-  int timestamp = timeline.getNextMeasurementTimestamp(0);
+  int64_t timestamp = timeline.getNextMeasurementTimestamp(0);
 
-  CHECK(timestamp == 10);
+  EXPECT_TRUE(timestamp == 10);
 
   timestamp = timeline.getNextMeasurementTimestamp(10);
-  CHECK(timestamp == -1) << timestamp;
+  EXPECT_TRUE(timestamp == -1) << timestamp;
 }
 
 TEST(TimelineTest, TimelineGetRange) {
@@ -45,25 +45,25 @@ TEST(TimelineTest, TimelineGetRange) {
   std::vector<TimedMeasurement> measurements =
       timeline.getMeasurementsInRange(5, 15);
 
-  CHECK(measurements.empty());
+  EXPECT_TRUE(measurements.empty());
 
   measurements = timeline.getMeasurementsInRange(5, 10);
 
-  CHECK(measurements.size() == 2);
+  EXPECT_TRUE(measurements.size() == 2);
 
-  CHECK(measurements[0].first == 0);
-  CHECK(measurements[1].first == 10);
+  EXPECT_TRUE(measurements[0].first == 0);
+  EXPECT_TRUE(measurements[1].first == 10);
 
   timeline.addMeasurement(
       20, new ImuMeasurement(Vector3(1, 1, 1), Vector3(1, 1, 1)));
 
   measurements = timeline.getMeasurementsInRange(5, 15);
 
-  CHECK(measurements.size() == 3);
+  EXPECT_TRUE(measurements.size() == 3);
 
-  CHECK(measurements[0].first == 0);
-  CHECK(measurements[1].first == 10);
-  CHECK(measurements[2].first == 20);
+  EXPECT_TRUE(measurements[0].first == 0);
+  EXPECT_TRUE(measurements[1].first == 10);
+  EXPECT_TRUE(measurements[2].first == 20);
 }
 
 }  // namespace tsif

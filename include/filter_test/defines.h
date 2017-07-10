@@ -32,7 +32,7 @@ typedef Eigen::Matrix3d Matrix3;
 typedef Eigen::MatrixXd MatrixX;
 
 constexpr double kNanoSecondsToSeconds = 1e-9;
-constexpr int kMaxMeasurmenetBufferSize = 1000;
+constexpr int kMaxMeasurementBufferSize = 1000;
 
 }  // namespace tsif
 

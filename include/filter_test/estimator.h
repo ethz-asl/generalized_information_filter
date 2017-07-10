@@ -54,42 +54,43 @@ class DummyInitState : public InitStateBase {
 class Estimator {
  public:
   Estimator(InitStateBase* state_initializer)
-      : is_initialized_(false),
-        timestamp_previous_update_ns_(-1),
-        state_initializer_(state_initializer) {}
+      : state_initializer_(state_initializer),
+        is_initialized_(false),
+        timestamp_previous_update_ns_(-1) {}
 
   ~Estimator() {
     delete state_initializer_;
   }
 
-  bool defineState(std::vector<BlockType> state_types);
+  bool defineState(std::vector<BlockTypeId> state_types);
 
-  void initStateValue(const int key, const VectorXRef& value);
+  void initStateValue(const size_t key, const VectorXRef& value);
 
   // Adds a residual. The problem_builder takes ownership of this residual and
   // takes care of cleaning it up.
   bool addResidual(
-      ResidualBase* residual, std::vector<int> first_keys,
-      std::vector<int> second_keys,
-      std::vector<int> measurement_keys = std::vector<int>());
+      ResidualBase* residual, const std::vector<size_t>& first_keys,
+      const std::vector<size_t>& second_keys,
+      const std::vector<size_t>& measurement_keys = std::vector<size_t>());
 
   // Same as addResidual but additionally this residual is used to predict the
   // state. This is only needed for the GIF.
   bool addPredictionResidual(
-      ResidualBase* residual, std::vector<int> first_keys,
-      std::vector<int> second_keys,
-      std::vector<int> measurement_keys = std::vector<int>());
+      ResidualBase* residual, const std::vector<size_t>& first_keys,
+      const std::vector<size_t>& second_keys,
+      const std::vector<size_t>& measurement_keys = std::vector<size_t>());
 
   void addMeasurement(
-      int timeline_key, int timestamp_ns, MeasurementBase* measurement);
+      const size_t timeline_key, const int64_t timestamp_ns,
+      MeasurementBase* measurement);
 
   void printState() const;
 
-  VectorX getStateAsVector() {
+  VectorX getStateAsVector() const {
     return state_.getAsVector();
   }
 
-  State getState() {
+  State getState() const {
     return state_;
   }
 
@@ -101,10 +102,9 @@ class Estimator {
 
  private:
   bool addResidualImplementation(
-      ResidualBase* residual, std::vector<int> first_keys,
-      std::vector<int> second_keys, std::vector<int> measurement_keys,
-      const bool use_for_prediction);
-
+      ResidualBase* residual, const std::vector<size_t>& first_keys,
+      const std::vector<size_t>& second_keys,
+      const std::vector<size_t>& measurement_keys, const bool use_for_prediction);
 
   void runEstimator();
 
@@ -126,7 +126,7 @@ class Estimator {
   // defines the state.
   // TODO(burrimi): State could also automatically be assembled by the residuals
   // in the future.
-  std::vector<BlockType> state_types_;
+  std::vector<BlockTypeId> state_types_;
 
   // Most recent state and corresponding information (= inverse of covariance
   // matrix).
@@ -134,7 +134,7 @@ class Estimator {
   // past.
   State state_;
   MatrixX information_;
-  int timestamp_previous_update_ns_;
+  int64_t timestamp_previous_update_ns_;
 };
 
 }  // namespace tsif

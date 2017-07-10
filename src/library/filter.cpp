@@ -29,7 +29,7 @@ void Filter::predictState(
       std::vector<const TimedMeasurementVector*> measurements =
           measurement_buffer.getTimedMeasurementVectors(
               residual_container->measurement_keys);
-      bool residual_ok = residual_container->residual->predict(
+      residual_container->residual->predict(
           blocks, measurements, measurement_buffer.timestamp_previous_update_ns,
           measurement_buffer.timestamp_ns, &blocks_predicted, nullptr);
     }
@@ -98,7 +98,6 @@ void Filter::predictAndUpdate(
     const FilterProblemDescription& filter_problem, const State& state,
     const MatrixX& information, State* updated_state,
     MatrixX* updated_information) {
-  const int& timestamp_ns = measurement_buffer.timestamp_ns;
   TSIF_LOG("State before prediction:\n" << state.getAsVector().transpose());
 
   predictState(
@@ -120,7 +119,7 @@ void Filter::predictAndUpdate(
 
   double weightedDelta = config_.residual_norm_threshold;
   MatrixX newInf(state.minimal_dimension_, state.minimal_dimension_);
-  size_t update_iteration;
+  int update_iteration;
   for (update_iteration = 0; update_iteration < config_.max_update_iterations &&
                              weightedDelta >= config_.residual_norm_threshold;
        ++update_iteration) {
@@ -137,13 +136,13 @@ void Filter::predictAndUpdate(
         information + jacobian_wrt_state1_.transpose() * jacobian_wrt_state1_;
     MatrixX J(active_residuals_dimension, active_residuals_dimension);
     J.setIdentity();
-#if TSIF_VERBOSE > 0
-    Eigen::JacobiSVD<MatrixX> svdD(D);
-    const double condD =
-        svdD.singularValues()(0) /
-        svdD.singularValues()(svdD.singularValues().size() - 1);
-    TSIF_LOG("D condition number:\n" << condD);
-#endif
+    if (TSIF_VERBOSE) {
+      Eigen::JacobiSVD<MatrixX> svdD(D);
+      const double condD =
+          svdD.singularValues()(0) /
+          svdD.singularValues()(svdD.singularValues().size() - 1);
+      TSIF_LOG("D condition number:\n" << condD);
+    }
     MatrixX S =
         jacobian_wrt_state2_.transpose() *
         (J -
@@ -151,13 +150,13 @@ void Filter::predictAndUpdate(
     newInf = S * jacobian_wrt_state2_;
     newInf = 0.5 * (newInf + newInf.transpose().eval());
     Eigen::LDLT<MatrixX> I_LDLT(newInf);
-#if TSIF_VERBOSE > 0
-    Eigen::JacobiSVD<MatrixX> svdI(newInf);
-    const double condI =
-        svdI.singularValues()(0) /
-        svdI.singularValues()(svdI.singularValues().size() - 1);
-    TSIF_LOG("I condition number:\n" << condI);
-#endif
+    if (TSIF_VERBOSE) {
+      Eigen::JacobiSVD<MatrixX> svdI(newInf);
+      const double condI =
+          svdI.singularValues()(0) /
+          svdI.singularValues()(svdI.singularValues().size() - 1);
+      TSIF_LOG("I condition number:\n" << condI);
+    }
     TSIF_LOGEIF(
         (I_LDLT.info() != Eigen::Success), "Computation of Iinv failed");
     VectorX dx = -I_LDLT.solve(S * residual_vector_);
@@ -186,7 +185,7 @@ void Filter::predictAndUpdate(
   //    PostProcess();
 }
 
-bool Filter::init(const State& state, const int& total_residual_dimension) {
+bool Filter::init(const State& state, const int total_residual_dimension) {
   CHECK(total_residual_dimension > 0)
       << "residual dimension: " << std::to_string(total_residual_dimension);
   const int& minimal_state_dimension = state.minimal_dimension_;

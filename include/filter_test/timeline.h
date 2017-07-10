@@ -16,10 +16,6 @@
 
 namespace tsif {
 
-using TimedMeasurement = std::pair<int, MeasurementBase*>;
-using TimedMeasurementMap = std::map<int, MeasurementBase*>;
-using TimedMeasurementVector = std::vector<TimedMeasurement>;
-
 class Timeline {
  public:
   // If a timeline is not mergeable then we have to apply the measurement before
@@ -28,28 +24,29 @@ class Timeline {
   // (they are not mergeable).
   bool mergeable_ = true;
   TimedMeasurementMap timed_measurements_;
-  void addMeasurement(const int timestamp_ns, MeasurementBase* measurement) {
-    while (kMaxMeasurmenetBufferSize <=
+  void addMeasurement(
+      const int64_t timestamp_ns, MeasurementBase* measurement) {
+    while (kMaxMeasurementBufferSize <=
            timed_measurements_.size()) {  // remove oldest if buffer is full
       deleteMeasurement(timed_measurements_.begin());
     }
     timed_measurements_.emplace_hint(
         timed_measurements_.end(), timestamp_ns, measurement);
   }
-  void deleteOlderThen(const int timestamp_ns);  // TODO(burrimi):implement.
+  void deleteOlderThan(const int64_t timestamp_ns);  // TODO(burrimi):implement.
   ~Timeline() {
     // Clean up measurement buffer.
     for (auto& timed_measurement : timed_measurements_) {
       delete timed_measurement.second;
     }
   }
-  inline int getOldestMeasurementTimestamp() const {
+  inline int64_t getOldestMeasurementTimestamp() const {
     return timed_measurements_.begin()->first;
   }
 
   // Finds the first measurement where measurement timestamp > timestamp_ns.
   // Returns -1 in case no newer measurement exists.
-  inline int getNextMeasurementTimestamp(const int timestamp_ns) const {
+  inline int64_t getNextMeasurementTimestamp(const int64_t timestamp_ns) const {
     const auto it = timed_measurements_.upper_bound(timestamp_ns);
     if (it != timed_measurements_.end()) {
       return it->first;
@@ -57,12 +54,14 @@ class Timeline {
     return -1;
   }
   template <typename MeasurementType>
-  inline const MeasurementType* getMeasurement(const int timestamp_ns) const {
+  inline const MeasurementType* getMeasurement(
+      const int64_t timestamp_ns) const {
     const MeasurementBase* measurement = getMeasurement(timestamp_ns);
     return dynamic_cast<const MeasurementType*>(measurement);
   }
 
-  inline const MeasurementBase* getMeasurement(const int timestamp_ns) const {
+  inline const MeasurementBase* getMeasurement(
+      const int64_t timestamp_ns) const {
     const auto& timed_measurement = timed_measurements_.find(timestamp_ns);
     if (timed_measurement != timed_measurements_.end()) {
       return timed_measurement->second;
@@ -70,13 +69,20 @@ class Timeline {
     return NULL;
   }
 
-  inline TimedMeasurement getTimedMeasurement(const int timestamp_ns) const {
+  // Get the measurement at a certain timestamp.
+  // Returns an invalid timestamp -1 and nullptr if the measurement does not
+  // exist.
+  inline TimedMeasurement getTimedMeasurement(
+      const int64_t timestamp_ns) const {
     const auto& timed_measurement = timed_measurements_.find(timestamp_ns);
-    CHECK(timed_measurement != timed_measurements_.end());
-    return *timed_measurement;
+    if (timed_measurement != timed_measurements_.end()) {
+      return *timed_measurement;
+    }
+    TSIF_LOGW("Tried to access measurement that does not exist.");
+    return TimedMeasurement(-1, nullptr);
   }
 
-  void interpolateAndAddAt(const int timestamp_ns) {
+  void interpolateAndAddAt(const int64_t timestamp_ns) {
     auto it_next = timed_measurements_.lower_bound(timestamp_ns);
     if (it_next->first != timestamp_ns) {
       auto it_previous = it_next;
@@ -93,9 +99,9 @@ class Timeline {
   }
 
   // returns Null if the measurement at that time instance exists
-  MeasurementBase* getInterpolatedMeasurement(const int timestamp_ns) {
+  MeasurementBase* getInterpolatedMeasurement(const int64_t timestamp_ns) {
     auto it_next = timed_measurements_.lower_bound(timestamp_ns);
-    MeasurementBase* interpolated_measurement;
+    MeasurementBase* interpolated_measurement = nullptr;
     if (it_next->first != timestamp_ns) {
       auto it_previous = it_next;
       --it_previous;
@@ -112,8 +118,8 @@ class Timeline {
   //  // time      x   x   x   x   x   x   x
   //  // min/max     ^               ^
   //  // return      x x   x   x   x x
-  //  std::vector<TimedMeasurement> getMeasurementsInRange(const int
-  //  timestamp_min_ns, const int timestamp_max_ns) {
+  //  std::vector<TimedMeasurement> getMeasurementsInRange(const int64_t
+  //  timestamp_min_ns, const int64_t timestamp_max_ns) {
   //    std::vector<TimedMeasurement> timed_measurements;
   //    if(getOldestMeasurementTimestamp() > timestamp_min_ns ||
   //    getNewestMeasurementTimestamp() < timestamp_max_ns) {
@@ -140,7 +146,7 @@ class Timeline {
   // min/max     ^               ^
   // return    x   x   x   x   x   x
   std::vector<TimedMeasurement> getMeasurementsInRange(
-      const int timestamp_min_ns, const int timestamp_max_ns) const {
+      const int64_t timestamp_min_ns, const int64_t timestamp_max_ns) const {
     std::vector<TimedMeasurement> timed_measurements;
     if (getOldestMeasurementTimestamp() > timestamp_min_ns ||
         getNewestMeasurementTimestamp() < timestamp_max_ns) {
@@ -161,10 +167,10 @@ class Timeline {
     return timed_measurements;
   }
 
-  inline int getNewestMeasurementTimestamp() const {
+  inline int64_t getNewestMeasurementTimestamp() const {
     return timed_measurements_.rbegin()->first;
   }
-  inline int getNumMeasurements() const {
+  inline size_t getNumMeasurements() const {
     return timed_measurements_.size();
   }
   inline bool isEmpty() const {

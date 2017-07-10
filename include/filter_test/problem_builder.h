@@ -8,16 +8,16 @@
 #ifndef INCLUDE_FILTER_TEST_PROBLEM_BUILDER_H_
 #define INCLUDE_FILTER_TEST_PROBLEM_BUILDER_H_
 
-#include "filter_test/measurement_manager.h"
+#include "filter_test/measurement.h"
 #include "filter_test/residual.h"
 #include "filter_test/state.h"
 
 namespace tsif {
 
 struct ResidualContainer {
-  std::vector<int> first_keys;
-  std::vector<int> second_keys;
-  std::vector<int> measurement_keys;
+  std::vector<size_t> first_keys;
+  std::vector<size_t> second_keys;
+  std::vector<size_t> measurement_keys;
   bool use_for_prediction;
   ResidualBase* residual;
 };
@@ -36,15 +36,11 @@ class ProblemBuilder {
       delete current_residual.residual;
     }
   }
-  // everything related to the residuals
-  std::vector<ResidualContainer> residual_containers_;
-
-  int total_residual_dimension_;
 
   // Adds a residual and takes ownership of the residual.
   bool addResidual(
-      ResidualBase* residual, std::vector<int> first_keys,
-      std::vector<int> second_keys, std::vector<int> measurement_keys,
+      ResidualBase* residual, std::vector<size_t> first_keys,
+      std::vector<size_t> second_keys, std::vector<size_t> measurement_keys,
       bool use_for_prediction);
 
   void printResiduals(const State& state) const;
@@ -59,6 +55,10 @@ class ProblemBuilder {
       const MeasurementBuffer& measurement_buffer);
 
  private:
+  // everything related to the residuals
+  std::vector<ResidualContainer> residual_containers_;
+
+  int total_residual_dimension_;
 };
 
 }  // namespace tsif
