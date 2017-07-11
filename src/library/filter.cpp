@@ -20,7 +20,7 @@ void Filter::predictState(
                              // residual, take the previous state.
 
   for (ResidualContainer* residual_container :
-       filter_problem.update_residuals_) {
+       filter_problem.prediction_residuals_) {
     if (residual_container->residual->active_) {
       std::vector<BlockBase*> blocks =
           state.getBlocks(residual_container->first_keys);

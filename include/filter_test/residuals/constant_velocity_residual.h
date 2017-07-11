@@ -18,7 +18,7 @@ namespace tsif {
 // space for manifolds).
 class ConstantVelocityResidual : public ResidualBase {
   enum BlockIndex { kPositionBlock = 0, kVelocityBlock };
-  static const int kResidualPositionOffset = 3;
+  static const int kResidualPositionOffset = 0;
   static const int kResidualVelocityOffset = 3;
 
   struct InternalState {
@@ -32,11 +32,12 @@ class ConstantVelocityResidual : public ResidualBase {
 
   static const bool kIsMergeable = true;
   static const int kResidualDimension = 6;
+  static const int kResidualMinimalDimension = 3;
 
  public:
   ConstantVelocityResidual(
       const double position_sigma, const double velocity_sigma)
-      : ResidualBase(kResidualDimension, kIsMergeable) {
+      : ResidualBase(kResidualDimension, kResidualMinimalDimension, kIsMergeable) {
     sqrt_information_position_ = 1 / position_sigma;
     sqrt_information_velocity_ = 1 / velocity_sigma;
   }

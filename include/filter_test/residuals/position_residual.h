@@ -17,10 +17,11 @@ namespace tsif {
 class PositionResidual : public ResidualBase {
   static const bool kIsMergeable = false;
   static const int kResidualDimension = 3;
+  static const int kResidualMinimalDimension = 3;
 
  public:
   PositionResidual(const Matrix3& covariance)
-      : ResidualBase(kResidualDimension, kIsMergeable) {
+      : ResidualBase(kResidualDimension, kResidualMinimalDimension, kIsMergeable) {
     // TODO(burrimi): should we use robust cholesky decomposition (ldlt) to also
     // handle semidefinite?
     Matrix3 L = covariance.llt()

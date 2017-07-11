@@ -17,9 +17,10 @@ namespace tsif {
 class ConstantResidual : public ResidualBase {
   static const bool kIsMergeable = true;
   static const int kResidualDimension = 3;
+  static const int kResidualMinimalDimension = 3;
 
  public:
-  ConstantResidual() : ResidualBase(kResidualDimension, kIsMergeable) {}
+  ConstantResidual() : ResidualBase(kResidualDimension, kResidualMinimalDimension, kIsMergeable) {}
 
   ~ConstantResidual() {}
 
@@ -46,7 +47,7 @@ class ConstantResidual : public ResidualBase {
       const int64_t t1_ns, const int64_t t2_ns, VectorXRef* residual,
       std::vector<MatrixXRef>* jacobian_wrt_state1,
       std::vector<MatrixXRef>* jacobian_wrt_state2) {
-    CHECK(false) << "Not implemented yet!";  // TODO(burrimi): Implement.
+    //CHECK(false) << "Not implemented yet!";  // TODO(burrimi): Implement.
     return false;
   }
 

@@ -34,12 +34,12 @@ enum BlockTypeId {
 
 class BlockBase {
  public:
-  const int minimal_dimension_;  // Dimension of the tangent space
   const int dimension_;
+  const int minimal_dimension_;  // Dimension of the tangent space
   const bool is_vector_space_;
   BlockBase(int dimension, int minimal_dimension, bool is_vector_space)
-      : minimal_dimension_(minimal_dimension),
-        dimension_(dimension),
+      : dimension_(dimension),
+        minimal_dimension_(minimal_dimension),
         is_vector_space_(is_vector_space) {
     CHECK(dimension >= minimal_dimension);
   };
