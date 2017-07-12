@@ -13,7 +13,7 @@
 namespace tsif {
 
 class State {
-  using BlockVector = std::vector<BlockBase*>;
+  using BlockVector = std::vector<BlockBase::Ptr>;
 
  public:
   int dimension_;
@@ -21,11 +21,7 @@ class State {
 
   State() : dimension_(0), minimal_dimension_(0) {}
 
-  ~State() {
-    for (BlockBase* current_block : state_blocks_) {
-      delete current_block;
-    }
-  }
+  ~State() {}
 
   // Copy constructor clones the other state and takes care of allocating the
   // new blocks
@@ -46,7 +42,7 @@ class State {
       BlockVector::const_iterator other_block_iterator =
           other.state_blocks_.begin();
       while (other_block_iterator != other.state_blocks_.end()) {
-        (*other_block_iterator)->copyBlockTo(*block_iterator);
+        (*other_block_iterator)->copyBlockTo((*block_iterator).get());
         ++block_iterator;
         ++other_block_iterator;
       }
@@ -60,15 +56,15 @@ class State {
   }
 
   inline void copyFrom(const State& other) {
-    for (BlockBase* current_block : other.state_blocks_) {
-      BlockBase* new_block = current_block->clone();
+    for (BlockBase::Ptr current_block : other.state_blocks_) {
+      BlockBase::Ptr new_block = current_block->clone();
       addBlock(new_block);
     }
   }
 
   void defineState(std::vector<BlockTypeId> block_types) {
     for (BlockTypeId current_type : block_types) {
-      BlockBase* current_block = block_helper::createBlockByType(current_type);
+      BlockBase::Ptr current_block = block_helper::createBlockByType(current_type);
       addBlock(current_block);
     }
   }
@@ -79,33 +75,34 @@ class State {
 
   template <typename BlockType>
   void setValue(const size_t key, const typename BlockType::StorageType& value) {
-    BlockType* block = dynamic_cast<BlockType*>(getBlock(key));
+    BlockType* block = dynamic_cast<BlockType*>(getBlock(key).get());
+
     CHECK_NOTNULL(block);  // Check if cast successful
     block->setValue(value);
   }
 
   template <typename BlockType>
   typename BlockType::StorageType& getValue(const size_t key) {
-    BlockType* block = getBlock(key);
+    BlockType* block = getBlock<BlockType>(key);
     return block->template getValue<BlockType>();
   }
 
-  inline BlockBase* getBlock(const size_t key) const {
-    CHECK(state_blocks_.size() > key);  // Check if key is valid.
-    return state_blocks_[key];
-  }
-
-  inline std::vector<BlockBase*> getBlocks(const std::vector<size_t>& keys) const {
-    std::vector<BlockBase*> blocks;
+  inline std::vector<BlockBase::Ptr> getBlocks(const std::vector<size_t>& keys) const {
+    std::vector<BlockBase::Ptr> blocks;
     for (const size_t& current_key : keys) {
       blocks.emplace_back(getBlock(current_key));
     }
     return blocks;
   }
 
+  inline BlockBase::Ptr getBlock(const size_t key) const {
+    CHECK(state_blocks_.size() > key);  // Check if key is valid.
+    return state_blocks_[key];
+  }
+
   template <typename BlockType>
-  BlockType* getBlock(const size_t key) const {
-    BlockType* block = dynamic_cast<BlockType*>(getBlock(key));
+  std::shared_ptr<BlockType> getBlock(const size_t key) const {
+    std::shared_ptr<BlockType> block = std::dynamic_pointer_cast<BlockType>(getBlock(key));
     CHECK_NOTNULL(block);  // Check if key is valid.
     return block;
   }
@@ -132,10 +129,10 @@ class State {
     int accumulated_dimension = 0;
 
     BlockVector::iterator block_iterator = result_state->state_blocks_.begin();
-    for (BlockBase* current_block : state_blocks_) {
+    for (BlockBase::Ptr current_block : state_blocks_) {
       current_block->boxPlus(
           dx.segment(accumulated_dimension, current_block->minimal_dimension_),
-          (*block_iterator));
+          (*block_iterator).get());
       accumulated_dimension += current_block->minimal_dimension_;
       ++block_iterator;
     }
@@ -155,9 +152,9 @@ class State {
 
     int index = 0;
     BlockVector::const_iterator block_iterator = other.state_blocks_.begin();
-    for (BlockBase* current_block : state_blocks_) {
+    for (BlockBase::Ptr current_block : state_blocks_) {
       dx->segment(index, current_block->minimal_dimension_) =
-          current_block->boxMinus((*block_iterator));
+          current_block->boxMinus((*block_iterator).get());
       index += current_block->minimal_dimension_;
       ++block_iterator;
     }
@@ -171,7 +168,7 @@ class State {
   VectorX getAsVector() const {
     VectorX state_vector(dimension_);
     int index = 0;
-    for (BlockBase* current_block : state_blocks_) {
+    for (BlockBase::Ptr current_block : state_blocks_) {
       state_vector.segment(index, current_block->dimension_) =
           current_block->getValueAsVector();
       index += current_block->dimension_;
@@ -181,7 +178,7 @@ class State {
 
   std::string print() const {
     std::ostringstream oss;
-    for (BlockBase* current_block : state_blocks_) {
+    for (BlockBase::Ptr current_block : state_blocks_) {
       oss << current_block->getTypeName() << "["
           << current_block->getValueAsVector().transpose() << "], ";
     }
@@ -189,8 +186,8 @@ class State {
   }
 
  private:
-  inline void addBlock(BlockBase* block_to_add) {
-    CHECK_NOTNULL(block_to_add);
+  inline void addBlock(BlockBase::Ptr block_to_add) {
+//    CHECK_NOTNULL(block_to_add);
     accumulated_minimal_dimensions_.push_back(dimension_);
     dimension_ += block_to_add->dimension_;
     minimal_dimension_ += block_to_add->minimal_dimension_;

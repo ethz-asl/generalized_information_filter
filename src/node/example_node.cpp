@@ -11,6 +11,7 @@ using namespace std;
 
 class Base {
  public:
+  typedef std::shared_ptr<Base> Ptr;
   virtual void func();
 };
 

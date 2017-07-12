@@ -20,7 +20,7 @@ namespace tsif {
 // space for manifolds).
 class ResidualBase {
  public:
-  const int dimension_;
+  const int dimension_; // TODO(burrimi): do we need this? remove otherwise!
   const int minimal_dimension_;  // Dimension of the tangent space
   const bool is_mergeable_;
   bool active_;
@@ -42,10 +42,10 @@ class ResidualBase {
   // The state and jacobian blocks contain only the relevant blocks for that
   // particular residual and not the full state!
   virtual bool predict(
-      const std::vector<BlockBase*>& state,
+      const std::vector<BlockBase::Ptr>& state,
       const std::vector<const TimedMeasurementVector*>& measurement_vectors,
       const int64_t t1_ns, const int64_t t2_ns,
-      std::vector<BlockBase*>* predicted_state,
+      std::vector<BlockBase::Ptr>* predicted_state,
       std::vector<MatrixXRef>* jacobian_wrt_state1) = 0;
 
   // evaluates the residual. The jacobians are only evaluated if the
@@ -53,8 +53,8 @@ class ResidualBase {
   // The state and jacobian blocks contain only the relevant blocks for that
   // particular residual and not the full state!
   virtual bool evaluate(
-      const std::vector<BlockBase*>& state1,
-      const std::vector<BlockBase*>& state2,
+      const std::vector<BlockBase::Ptr>& state1,
+      const std::vector<BlockBase::Ptr>& state2,
       const std::vector<const TimedMeasurementVector*>& measurement_vectors,
       const int64_t t1_ns, const int64_t t2_ns, VectorXRef* residual,
       std::vector<MatrixXRef>* jacobian_wrt_state1,
@@ -64,11 +64,11 @@ class ResidualBase {
 
   // This function checks if all input blocks are of correct type.
   virtual bool inputTypesValid(
-      const std::vector<BlockBase*>& state1,
-      const std::vector<BlockBase*>& state2) = 0;
+      const std::vector<BlockBase::Ptr>& state1,
+      const std::vector<BlockBase::Ptr>& state2) = 0;
 
-//  bool finiteDifference(const std::vector<BlockBase*>& state1,
-//                        const std::vector<BlockBase*>& state2,
+//  bool finiteDifference(const std::vector<BlockBase::Ptr>& state1,
+//                        const std::vector<BlockBase::Ptr>& state2,
 //                        const std::vector<const TimedMeasurementVector*>& measurement_vectors,
 //                        const int64_t t1_ns, const int64_t t2_ns, const double delta,
 //                        std::vector<MatrixXRef>* jacobian_wrt_state1,
@@ -79,9 +79,9 @@ class ResidualBase {
 //    evaluate(state1, state2, measurement_vectors, t1_ns, t2_ns, &residual, nullptr, nullptr);
 //
 //    // Jacobians wrt state1
-//    std::vector<BlockBase*> state1_perturbed;
+//    std::vector<BlockBase::Ptr> state1_perturbed;
 //    for(size_t block_index = 0; block_index < state1.size(); ++block_index) {
-//      const BlockBase* current_block = state1[block_index];
+//      const BlockBase::Ptr current_block = state1[block_index];
 //      for(size_t block_offset = 0; block_offset < current_block->size(); ++block_offset) {
 //        //boxplus
 //        evaluate(state1_perturbed, state2, measurement_vectors, t1_ns, t2_ns, &residual_perturbed, nullptr, nullptr);
@@ -91,7 +91,7 @@ class ResidualBase {
 //      }
 //    }
 //
-//    std::vector<BlockBase*> state2_perturbed;
+//    std::vector<BlockBase::Ptr> state2_perturbed;
 //
 //  }
 
