@@ -32,7 +32,7 @@ inline Eigen::Matrix<Scalar, 3, 3> gamma(
     const Eigen::Matrix<Scalar, 3, 1>& phi) {
   const Scalar phi_squared_norm = phi.squaredNorm();
 
-  if (phi_squared_norm < 1e-6) {
+  if (phi_squared_norm < 1e-4) {
     Eigen::Matrix<Scalar, 3, 3> gamma;
     gamma.setIdentity();
     gamma += 0.5 * common::skew(phi);
@@ -58,7 +58,7 @@ inline Eigen::Quaternion<Scalar> expMap(
     const Eigen::Matrix<Scalar, 3, 1>& theta) {
   const Scalar theta_squared_norm = theta.squaredNorm();
 
-  if (theta_squared_norm < 1e-6) {
+  if (theta_squared_norm < 1e-4) {
     Eigen::Quaternion<Scalar> q(
         1, theta(0) * 0.5, theta(1) * 0.5, theta(2) * 0.5);
     q.normalize();
@@ -81,7 +81,7 @@ inline Eigen::Vector3d logMap(const Eigen::Quaterniond& q) {
   const Eigen::Block<const Eigen::Vector4d, 3, 1> q_imag = q.vec();
   const double q_imag_squared_norm = q_imag.squaredNorm();
 
-  if (q_imag_squared_norm < 1e-6) {
+  if (q_imag_squared_norm < 1e-4) {
     return 2 * copysign(1, q.w()) * q_imag;
   }
 
@@ -95,7 +95,7 @@ inline Eigen::Vector3d logMap(const Eigen::Quaterniond& q) {
 // TODO(burrimi): Check if there is a better way to pass mapped quaternions.
 inline void boxPlus(
     const Eigen::Ref<const Eigen::Vector4d>& p,
-    const Eigen::Ref<const Eigen::Vector3d>& theta,
+    const Vector3Ref& theta,
     Eigen::Quaterniond* p_plus_theta) {
   CHECK_NOTNULL(p_plus_theta);
   const Eigen::Map<const Eigen::Quaterniond> p_mapped(p.data());
@@ -109,7 +109,7 @@ inline void boxPlus(
 // computation.
 inline void boxMinus(
     const Eigen::Quaterniond& p, const Eigen::Quaterniond& q,
-    Eigen::Vector3d* p_minus_q) {
+    Vector3* p_minus_q) {
   CHECK_NOTNULL(p_minus_q);
   *p_minus_q = logMap(p * q.inverse());
 }
@@ -122,7 +122,7 @@ inline void boxMinus(
 // return Jacobians to reuse computation.
 inline void GetBoxMinusJacobians(
     const Eigen::Quaterniond& p, const Eigen::Quaterniond& q,
-    Eigen::Matrix3d* J_boxminus_wrt_p, Eigen::Matrix3d* J_boxminus_wrt_q) {
+    Matrix3* J_boxminus_wrt_p, Matrix3* J_boxminus_wrt_q) {
   if (J_boxminus_wrt_p == NULL && J_boxminus_wrt_q == NULL) {
     return;  // Nothing to do.
   }
@@ -130,7 +130,7 @@ inline void GetBoxMinusJacobians(
   Eigen::Vector3d theta;
   boxMinus(p, q, &theta);
 
-  const Eigen::Matrix3d gamma_inverse = gamma(theta).inverse();
+  const Matrix3 gamma_inverse = gamma(theta).inverse();
 
   if (J_boxminus_wrt_p != NULL) {
     *J_boxminus_wrt_p = gamma_inverse;

@@ -18,11 +18,11 @@ namespace tsif {
 // space for manifolds).
 class ConstantVelocityResidual : public ResidualBase {
   enum BlockIndex { kPositionBlock = 0, kVelocityBlock };
-  static const int kResidualPositionOffset = 3;
+  static const int kResidualPositionOffset = 0;
   static const int kResidualVelocityOffset = 3;
 
   struct InternalState {
-    InternalState(const std::vector<BlockBase*>& state)
+    InternalState(const std::vector<BlockBase::Ptr>& state)
         : p(state[kPositionBlock]->getValue<VectorBlock<3>>()),
           v(state[kVelocityBlock]->getValue<VectorBlock<3>>()) {}
     InternalState(Vector3& p1, Vector3& v1) : p(p1), v(v1) {}
@@ -32,11 +32,12 @@ class ConstantVelocityResidual : public ResidualBase {
 
   static const bool kIsMergeable = true;
   static const int kResidualDimension = 6;
+  static const int kResidualMinimalDimension = 3;
 
  public:
   ConstantVelocityResidual(
       const double position_sigma, const double velocity_sigma)
-      : ResidualBase(kResidualDimension, kIsMergeable) {
+      : ResidualBase(kResidualDimension, kResidualMinimalDimension, kIsMergeable) {
     sqrt_information_position_ = 1 / position_sigma;
     sqrt_information_velocity_ = 1 / velocity_sigma;
   }
@@ -49,10 +50,10 @@ class ConstantVelocityResidual : public ResidualBase {
   //  }
 
   virtual bool predict(
-      const std::vector<BlockBase*>& state,
+      const std::vector<BlockBase::Ptr>& state,
       const std::vector<const TimedMeasurementVector*>& measurement_vectors,
       const int64_t t1_ns, const int64_t t2_ns,
-      std::vector<BlockBase*>* predicted_state,
+      std::vector<BlockBase::Ptr>* predicted_state,
       std::vector<MatrixXRef>* jacobian_wrt_state1) {
     CHECK_NOTNULL(predicted_state);
     const double dt = kNanoSecondsToSeconds * (t2_ns - t1_ns);
@@ -86,8 +87,8 @@ class ConstantVelocityResidual : public ResidualBase {
   }
 
   virtual bool evaluate(
-      const std::vector<BlockBase*>& state1,
-      const std::vector<BlockBase*>& state2,
+      const std::vector<BlockBase::Ptr>& state1,
+      const std::vector<BlockBase::Ptr>& state2,
       const std::vector<const TimedMeasurementVector*>& measurement_vectors,
       const int64_t t1_ns, const int64_t t2_ns, VectorXRef* residual,
       std::vector<MatrixXRef>* jacobian_wrt_state1,
@@ -148,8 +149,8 @@ class ConstantVelocityResidual : public ResidualBase {
   }
 
   virtual bool inputTypesValid(
-      const std::vector<BlockBase*>& state1,
-      const std::vector<BlockBase*>& state2) {
+      const std::vector<BlockBase::Ptr>& state1,
+      const std::vector<BlockBase::Ptr>& state2) {
     bool all_types_ok = true;
     all_types_ok &=
         state1[kPositionBlock]->isBlockTypeCorrect<VectorBlock<3>>();

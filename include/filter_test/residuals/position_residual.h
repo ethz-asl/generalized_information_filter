@@ -17,10 +17,11 @@ namespace tsif {
 class PositionResidual : public ResidualBase {
   static const bool kIsMergeable = false;
   static const int kResidualDimension = 3;
+  static const int kResidualMinimalDimension = 3;
 
  public:
   PositionResidual(const Matrix3& covariance)
-      : ResidualBase(kResidualDimension, kIsMergeable) {
+      : ResidualBase(kResidualDimension, kResidualMinimalDimension, kIsMergeable) {
     // TODO(burrimi): should we use robust cholesky decomposition (ldlt) to also
     // handle semidefinite?
     Matrix3 L = covariance.llt()
@@ -36,10 +37,10 @@ class PositionResidual : public ResidualBase {
   //  }
 
   virtual bool predict(
-      const std::vector<BlockBase*>& state,
+      const std::vector<BlockBase::Ptr>& state,
       const std::vector<const TimedMeasurementVector*>& measurement_vectors,
       const int64_t t1_ns, const int64_t t2_ns,
-      std::vector<BlockBase*>* predicted_state,
+      std::vector<BlockBase::Ptr>* predicted_state,
       std::vector<MatrixXRef>* jacobian_wrt_state1) {
     // TODO(burrimi): implement.
     assert(true);  // TODO(burrimi): Implement.
@@ -68,8 +69,8 @@ class PositionResidual : public ResidualBase {
   }
 
   virtual bool evaluate(
-      const std::vector<BlockBase*>& state1,
-      const std::vector<BlockBase*>& state2,
+      const std::vector<BlockBase::Ptr>& state1,
+      const std::vector<BlockBase::Ptr>& state2,
       const std::vector<const TimedMeasurementVector*>& measurement_vectors,
       const int64_t t1_ns, const int64_t t2_ns, VectorXRef* residual,
       std::vector<MatrixXRef>* jacobian_wrt_state1,
@@ -82,7 +83,7 @@ class PositionResidual : public ResidualBase {
         getPositionMeasurement(measurement_vectors, t2_ns);
     //    const Vector3 position_measured(0,0,0);
 
-    const Vector3& p_kp1 = static_cast<VectorBlock<3>*>(state2[0])->value_;
+    const Vector3& p_kp1 = state2[0]->getValue<VectorBlock<3>>();
 
     residual->template block<3, 1>(0, 0) =
         sqrt_information_matrix_ * (p_kp1 - position_measured);
@@ -100,8 +101,8 @@ class PositionResidual : public ResidualBase {
   }
 
   virtual bool inputTypesValid(
-      const std::vector<BlockBase*>& state1,
-      const std::vector<BlockBase*>& state2) {
+      const std::vector<BlockBase::Ptr>& state1,
+      const std::vector<BlockBase::Ptr>& state2) {
     bool all_types_ok = true;
     all_types_ok &= state2[0]->isBlockTypeCorrect<VectorBlock<3>>();
     TSIF_LOGEIF(

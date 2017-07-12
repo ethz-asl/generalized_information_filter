@@ -25,8 +25,8 @@ namespace tsif {
 // Now in each iteration we extract these blocks again and put them into a
 // vector which is a lot of overhead and we should buffer this.
 // struct PreparedResidual {
-//  std::vector<BlockBase*> blocks1;
-//  std::vector<BlockBase*> blocks2;
+//  std::vector<BlockBase::Ptr> blocks1;
+//  std::vector<BlockBase::Ptr> blocks2;
 //  VectorXRef residual;
 //  std::vector<MatrixXRef> jacobian_wrt_state1_blocks;
 //  std::vector<MatrixXRef> jacobian_wrt_state2_blocks;

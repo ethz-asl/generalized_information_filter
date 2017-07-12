@@ -20,11 +20,11 @@ void Filter::predictState(
                              // residual, take the previous state.
 
   for (ResidualContainer* residual_container :
-       filter_problem.update_residuals_) {
+       filter_problem.prediction_residuals_) {
     if (residual_container->residual->active_) {
-      std::vector<BlockBase*> blocks =
+      std::vector<BlockBase::Ptr> blocks =
           state.getBlocks(residual_container->first_keys);
-      std::vector<BlockBase*> blocks_predicted =
+      std::vector<BlockBase::Ptr> blocks_predicted =
           predicted_state->getBlocks(residual_container->second_keys);
       std::vector<const TimedMeasurementVector*> measurements =
           measurement_buffer.getTimedMeasurementVectors(
@@ -45,9 +45,9 @@ void Filter::constructProblem(
   for (ResidualContainer* residual_container :
        filter_problem.update_residuals_) {
     if (residual_container->residual->active_) {
-      std::vector<BlockBase*> blocks1 =
+      std::vector<BlockBase::Ptr> blocks1 =
           first_state.getBlocks(residual_container->first_keys);
-      std::vector<BlockBase*> blocks2 =
+      std::vector<BlockBase::Ptr> blocks2 =
           second_state.getBlocks(residual_container->second_keys);
 
       const int& residual_dimension = residual_container->residual->dimension_;

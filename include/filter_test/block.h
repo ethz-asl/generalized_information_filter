@@ -34,18 +34,19 @@ enum BlockTypeId {
 
 class BlockBase {
  public:
-  const int minimal_dimension_;  // Dimension of the tangent space
+  typedef std::shared_ptr<BlockBase> Ptr;
   const int dimension_;
+  const int minimal_dimension_;  // Dimension of the tangent space
   const bool is_vector_space_;
   BlockBase(int dimension, int minimal_dimension, bool is_vector_space)
-      : minimal_dimension_(minimal_dimension),
-        dimension_(dimension),
+      : dimension_(dimension),
+        minimal_dimension_(minimal_dimension),
         is_vector_space_(is_vector_space) {
     CHECK(dimension >= minimal_dimension);
   };
   virtual ~BlockBase() {}
 
-  virtual BlockBase* clone() const = 0;
+  virtual BlockBase::Ptr clone() const = 0;
 
   virtual void copyBlockTo(
       BlockBase* result) const = 0;  // TODO(burrimi): find better way.
@@ -95,8 +96,8 @@ class VectorBlock : public BlockBase {
 
   virtual ~VectorBlock() {}
 
-  virtual BlockBase* clone() const {
-    return new VectorBlock<Dimension>(
+  virtual BlockBase::Ptr clone() const {
+    return std::make_shared<VectorBlock<Dimension>>(
         static_cast<const VectorBlock<Dimension>&>(
             *this));  // call the copy ctor.
   }
@@ -156,7 +157,7 @@ class VectorBlock : public BlockBase {
 };
 
 namespace block_helper {
-BlockBase* createBlockByType(BlockTypeId block_type);
+BlockBase::Ptr createBlockByType(BlockTypeId block_type);
 }  // namespace block_helper
 
 }  // namespace tsif

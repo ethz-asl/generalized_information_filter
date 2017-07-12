@@ -17,9 +17,10 @@ namespace tsif {
 class ConstantResidual : public ResidualBase {
   static const bool kIsMergeable = true;
   static const int kResidualDimension = 3;
+  static const int kResidualMinimalDimension = 3;
 
  public:
-  ConstantResidual() : ResidualBase(kResidualDimension, kIsMergeable) {}
+  ConstantResidual() : ResidualBase(kResidualDimension, kResidualMinimalDimension, kIsMergeable) {}
 
   ~ConstantResidual() {}
 
@@ -29,10 +30,10 @@ class ConstantResidual : public ResidualBase {
   //  }
 
   virtual bool predict(
-      const std::vector<BlockBase*>& state,
+      const std::vector<BlockBase::Ptr>& state,
       const std::vector<const TimedMeasurementVector*>& measurement_vectors,
       const int64_t t1_ns, const int64_t t2_ns,
-      std::vector<BlockBase*>* predicted_state,
+      std::vector<BlockBase::Ptr>* predicted_state,
       std::vector<MatrixXRef>* jacobian_wrt_state1) {
     // TODO(burrimi): implement.
     CHECK(false) << "Not implemented yet!";  // TODO(burrimi): Implement.
@@ -40,13 +41,13 @@ class ConstantResidual : public ResidualBase {
   }
 
   virtual bool evaluate(
-      const std::vector<BlockBase*>& state1,
-      const std::vector<BlockBase*>& state2,
+      const std::vector<BlockBase::Ptr>& state1,
+      const std::vector<BlockBase::Ptr>& state2,
       const std::vector<const TimedMeasurementVector*>& measurement_vectors,
       const int64_t t1_ns, const int64_t t2_ns, VectorXRef* residual,
       std::vector<MatrixXRef>* jacobian_wrt_state1,
       std::vector<MatrixXRef>* jacobian_wrt_state2) {
-    CHECK(false) << "Not implemented yet!";  // TODO(burrimi): Implement.
+    //CHECK(false) << "Not implemented yet!";  // TODO(burrimi): Implement.
     return false;
   }
 
@@ -55,8 +56,8 @@ class ConstantResidual : public ResidualBase {
   }
 
   virtual bool inputTypesValid(
-      const std::vector<BlockBase*>& state1,
-      const std::vector<BlockBase*>& state2) {
+      const std::vector<BlockBase::Ptr>& state1,
+      const std::vector<BlockBase::Ptr>& state2) {
     bool all_types_ok = true;
     all_types_ok &= state1[0]->isBlockTypeCorrect<VectorBlock<3>>();
     all_types_ok &= state2[0]->isBlockTypeCorrect<VectorBlock<3>>();
