@@ -37,10 +37,10 @@ class PositionResidual : public ResidualBase {
   //  }
 
   virtual bool predict(
-      const std::vector<BlockBase::Ptr>& state,
+      const VectorOfBlocks& state,
       const std::vector<const TimedMeasurementVector*>& measurement_vectors,
       const int64_t t1_ns, const int64_t t2_ns,
-      std::vector<BlockBase::Ptr>* predicted_state,
+      VectorOfBlocks* predicted_state,
       std::vector<MatrixXRef>* jacobian_wrt_state1) {
     // TODO(burrimi): implement.
     assert(true);  // TODO(burrimi): Implement.
@@ -69,15 +69,12 @@ class PositionResidual : public ResidualBase {
   }
 
   virtual bool evaluate(
-      const std::vector<BlockBase::Ptr>& state1,
-      const std::vector<BlockBase::Ptr>& state2,
+      const VectorOfBlocks& state1,
+      const VectorOfBlocks& state2,
       const std::vector<const TimedMeasurementVector*>& measurement_vectors,
-      const int64_t t1_ns, const int64_t t2_ns, VectorXRef* residual,
+      const int64_t t1_ns, const int64_t t2_ns, VectorXRef residual,
       std::vector<MatrixXRef>* jacobian_wrt_state1,
       std::vector<MatrixXRef>* jacobian_wrt_state2) {
-    if (residual == NULL) {
-      return false;
-    }
 
     const Vector3 position_measured =
         getPositionMeasurement(measurement_vectors, t2_ns);
@@ -85,7 +82,7 @@ class PositionResidual : public ResidualBase {
 
     const Vector3& p_kp1 = state2[0]->getValue<VectorBlock<3>>();
 
-    residual->template block<3, 1>(0, 0) =
+    residual.template block<3, 1>(0, 0) =
         sqrt_information_matrix_ * (p_kp1 - position_measured);
 
     if (jacobian_wrt_state2 != NULL) {
@@ -101,8 +98,8 @@ class PositionResidual : public ResidualBase {
   }
 
   virtual bool inputTypesValid(
-      const std::vector<BlockBase::Ptr>& state1,
-      const std::vector<BlockBase::Ptr>& state2) {
+      const VectorOfBlocks& state1,
+      const VectorOfBlocks& state2) {
     bool all_types_ok = true;
     all_types_ok &= state2[0]->isBlockTypeCorrect<VectorBlock<3>>();
     TSIF_LOGEIF(

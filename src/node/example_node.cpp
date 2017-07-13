@@ -38,5 +38,9 @@ int main() {
   cout << typeid(*dp).name() << endl;
   cout << typeid(*adp).name() << endl;
   static_cast<AnotherDerived*>(adp)->func(3);
+
+
+  Base::Ptr test = make_shared<Derived>();
+
   return 0;
 }

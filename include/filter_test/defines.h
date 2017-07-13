@@ -12,10 +12,7 @@
 
 namespace tsif {
 
-#define TSIF_VERBOSE true
-
-#define DO_SANITY_CHECKS true
-#define VERBOSE_MODE true  // Should we output a lot of stuff to the console?
+#define TSIF_VERBOSE true // Should we output a lot of potentially useless stuff to the console?
 
 template <int Dimension>
 using Vector = Eigen::Matrix<double, Dimension, 1>;
@@ -33,6 +30,8 @@ typedef Eigen::MatrixXd MatrixX;
 
 constexpr double kNanoSecondsToSeconds = 1e-9;
 constexpr int kMaxMeasurementBufferSize = 1000;
+
+constexpr int kRandomNumberSeed = 210;
 
 }  // namespace tsif
 

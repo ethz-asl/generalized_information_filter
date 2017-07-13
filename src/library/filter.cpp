@@ -22,9 +22,9 @@ void Filter::predictState(
   for (ResidualContainer* residual_container :
        filter_problem.prediction_residuals_) {
     if (residual_container->residual->active_) {
-      std::vector<BlockBase::Ptr> blocks =
+      VectorOfBlocks blocks =
           state.getBlocks(residual_container->first_keys);
-      std::vector<BlockBase::Ptr> blocks_predicted =
+      VectorOfBlocks blocks_predicted =
           predicted_state->getBlocks(residual_container->second_keys);
       std::vector<const TimedMeasurementVector*> measurements =
           measurement_buffer.getTimedMeasurementVectors(
@@ -45,9 +45,9 @@ void Filter::constructProblem(
   for (ResidualContainer* residual_container :
        filter_problem.update_residuals_) {
     if (residual_container->residual->active_) {
-      std::vector<BlockBase::Ptr> blocks1 =
+      VectorOfBlocks blocks1 =
           first_state.getBlocks(residual_container->first_keys);
-      std::vector<BlockBase::Ptr> blocks2 =
+      VectorOfBlocks blocks2 =
           second_state.getBlocks(residual_container->second_keys);
 
       const int& residual_dimension = residual_container->residual->dimension_;
@@ -67,8 +67,12 @@ void Filter::constructProblem(
       bool residual_ok = residual_container->residual->evaluate(
           blocks1, blocks2, measurements,
           measurement_buffer.timestamp_previous_update_ns,
-          measurement_buffer.timestamp_ns, &residual_error,
+          measurement_buffer.timestamp_ns, residual_error,
           &jacobian_wrt_state1_blocks, &jacobian_wrt_state2_blocks);
+
+      residual_container->residual->checkJacobians(blocks1, blocks2, measurements,
+          measurement_buffer.timestamp_previous_update_ns,
+          measurement_buffer.timestamp_ns, 0.000001);
 
       if (residual_ok) {
         index_residual += residual_dimension;

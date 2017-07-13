@@ -87,9 +87,9 @@ void ProblemBuilder::printResiduals(const State& state) const {
 
 void ProblemBuilder::checkResiduals(const State& state) const {
   for (const ResidualContainer& current_residual : residual_containers_) {
-    std::vector<BlockBase::Ptr> blocks1 =
+    VectorOfBlocks blocks1 =
         state.getBlocks(current_residual.first_keys);
-    std::vector<BlockBase::Ptr> blocks2 =
+    VectorOfBlocks blocks2 =
         state.getBlocks(current_residual.second_keys);
     std::cout << "Checking input types for residual : "
               << current_residual.residual->getName() << std::endl;

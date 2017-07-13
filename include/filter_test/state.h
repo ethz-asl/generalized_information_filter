@@ -13,8 +13,6 @@
 namespace tsif {
 
 class State {
-  using BlockVector = std::vector<BlockBase::Ptr>;
-
  public:
   int dimension_;
   int minimal_dimension_;
@@ -38,8 +36,8 @@ class State {
     // TODO(burrimi): Do better check! For now we assume that the same dimension
     // is probably the same state :/
     if (dimension_ == other.dimension_) {
-      BlockVector::iterator block_iterator = state_blocks_.begin();
-      BlockVector::const_iterator other_block_iterator =
+      VectorOfBlocks::iterator block_iterator = state_blocks_.begin();
+      VectorOfBlocks::const_iterator other_block_iterator =
           other.state_blocks_.begin();
       while (other_block_iterator != other.state_blocks_.end()) {
         (*other_block_iterator)->copyBlockTo((*block_iterator).get());
@@ -56,7 +54,7 @@ class State {
   }
 
   inline void copyFrom(const State& other) {
-    for (BlockBase::Ptr current_block : other.state_blocks_) {
+    for (const BlockBase::Ptr& current_block : other.state_blocks_) {
       BlockBase::Ptr new_block = current_block->clone();
       addBlock(new_block);
     }
@@ -69,8 +67,12 @@ class State {
     }
   }
 
+  void setRandom() {
+    block_helper::setRandom(&state_blocks_);
+  }
+
   void setBlock(const size_t key, const VectorXRef& value) {
-    getBlock(key)->setValue(value);
+    getBlock(key)->setValueFromVector(value);
   }
 
   template <typename BlockType>
@@ -87,8 +89,8 @@ class State {
     return block->template getValue<BlockType>();
   }
 
-  inline std::vector<BlockBase::Ptr> getBlocks(const std::vector<size_t>& keys) const {
-    std::vector<BlockBase::Ptr> blocks;
+  inline VectorOfBlocks getBlocks(const std::vector<size_t>& keys) const {
+    VectorOfBlocks blocks;
     for (const size_t& current_key : keys) {
       blocks.emplace_back(getBlock(current_key));
     }
@@ -113,8 +115,6 @@ class State {
 
   void boxPlus(const VectorXRef& dx, State* result_state) const {
     CHECK_NOTNULL(result_state);
-    CHECK(
-        minimal_dimension_ == dx.size());  // Check if dimension of dx is valid.
 
     // Convenience function: if we have an empty state we clone the current
     // state to create it.
@@ -126,38 +126,16 @@ class State {
         << "Dimension of first state" << dimension_ << " result state "
         << result_state
                ->dimension_;  // Check if dimension of result_state is valid.
-    int accumulated_dimension = 0;
-
-    BlockVector::iterator block_iterator = result_state->state_blocks_.begin();
-    for (BlockBase::Ptr current_block : state_blocks_) {
-      current_block->boxPlus(
-          dx.segment(accumulated_dimension, current_block->minimal_dimension_),
-          (*block_iterator).get());
-      accumulated_dimension += current_block->minimal_dimension_;
-      ++block_iterator;
-    }
+    block_helper::boxPlus(state_blocks_, minimal_dimension_, dx, &result_state->state_blocks_);
   }
 
   // calculates this boxminus other = dx
   void boxMinus(const State& other, VectorX* dx) const {
-    CHECK_NOTNULL(dx);
-
-    CHECK(
-        minimal_dimension_ ==
-        dx->size());  // Check if dimension of dx is valid.
-
     CHECK(dimension_ == other.dimension_)
         << "Dimension of first state " << dimension_ << " other state "
         << other.dimension_;  // Check if dimension of result_state is valid.
 
-    int index = 0;
-    BlockVector::const_iterator block_iterator = other.state_blocks_.begin();
-    for (BlockBase::Ptr current_block : state_blocks_) {
-      dx->segment(index, current_block->minimal_dimension_) =
-          current_block->boxMinus((*block_iterator).get());
-      index += current_block->minimal_dimension_;
-      ++block_iterator;
-    }
+    block_helper::boxMinus(state_blocks_, minimal_dimension_, other.state_blocks_, dx);
   }
 
   inline int getAccumulatedMinimalDimension(const size_t key) const {
@@ -194,7 +172,7 @@ class State {
     state_blocks_.push_back(block_to_add);
   }
 
-  BlockVector state_blocks_;
+  VectorOfBlocks state_blocks_;
   std::vector<int> accumulated_minimal_dimensions_;
 };
 

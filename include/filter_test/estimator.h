@@ -11,7 +11,6 @@
 #include <iostream>
 #include <list>
 
-#include "filter_test/block.h"
 #include "filter_test/defines.h"
 #include "filter_test/filter.h"
 #include "filter_test/helper_functions.h"
@@ -19,6 +18,7 @@
 #include "filter_test/problem_builder.h"
 #include "filter_test/residual.h"
 #include "filter_test/state.h"
+#include "filter_test/utils/random.h"
 
 namespace tsif {
 
@@ -56,7 +56,9 @@ class Estimator {
   Estimator(InitStateBase* state_initializer)
       : state_initializer_(state_initializer),
         is_initialized_(false),
-        timestamp_previous_update_ns_(-1) {}
+        timestamp_previous_update_ns_(-1) {
+    NormalRandomNumberGenerator::getInstance().setSeed(kRandomNumberSeed);
+  }
 
   ~Estimator() {
     delete state_initializer_;
