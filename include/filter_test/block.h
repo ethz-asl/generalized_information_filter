@@ -23,9 +23,6 @@ class BlockBase;
 
 using BlockBasePtr = std::shared_ptr<BlockBase>;
 using VectorOfBlocks = std::vector<std::shared_ptr<BlockBase>>;
-// using TimedMeasurementMap = std::map<int64_t, BlockBase*>;
-// using TimedMeasurementVector = std::vector<TimedMeasurement>;
-// using TimedMeasurementVector = std::vector<TimedMeasurement>;
 
 enum BlockTypeId {
   kVector1 = 0,
