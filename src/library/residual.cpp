@@ -69,7 +69,6 @@ void ResidualBase::finiteDifference(
 
     for (size_t block_index = 0; block_index < state2.size(); ++block_index) {
       const BlockBase::Ptr& current_block = state2[block_index];
-      VectorX delta_vector(current_block->minimal_dimension_);
 
       for (int block_offset = 0;
            block_offset < current_block->minimal_dimension_; ++block_offset) {
