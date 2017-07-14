@@ -67,6 +67,12 @@ class ConstantResidual : public ResidualBase {
     return all_types_ok;
   }
 
+  virtual bool checkJacobians(const VectorOfBlocks& state1,
+                        const VectorOfBlocks& state2,const int64_t t1_ns, const int64_t t2_ns, const double delta) {
+    // TODO(burrimi): implement.
+    return true;
+  }
+
  private:
 };
 

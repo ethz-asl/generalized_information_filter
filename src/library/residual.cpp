@@ -27,49 +27,53 @@ void ResidualBase::finiteDifference(const VectorOfBlocks& state1,
     evaluate(state1, state2, measurement_vectors, t1_ns, t2_ns, residual, nullptr, nullptr);
 
     // Jacobians wrt state1
-    VectorOfBlocks state1_perturbed;
-    block_helper::copyVectorOfBlocks(state1, &state1_perturbed);
+    if(jacobian_wrt_state1 != nullptr) {
+      VectorOfBlocks state1_perturbed;
+      block_helper::copyVectorOfBlocks(state1, &state1_perturbed);
 
-    for(size_t block_index = 0; block_index < state1.size(); ++block_index) {
+      for(size_t block_index = 0; block_index < state1.size(); ++block_index) {
 
-      const BlockBase::Ptr& current_block = state1[block_index];
-      VectorX delta_vector(current_block->minimal_dimension_);
+        const BlockBase::Ptr& current_block = state1[block_index];
+        VectorX delta_vector(current_block->minimal_dimension_);
 
-      for(int block_offset = 0; block_offset < current_block->minimal_dimension_; ++block_offset) {
-        delta_vector.setZero();
-        delta_vector[block_offset] = delta;
-        //boxplus of relevant block
-        state1[block_index]->boxPlus(delta_vector, state1_perturbed[block_index].get());
+        for(int block_offset = 0; block_offset < current_block->minimal_dimension_; ++block_offset) {
+          delta_vector.setZero();
+          delta_vector[block_offset] = delta;
+          //boxplus of relevant block
+          state1[block_index]->boxPlus(delta_vector, state1_perturbed[block_index].get());
 
-        evaluate(state1_perturbed, state2, measurement_vectors, t1_ns, t2_ns, residual_perturbed, nullptr, nullptr);
+          evaluate(state1_perturbed, state2, measurement_vectors, t1_ns, t2_ns, residual_perturbed, nullptr, nullptr);
 
-        (*jacobian_wrt_state1)[block_index].col(block_offset) =  (1/delta) * (residual_perturbed - residual);
+          (*jacobian_wrt_state1)[block_index].col(block_offset) =  (1/delta) * (residual_perturbed - residual);
 
+        }
+        state1_perturbed[block_index] = state1[block_index]; // TODO(burrimi):remove hack!
       }
-      state1_perturbed[block_index] = state1[block_index];
     }
 
-    VectorOfBlocks state2_perturbed;
-    block_helper::copyVectorOfBlocks(state2, &state2_perturbed);
+    if(jacobian_wrt_state2 != nullptr) {
+      VectorOfBlocks state2_perturbed;
+      block_helper::copyVectorOfBlocks(state2, &state2_perturbed);
 
-    for(size_t block_index = 0; block_index < state2.size(); ++block_index) {
+      for(size_t block_index = 0; block_index < state2.size(); ++block_index) {
 
-      const BlockBase::Ptr& current_block = state2[block_index];
-      VectorX delta_vector(current_block->minimal_dimension_);
+        const BlockBase::Ptr& current_block = state2[block_index];
+        VectorX delta_vector(current_block->minimal_dimension_);
 
-      for(int block_offset = 0; block_offset < current_block->minimal_dimension_; ++block_offset) {
-        delta_vector.setZero();
-        delta_vector[block_offset] = delta;
-        //boxplus of relevant block
-        state2[block_index]->boxPlus(delta_vector, state2_perturbed[block_index].get());
+        for(int block_offset = 0; block_offset < current_block->minimal_dimension_; ++block_offset) {
+          delta_vector.setZero();
+          delta_vector[block_offset] = delta;
+          //boxplus of relevant block
+          state2[block_index]->boxPlus(delta_vector, state2_perturbed[block_index].get());
 
-        evaluate(state1, state2_perturbed, measurement_vectors, t1_ns, t2_ns, residual_perturbed, nullptr, nullptr);
+          evaluate(state1, state2_perturbed, measurement_vectors, t1_ns, t2_ns, residual_perturbed, nullptr, nullptr);
 
-        (*jacobian_wrt_state2)[block_index].col(block_offset) =  (1/delta) * (residual_perturbed - residual);
+          (*jacobian_wrt_state2)[block_index].col(block_offset) =  (1/delta) * (residual_perturbed - residual);
 
+        }
+        state2_perturbed[block_index] = state2[block_index]; // TODO(burrimi):remove hack!
       }
-      state2_perturbed[block_index] = state2[block_index];
     }
-  }
+}
 
 }  // namespace tsif

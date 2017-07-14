@@ -70,10 +70,6 @@ void Filter::constructProblem(
           measurement_buffer.timestamp_ns, residual_error,
           &jacobian_wrt_state1_blocks, &jacobian_wrt_state2_blocks);
 
-      residual_container->residual->checkJacobians(blocks1, blocks2, measurements,
-          measurement_buffer.timestamp_previous_update_ns,
-          measurement_buffer.timestamp_ns, 0.000001);
-
       if (residual_ok) {
         index_residual += residual_dimension;
       }

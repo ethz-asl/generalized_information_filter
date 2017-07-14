@@ -18,8 +18,6 @@ cs_add_library(${PROJECT_NAME}
   src/library/problem_builder.cpp
   src/library/block.cpp)
 
-target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
-
 cs_add_executable(filter_test_node
     src/node/filter_test_node.cpp
 )

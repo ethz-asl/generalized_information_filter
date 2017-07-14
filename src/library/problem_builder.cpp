@@ -94,6 +94,14 @@ void ProblemBuilder::checkResiduals(const State& state) const {
     std::cout << "Checking input types for residual : "
               << current_residual.residual->getName() << std::endl;
     current_residual.residual->inputTypesValid(blocks1, blocks2);
+
+    const double kSelfCheckTimeStart = 0;
+    const double kSelfCheckTimeEnd = 0.5;
+    const double kSelfCheckFiniteDifferenceEpsilon = 1e-6;
+    std::cout << "Checking Jacobians for residual : "
+        << current_residual.residual->getName() << std::endl;
+    current_residual.residual->checkJacobians(blocks1, blocks2, kSelfCheckTimeStart, kSelfCheckTimeEnd
+        , kSelfCheckFiniteDifferenceEpsilon);
   }
 }
 

@@ -119,8 +119,6 @@ class ConstantVelocityResidual : public ResidualBase {
       (*jacobian_wrt_state1)[kVelocityBlock].template block<3, 3>(
           kResidualVelocityOffset, 0) =
           sqrt_information_velocity_ * Matrix3::Identity();
-
-
     }
 
     if (jacobian_wrt_state2 != NULL) {
@@ -163,6 +161,13 @@ class ConstantVelocityResidual : public ResidualBase {
         "Constant velocity residual has wrong block types. Check your state "
         "indices!");
     return all_types_ok;
+  }
+
+  virtual bool checkJacobians(const VectorOfBlocks& state1,
+                        const VectorOfBlocks& state2,const int64_t t1_ns, const int64_t t2_ns, const double delta) {
+    const std::vector<const TimedMeasurementVector*> measurement_vectors; // Create measurements.
+    // Since residual is not depending on any measurements this is trivial :)
+    return checkJacobiansImpl(state1, state2, measurement_vectors, t1_ns,t2_ns, delta);;
   }
 
  private:

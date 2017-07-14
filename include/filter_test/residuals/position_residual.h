@@ -108,6 +108,18 @@ class PositionResidual : public ResidualBase {
     return all_types_ok;
   }
 
+  virtual bool checkJacobians(const VectorOfBlocks& state1,
+                        const VectorOfBlocks& state2,const int64_t t1_ns, const int64_t t2_ns, const double delta) {
+    // TODO(burrimi): Find better way to create measurements. This is really bad.
+    std::vector<const TimedMeasurementVector*> measurement_vectors(1); // Create measurements.
+    PositionMeasurement position_measurement = PositionMeasurement::createRandomMeasurement();
+    TimedMeasurementVector position_measurements;
+    position_measurements.emplace_back(TimedMeasurement(t2_ns,&position_measurement));
+    measurement_vectors[0] = &position_measurements;
+
+    return checkJacobiansImpl(state1, state2, measurement_vectors, t1_ns,t2_ns, delta);
+  }
+
  private:
   Matrix3 sqrt_information_matrix_;
 };
