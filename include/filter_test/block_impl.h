@@ -94,6 +94,89 @@ class VectorBlock : public BlockBase {
   StorageType value_;
 };
 
+
+class QuaternionBlock : public BlockBase {
+ public:
+  typedef Quaternion StorageType;
+
+  static const int kDimension = 4;
+  static const int kMinimalDimension = 3;
+  static const bool kIsVectorSpace = false;
+
+  QuaternionBlock(const StorageType& value)
+      : BlockBase(kDimension, kMinimalDimension, kIsVectorSpace), value_(value) {}
+
+  QuaternionBlock() : QuaternionBlock(StorageType::Identity()) {}
+
+  virtual ~QuaternionBlock() {}
+
+  virtual BlockBase::Ptr clone() const {
+    return std::make_shared<QuaternionBlock>(
+        static_cast<const QuaternionBlock&>(
+            *this));  // call the copy ctor.
+  }
+
+  virtual void copyBlockTo(BlockBase* copy) const {
+    QuaternionBlock* quaternion_copy =
+        dynamic_cast<QuaternionBlock*>(copy);
+    CHECK_NOTNULL(quaternion_copy);
+    quaternion_copy->value_ = value_;
+  }
+
+  virtual void boxPlus(const VectorX& dx, BlockBase* result) {
+    CHECK(dx.size() == kMinimalDimension);
+    QuaternionBlock* result1 =
+        dynamic_cast<QuaternionBlock*>(result);
+    CHECK_NOTNULL(result1);
+    quaternion_helpers::boxPlus(value_, dx, &(result1->value_));
+  }
+
+  virtual Eigen::VectorXd boxMinus(const BlockBase* y) {
+    const QuaternionBlock* y_quaternion =
+        dynamic_cast<const QuaternionBlock*>(y);
+    CHECK_NOTNULL(y_quaternion);  // << "Type cast from BlockBase to VectorBlock
+                              // failed! Did you mix types?";
+    Vector3 result(kMinimalDimension);
+    quaternion_helpers::boxMinus(value_, y_quaternion->value_, &result);
+    return result;
+  }
+
+  virtual Eigen::VectorXd getValueAsVector() {
+    Quaternion a;
+    return value_.coeffs();
+  }  // TODO(burrimi): return reference?
+
+  virtual void setValueFromVector(const VectorXRef& value) {
+    CHECK(value.size() == kDimension);
+    value_.coeffs() = value;
+  }
+
+  void setValue(const StorageType& value) {
+    value_ = value;
+  }
+
+  StorageType& getValue() {
+    return value_;
+  }
+
+  const StorageType& getValue() const {
+    return value_;
+  }
+
+  virtual std::string getTypeName() {
+    return "quaternion";
+  }
+
+  virtual void setRandom() {
+    Vector3 delta = NormalRandomNumberGenerator::getInstance()
+    .template getVector<kMinimalDimension>();
+    quaternion_helpers::boxPlus(value_, delta, &value_);
+  }
+
+ private:
+  StorageType value_;
+};
+
 }  // namespace tsif
 
 #endif /* INCLUDE_FILTER_TEST_BLOCK_IMPL_H_ */

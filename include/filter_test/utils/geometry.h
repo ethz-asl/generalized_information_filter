@@ -23,9 +23,7 @@ Eigen::Matrix<Scalar, 3, 3> skew(const Eigen::Matrix<Scalar, 3, 1>& vector) {
 }
 }  // namespace common
 
-namespace eigen_quaternion_helpers {
-const int kLocalSize = 3;
-const int kGlobalSize = 4;
+namespace quaternion_helpers {
 
 template <typename Scalar>
 inline Eigen::Matrix<Scalar, 3, 3> gamma(
@@ -92,18 +90,15 @@ inline Eigen::Vector3d logMap(const Eigen::Quaterniond& q) {
 
 // Rotates the quaternion p with the error theta on the tangent space:
 // p_plus_theta = p boxplus theta
-// TODO(burrimi): Check if there is a better way to pass mapped quaternions.
 inline void boxPlus(
-    const Eigen::Ref<const Eigen::Vector4d>& p, const Vector3Ref& theta,
-    Eigen::Quaterniond* p_plus_theta) {
+    const Quaternion& p, const VectorX& theta,
+    Quaternion* p_plus_theta) {
   CHECK_NOTNULL(p_plus_theta);
-  const Eigen::Map<const Eigen::Quaterniond> p_mapped(p.data());
-  *p_plus_theta = expMap(theta) * p_mapped;
+  *p_plus_theta = expMap(theta) * p;
 }
 
 // Calculates the shortest connection respecting the manifold structure:
 // theta = p boxminus q
-// TODO(burrimi): Modify to also allow Eigen::Map types.
 // TODO(burrimi): Extend this function to also return Jacobians to reuse
 // computation.
 inline void boxMinus(
