@@ -9,6 +9,7 @@
 #define INCLUDE_FILTER_TEST_RESIDUALS_POSITION_RESIDUAL_H_
 
 #include "filter_test/residual.h"
+#include "filter_test/block_impl.h"
 
 namespace tsif {
 

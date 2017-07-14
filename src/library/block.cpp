@@ -1,5 +1,5 @@
 
-#include "filter_test/block.h"
+#include "filter_test/block_impl.h"
 
 namespace tsif {
 
