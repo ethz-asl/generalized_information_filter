@@ -19,15 +19,13 @@
 
 namespace tsif {
 
-
 class BlockBase;
 
 using BlockBasePtr = std::shared_ptr<BlockBase>;
 using VectorOfBlocks = std::vector<std::shared_ptr<BlockBase>>;
-//using TimedMeasurementMap = std::map<int64_t, BlockBase*>;
-//using TimedMeasurementVector = std::vector<TimedMeasurement>;
-//using TimedMeasurementVector = std::vector<TimedMeasurement>;
-
+// using TimedMeasurementMap = std::map<int64_t, BlockBase*>;
+// using TimedMeasurementVector = std::vector<TimedMeasurement>;
+// using TimedMeasurementVector = std::vector<TimedMeasurement>;
 
 enum BlockTypeId {
   kVector1 = 0,
@@ -36,10 +34,10 @@ enum BlockTypeId {
   kVector4,
   kVector5,
   kVector6,
-  kSO1, // Not implemented
-  kSO2, // Not implemented
-  kSO3, // Not implemented
-  kUnitVector3 // Not implemented
+  kSO1,         // Not implemented
+  kSO2,         // Not implemented
+  kSO3,         // Not implemented
+  kUnitVector3  // Not implemented
 };
 
 class BlockBase {
@@ -163,7 +161,8 @@ class VectorBlock : public BlockBase {
   }
 
   virtual void setRandom() {
-    value_ = NormalRandomNumberGenerator::getInstance().template getVector<Dimension>();
+    value_ = NormalRandomNumberGenerator::getInstance()
+                 .template getVector<Dimension>();
   }
 
  private:
@@ -176,14 +175,14 @@ BlockBase::Ptr createBlockByType(BlockTypeId block_type);
 inline void copyVectorOfBlocks(const VectorOfBlocks& a, VectorOfBlocks* b) {
   CHECK_NOTNULL(b);
   b->resize(a.size());
-  for(size_t i = 0; i < a.size(); ++i) {
+  for (size_t i = 0; i < a.size(); ++i) {
     (*b)[i] = a[i]->clone();
   }
 }
 
 inline int getMinimalDimension(const VectorOfBlocks& a) {
   int accumulated_dimension = 0;
-  for(size_t i = 0; i < a.size(); ++i) {
+  for (size_t i = 0; i < a.size(); ++i) {
     accumulated_dimension += a[i]->minimal_dimension_;
   }
   return accumulated_dimension;
@@ -191,42 +190,51 @@ inline int getMinimalDimension(const VectorOfBlocks& a) {
 
 inline void setRandom(VectorOfBlocks* blocks) {
   CHECK_NOTNULL(blocks);
-  for(size_t i = 0; i < blocks->size(); ++i) {
+  for (size_t i = 0; i < blocks->size(); ++i) {
     (*blocks)[i]->setRandom();
   }
 }
 
 // calculates a boxplus dx = b
-inline void boxPlus(const VectorOfBlocks& a, const int minimal_dimension_a, const VectorXRef& dx, VectorOfBlocks* b) {
+inline void boxPlus(
+    const VectorOfBlocks& a, const int minimal_dimension_a,
+    const VectorXRef& dx, VectorOfBlocks* b) {
   CHECK_NOTNULL(b);
   CHECK(minimal_dimension_a == dx.size());
   CHECK(a.size() == b->size());
 
   int accumulated_dimension = 0;
-  for(size_t i = 0; i < a.size(); ++i) {
-    a[i]->boxPlus(dx.segment(accumulated_dimension, a[i]->minimal_dimension_), (*b)[i].get());
+  for (size_t i = 0; i < a.size(); ++i) {
+    a[i]->boxPlus(
+        dx.segment(accumulated_dimension, a[i]->minimal_dimension_),
+        (*b)[i].get());
     accumulated_dimension += a[i]->minimal_dimension_;
   }
 }
 
-inline void boxPlus(const VectorOfBlocks& a, const VectorXRef& dx, VectorOfBlocks* b) {
+inline void boxPlus(
+    const VectorOfBlocks& a, const VectorXRef& dx, VectorOfBlocks* b) {
   boxPlus(a, getMinimalDimension(a), dx, b);
 }
 
 // calculates a boxminus b = dx
-inline void boxMinus(const VectorOfBlocks& a, const int minimal_dimension_a, const VectorOfBlocks& b, VectorX* dx) {
+inline void boxMinus(
+    const VectorOfBlocks& a, const int minimal_dimension_a,
+    const VectorOfBlocks& b, VectorX* dx) {
   CHECK_NOTNULL(dx);
   CHECK(minimal_dimension_a == dx->size());
   CHECK(a.size() == b.size());
 
   int accumulated_dimension = 0;
-  for(size_t i = 0; i < a.size(); ++i) {
-    dx->segment(accumulated_dimension, a[i]->minimal_dimension_) = a[i]->boxMinus(b[i].get());
+  for (size_t i = 0; i < a.size(); ++i) {
+    dx->segment(accumulated_dimension, a[i]->minimal_dimension_) =
+        a[i]->boxMinus(b[i].get());
     accumulated_dimension += a[i]->minimal_dimension_;
   }
 }
 
-inline void boxMinus(const VectorOfBlocks& a, const VectorOfBlocks& b, VectorX* dx) {
+inline void boxMinus(
+    const VectorOfBlocks& a, const VectorOfBlocks& b, VectorX* dx) {
   boxMinus(a, getMinimalDimension(a), b, dx);
 }
 

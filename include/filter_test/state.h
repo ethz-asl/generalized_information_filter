@@ -62,7 +62,8 @@ class State {
 
   void defineState(std::vector<BlockTypeId> block_types) {
     for (BlockTypeId current_type : block_types) {
-      BlockBase::Ptr current_block = block_helper::createBlockByType(current_type);
+      BlockBase::Ptr current_block =
+          block_helper::createBlockByType(current_type);
       addBlock(current_block);
     }
   }
@@ -76,7 +77,8 @@ class State {
   }
 
   template <typename BlockType>
-  void setValue(const size_t key, const typename BlockType::StorageType& value) {
+  void setValue(
+      const size_t key, const typename BlockType::StorageType& value) {
     BlockType* block = dynamic_cast<BlockType*>(getBlock(key).get());
 
     CHECK_NOTNULL(block);  // Check if cast successful
@@ -104,7 +106,8 @@ class State {
 
   template <typename BlockType>
   std::shared_ptr<BlockType> getBlock(const size_t key) const {
-    std::shared_ptr<BlockType> block = std::dynamic_pointer_cast<BlockType>(getBlock(key));
+    std::shared_ptr<BlockType> block =
+        std::dynamic_pointer_cast<BlockType>(getBlock(key));
     CHECK_NOTNULL(block);  // Check if key is valid.
     return block;
   }
@@ -126,7 +129,8 @@ class State {
         << "Dimension of first state" << dimension_ << " result state "
         << result_state
                ->dimension_;  // Check if dimension of result_state is valid.
-    block_helper::boxPlus(state_blocks_, minimal_dimension_, dx, &result_state->state_blocks_);
+    block_helper::boxPlus(
+        state_blocks_, minimal_dimension_, dx, &result_state->state_blocks_);
   }
 
   // calculates this boxminus other = dx
@@ -135,7 +139,8 @@ class State {
         << "Dimension of first state " << dimension_ << " other state "
         << other.dimension_;  // Check if dimension of result_state is valid.
 
-    block_helper::boxMinus(state_blocks_, minimal_dimension_, other.state_blocks_, dx);
+    block_helper::boxMinus(
+        state_blocks_, minimal_dimension_, other.state_blocks_, dx);
   }
 
   inline int getAccumulatedMinimalDimension(const size_t key) const {
@@ -165,7 +170,7 @@ class State {
 
  private:
   inline void addBlock(BlockBase::Ptr block_to_add) {
-//    CHECK_NOTNULL(block_to_add);
+    //    CHECK_NOTNULL(block_to_add);
     accumulated_minimal_dimensions_.push_back(dimension_);
     dimension_ += block_to_add->dimension_;
     minimal_dimension_ += block_to_add->minimal_dimension_;

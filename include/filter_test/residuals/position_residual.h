@@ -21,7 +21,8 @@ class PositionResidual : public ResidualBase {
 
  public:
   PositionResidual(const Matrix3& covariance)
-      : ResidualBase(kResidualDimension, kResidualMinimalDimension, kIsMergeable) {
+      : ResidualBase(
+            kResidualDimension, kResidualMinimalDimension, kIsMergeable) {
     // TODO(burrimi): should we use robust cholesky decomposition (ldlt) to also
     // handle semidefinite?
     Matrix3 L = covariance.llt()
@@ -39,8 +40,7 @@ class PositionResidual : public ResidualBase {
   virtual bool predict(
       const VectorOfBlocks& state,
       const std::vector<const TimedMeasurementVector*>& measurement_vectors,
-      const int64_t t1_ns, const int64_t t2_ns,
-      VectorOfBlocks* predicted_state,
+      const int64_t t1_ns, const int64_t t2_ns, VectorOfBlocks* predicted_state,
       std::vector<MatrixXRef>* jacobian_wrt_state1) {
     // TODO(burrimi): implement.
     assert(true);  // TODO(burrimi): Implement.
@@ -69,13 +69,11 @@ class PositionResidual : public ResidualBase {
   }
 
   virtual bool evaluate(
-      const VectorOfBlocks& state1,
-      const VectorOfBlocks& state2,
+      const VectorOfBlocks& state1, const VectorOfBlocks& state2,
       const std::vector<const TimedMeasurementVector*>& measurement_vectors,
       const int64_t t1_ns, const int64_t t2_ns, VectorXRef residual,
       std::vector<MatrixXRef>* jacobian_wrt_state1,
       std::vector<MatrixXRef>* jacobian_wrt_state2) {
-
     const Vector3 position_measured =
         getPositionMeasurement(measurement_vectors, t2_ns);
     //    const Vector3 position_measured(0,0,0);
@@ -98,8 +96,7 @@ class PositionResidual : public ResidualBase {
   }
 
   virtual bool inputTypesValid(
-      const VectorOfBlocks& state1,
-      const VectorOfBlocks& state2) {
+      const VectorOfBlocks& state1, const VectorOfBlocks& state2) {
     bool all_types_ok = true;
     all_types_ok &= state2[0]->isBlockTypeCorrect<VectorBlock<3>>();
     TSIF_LOGEIF(
@@ -108,16 +105,22 @@ class PositionResidual : public ResidualBase {
     return all_types_ok;
   }
 
-  virtual bool checkJacobians(const VectorOfBlocks& state1,
-                        const VectorOfBlocks& state2,const int64_t t1_ns, const int64_t t2_ns, const double delta) {
-    // TODO(burrimi): Find better way to create measurements. This is really bad.
-    std::vector<const TimedMeasurementVector*> measurement_vectors(1); // Create measurements.
-    PositionMeasurement position_measurement = PositionMeasurement::createRandomMeasurement();
+  virtual bool checkJacobians(
+      const VectorOfBlocks& state1, const VectorOfBlocks& state2,
+      const int64_t t1_ns, const int64_t t2_ns, const double delta) {
+    // TODO(burrimi): Find better way to create measurements. This is really
+    // bad.
+    std::vector<const TimedMeasurementVector*> measurement_vectors(
+        1);  // Create measurements.
+    PositionMeasurement position_measurement =
+        PositionMeasurement::createRandomMeasurement();
     TimedMeasurementVector position_measurements;
-    position_measurements.emplace_back(TimedMeasurement(t2_ns,&position_measurement));
+    position_measurements.emplace_back(
+        TimedMeasurement(t2_ns, &position_measurement));
     measurement_vectors[0] = &position_measurements;
 
-    return checkJacobiansImpl(state1, state2, measurement_vectors, t1_ns,t2_ns, delta);
+    return checkJacobiansImpl(
+        state1, state2, measurement_vectors, t1_ns, t2_ns, delta);
   }
 
  private:

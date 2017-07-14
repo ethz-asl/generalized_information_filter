@@ -106,7 +106,8 @@ class Estimator {
   bool addResidualImplementation(
       ResidualBase* residual, const std::vector<size_t>& first_keys,
       const std::vector<size_t>& second_keys,
-      const std::vector<size_t>& measurement_keys, const bool use_for_prediction);
+      const std::vector<size_t>& measurement_keys,
+      const bool use_for_prediction);
 
   void runEstimator();
 

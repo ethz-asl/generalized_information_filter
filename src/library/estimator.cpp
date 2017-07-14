@@ -41,7 +41,8 @@ bool Estimator::addPredictionResidual(
 bool Estimator::addResidualImplementation(
     ResidualBase* residual, const std::vector<size_t>& first_keys,
     const std::vector<size_t>& second_keys,
-    const std::vector<size_t>& measurement_keys, const bool use_for_prediction) {
+    const std::vector<size_t>& measurement_keys,
+    const bool use_for_prediction) {
   CHECK_NOTNULL(residual);
   CHECK(state_.dimension_ > 0);  // Check if state is defined.
   CHECK(!is_initialized_) << "Extending the state or adding residuals after "

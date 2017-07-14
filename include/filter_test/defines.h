@@ -12,7 +12,8 @@
 
 namespace tsif {
 
-#define TSIF_VERBOSE true // Should we output a lot of potentially useless stuff to the console?
+#define TSIF_VERBOSE \
+  true  // Should we output a lot of potentially useless stuff to the console?
 
 template <int Dimension>
 using Vector = Eigen::Matrix<double, Dimension, 1>;

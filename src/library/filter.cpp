@@ -22,8 +22,7 @@ void Filter::predictState(
   for (ResidualContainer* residual_container :
        filter_problem.prediction_residuals_) {
     if (residual_container->residual->active_) {
-      VectorOfBlocks blocks =
-          state.getBlocks(residual_container->first_keys);
+      VectorOfBlocks blocks = state.getBlocks(residual_container->first_keys);
       VectorOfBlocks blocks_predicted =
           predicted_state->getBlocks(residual_container->second_keys);
       std::vector<const TimedMeasurementVector*> measurements =

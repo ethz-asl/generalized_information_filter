@@ -20,7 +20,9 @@ class ConstantResidual : public ResidualBase {
   static const int kResidualMinimalDimension = 3;
 
  public:
-  ConstantResidual() : ResidualBase(kResidualDimension, kResidualMinimalDimension, kIsMergeable) {}
+  ConstantResidual()
+      : ResidualBase(
+            kResidualDimension, kResidualMinimalDimension, kIsMergeable) {}
 
   ~ConstantResidual() {}
 
@@ -32,8 +34,7 @@ class ConstantResidual : public ResidualBase {
   virtual bool predict(
       const VectorOfBlocks& state,
       const std::vector<const TimedMeasurementVector*>& measurement_vectors,
-      const int64_t t1_ns, const int64_t t2_ns,
-      VectorOfBlocks* predicted_state,
+      const int64_t t1_ns, const int64_t t2_ns, VectorOfBlocks* predicted_state,
       std::vector<MatrixXRef>* jacobian_wrt_state1) {
     // TODO(burrimi): implement.
     CHECK(false) << "Not implemented yet!";  // TODO(burrimi): Implement.
@@ -41,13 +42,12 @@ class ConstantResidual : public ResidualBase {
   }
 
   virtual bool evaluate(
-      const VectorOfBlocks& state1,
-      const VectorOfBlocks& state2,
+      const VectorOfBlocks& state1, const VectorOfBlocks& state2,
       const std::vector<const TimedMeasurementVector*>& measurement_vectors,
       const int64_t t1_ns, const int64_t t2_ns, VectorXRef residual,
       std::vector<MatrixXRef>* jacobian_wrt_state1,
       std::vector<MatrixXRef>* jacobian_wrt_state2) {
-    //CHECK(false) << "Not implemented yet!";  // TODO(burrimi): Implement.
+    // CHECK(false) << "Not implemented yet!";  // TODO(burrimi): Implement.
     return false;
   }
 
@@ -56,8 +56,7 @@ class ConstantResidual : public ResidualBase {
   }
 
   virtual bool inputTypesValid(
-      const VectorOfBlocks& state1,
-      const VectorOfBlocks& state2) {
+      const VectorOfBlocks& state1, const VectorOfBlocks& state2) {
     bool all_types_ok = true;
     all_types_ok &= state1[0]->isBlockTypeCorrect<VectorBlock<3>>();
     all_types_ok &= state2[0]->isBlockTypeCorrect<VectorBlock<3>>();
@@ -67,8 +66,9 @@ class ConstantResidual : public ResidualBase {
     return all_types_ok;
   }
 
-  virtual bool checkJacobians(const VectorOfBlocks& state1,
-                        const VectorOfBlocks& state2,const int64_t t1_ns, const int64_t t2_ns, const double delta) {
+  virtual bool checkJacobians(
+      const VectorOfBlocks& state1, const VectorOfBlocks& state2,
+      const int64_t t1_ns, const int64_t t2_ns, const double delta) {
     // TODO(burrimi): implement.
     return true;
   }

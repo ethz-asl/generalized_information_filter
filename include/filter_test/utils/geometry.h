@@ -94,8 +94,7 @@ inline Eigen::Vector3d logMap(const Eigen::Quaterniond& q) {
 // p_plus_theta = p boxplus theta
 // TODO(burrimi): Check if there is a better way to pass mapped quaternions.
 inline void boxPlus(
-    const Eigen::Ref<const Eigen::Vector4d>& p,
-    const Vector3Ref& theta,
+    const Eigen::Ref<const Eigen::Vector4d>& p, const Vector3Ref& theta,
     Eigen::Quaterniond* p_plus_theta) {
   CHECK_NOTNULL(p_plus_theta);
   const Eigen::Map<const Eigen::Quaterniond> p_mapped(p.data());

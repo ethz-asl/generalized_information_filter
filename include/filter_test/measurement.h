@@ -121,7 +121,8 @@ class PositionMeasurement : public MeasurementBase {
   }
 
   static PositionMeasurement createRandomMeasurement() {
-    const Vector3 position = NormalRandomNumberGenerator::getInstance().template getVector<3>();
+    const Vector3 position =
+        NormalRandomNumberGenerator::getInstance().template getVector<3>();
     return PositionMeasurement(position);
   }
 
@@ -154,8 +155,10 @@ class ImuMeasurement : public MeasurementBase {
   }
 
   static ImuMeasurement createRandomMeasurement() {
-    const Vector3 acceleration = NormalRandomNumberGenerator::getInstance().template getVector<3>();
-    const Vector3 angular_velocity = NormalRandomNumberGenerator::getInstance().template getVector<3>();
+    const Vector3 acceleration =
+        NormalRandomNumberGenerator::getInstance().template getVector<3>();
+    const Vector3 angular_velocity =
+        NormalRandomNumberGenerator::getInstance().template getVector<3>();
     return ImuMeasurement(acceleration, angular_velocity);
   }
 
