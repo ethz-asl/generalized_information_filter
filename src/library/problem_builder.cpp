@@ -86,6 +86,7 @@ void ProblemBuilder::printResiduals(const State& state) const {
 }
 
 void ProblemBuilder::checkResiduals(const State& state) const {
+  bool residuals_ok = true;
   for (const ResidualContainer& current_residual : residual_containers_) {
     VectorOfBlocks blocks1 =
         state.getBlocks(current_residual.first_keys);
@@ -93,15 +94,17 @@ void ProblemBuilder::checkResiduals(const State& state) const {
         state.getBlocks(current_residual.second_keys);
     std::cout << "Checking input types for residual : "
               << current_residual.residual->getName() << std::endl;
-    current_residual.residual->inputTypesValid(blocks1, blocks2);
+    residuals_ok &= current_residual.residual->inputTypesValid(blocks1, blocks2);
 
     const double kSelfCheckTimeStart = 0;
     const double kSelfCheckTimeEnd = 0.5;
     const double kSelfCheckFiniteDifferenceEpsilon = 1e-6;
-    std::cout << "Checking Jacobians for residual : "
-        << current_residual.residual->getName() << std::endl;
-    current_residual.residual->checkJacobians(blocks1, blocks2, kSelfCheckTimeStart, kSelfCheckTimeEnd
+    std::cout << "Checking Jacobians" << std::endl;
+    residuals_ok &= current_residual.residual->checkJacobians(blocks1, blocks2, kSelfCheckTimeStart, kSelfCheckTimeEnd
         , kSelfCheckFiniteDifferenceEpsilon);
+  }
+  if(residuals_ok) {
+    std::cout << "All residual checks passed. Residuals are probably correctly implemented." << std::endl;
   }
 }
 

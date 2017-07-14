@@ -117,7 +117,9 @@ void Estimator::printResiduals() const {
 }
 
 void Estimator::checkResiduals() const {
-  problem_builder_.checkResiduals(state_);
+  State random_state = state_;
+  random_state.setRandom();
+  problem_builder_.checkResiduals(random_state);
 }
 
 bool Estimator::init(const MeasurementBuffer& measurement_buffer) {
