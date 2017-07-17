@@ -89,56 +89,7 @@ class ResidualBase {
   bool checkJacobiansImpl(
       const VectorOfBlocks& state1, const VectorOfBlocks& state2,
       const std::vector<const TimedMeasurementVector*>& measurement_vectors,
-      const int64_t t1_ns, const int64_t t2_ns, const double delta) {
-    if (state1.empty() && state2.empty()) {
-      return true;
-    }
-
-    const int state1_minimal_dimension =
-        block_helper::getMinimalDimension(state1);
-    const int state2_minimal_dimension =
-        block_helper::getMinimalDimension(state2);
-    MatrixX J1(minimal_dimension_, state1_minimal_dimension);
-    MatrixX J2(minimal_dimension_, state2_minimal_dimension);
-    std::vector<MatrixXRef> J1_blocks = getJacobianBlocks(state1, &J1);
-    std::vector<MatrixXRef> J2_blocks = getJacobianBlocks(state2, &J2);
-
-    MatrixX J1_finite_diff(minimal_dimension_, state1_minimal_dimension);
-    MatrixX J2_finite_diff(minimal_dimension_, state2_minimal_dimension);
-    std::vector<MatrixXRef> J1_blocks_finite_diff =
-        getJacobianBlocks(state1, &J1_finite_diff);
-    std::vector<MatrixXRef> J2_blocks_finite_diff =
-        getJacobianBlocks(state2, &J2_finite_diff);
-
-    VectorX residual(minimal_dimension_);
-    evaluate(
-        state1, state2, measurement_vectors, t1_ns, t2_ns, residual, nullptr,
-        nullptr);
-    evaluate(
-        state1, state2, measurement_vectors, t1_ns, t2_ns, residual, &J1_blocks,
-        &J2_blocks);
-    finiteDifference(
-        state1, state2, measurement_vectors, t1_ns, t2_ns, delta,
-        &J1_blocks_finite_diff, &J2_blocks_finite_diff);
-
-    bool all_ok = true;
-    if (!J1.isApprox(J1_finite_diff, 1e-6)) {
-      TSIF_LOGE(
-          "Residual Jacobian might be wrong: \n"
-          << J1 << "\n Num diff: \n"
-          << J1_finite_diff);
-      all_ok = false;
-    }
-
-    if (!J2.isApprox(J2_finite_diff, 1e-6)) {
-      TSIF_LOGE(
-          "Residual Jacobian might be wrong: \n"
-          << J2 << "\n Num diff: \n"
-          << J2_finite_diff);
-      all_ok = false;
-    }
-    return all_ok;
-  }
+      const int64_t t1_ns, const int64_t t2_ns, const double delta);
 
  private:
   std::vector<MatrixXRef> getJacobianBlocks(

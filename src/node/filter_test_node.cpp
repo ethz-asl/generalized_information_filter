@@ -64,14 +64,14 @@ int main(int argc, char** argv) {
   test_estimator.printState();
 
   ConstantVelocityResidual* test_residual1 = new ConstantVelocityResidual(1, 1);
-  std::vector<int> first_keys{kStatePosition, kStateVelocity};
-  std::vector<int> second_keys{kStatePosition, kStateVelocity};
+  std::vector<size_t> first_keys{kStatePosition, kStateVelocity};
+  std::vector<size_t> second_keys{kStatePosition, kStateVelocity};
   test_estimator.addResidual(test_residual1, first_keys, second_keys);
 
   PositionResidual* test_residual2 = new PositionResidual(Matrix3::Identity());
   first_keys = {};
   second_keys = {kStatePosition};
-  std::vector<int> measurement_keys{kMeasPosition};
+  std::vector<size_t> measurement_keys{kMeasPosition};
 
   test_estimator.addResidual(
       test_residual2, first_keys, second_keys, measurement_keys);
