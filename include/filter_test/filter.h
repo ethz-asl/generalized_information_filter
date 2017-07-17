@@ -25,8 +25,8 @@ namespace tsif {
 // Now in each iteration we extract these blocks again and put them into a
 // vector which is a lot of overhead and we should buffer this.
 // struct PreparedResidual {
-//  std::vector<BlockBase*> blocks1;
-//  std::vector<BlockBase*> blocks2;
+//  VectorOfBlocks blocks1;
+//  VectorOfBlocks blocks2;
 //  VectorXRef residual;
 //  std::vector<MatrixXRef> jacobian_wrt_state1_blocks;
 //  std::vector<MatrixXRef> jacobian_wrt_state2_blocks;
@@ -67,7 +67,7 @@ class Filter {
       MatrixX* updated_information);
 
  private:
-  inline std::vector<MatrixXRef> getJacobianBlocks(
+  std::vector<MatrixXRef> getJacobianBlocks(
       const State& state, const std::vector<size_t>& keys,
       const int residual_index, const int residual_dimension,
       MatrixX* jacobian) {
@@ -77,7 +77,7 @@ class Filter {
           state.getAccumulatedMinimalDimension(current_key);
       jacobian_blocks.emplace_back(jacobian->block(
           residual_index, state_index, residual_dimension,
-          state.minimal_dimension_));
+          state.getBlock(current_key)->minimal_dimension_));
     }
     return jacobian_blocks;
   }
