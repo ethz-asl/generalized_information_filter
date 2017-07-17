@@ -77,7 +77,7 @@ class BlockBase {
     return true;
   }
 
-  virtual void boxPlus(const Eigen::VectorXd& dx, BlockBase* result) = 0;
+  virtual void boxPlus(const VectorX& dx, BlockBase* result) = 0;
   virtual Eigen::VectorXd boxMinus(const BlockBase* y) = 0;
   virtual Eigen::VectorXd getValueAsVector() = 0;
   virtual void setValueFromVector(const VectorXRef& value) = 0;

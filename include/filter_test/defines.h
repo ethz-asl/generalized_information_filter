@@ -38,6 +38,10 @@ constexpr int kMaxMeasurementBufferSize = 1000;
 
 constexpr int kRandomNumberSeed = 210;
 
+// --- geometry defines ---
+static const double kQuaternionSmallAngleThreshold = 1e-4;
+
+
 }  // namespace tsif
 
 #endif /* INCLUDE_FILTER_TEST_DEFINES_H_ */

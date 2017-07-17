@@ -38,5 +38,10 @@ catkin_add_gtest(test_timeline
   src/test/test_timeline.cpp)
 target_link_libraries(test_timeline ${PROJECT_NAME} ${catkin_LIBRARIES})
 
+catkin_add_gtest(test_geometry
+  src/test/test_geometry.cpp)
+target_link_libraries(test_geometry ${PROJECT_NAME} ${catkin_LIBRARIES})
+
+
 cs_install()
 cs_export()

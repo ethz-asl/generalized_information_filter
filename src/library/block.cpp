@@ -19,7 +19,7 @@ BlockBase::Ptr createBlockByType(BlockTypeId block_type) {
     case kVector6:
       return std::make_shared<VectorBlock<6>>();
     case kSO3:
-      CHECK(false);  // TODO(burrimi): Implement this!
+      return std::make_shared<QuaternionBlock>();
       break;
     default:
       break;

@@ -43,7 +43,7 @@ class VectorBlock : public BlockBase {
     result1->value_ = value_;
   }
 
-  virtual void boxPlus(const Eigen::VectorXd& dx, BlockBase* result) {
+  virtual void boxPlus(const VectorX& dx, BlockBase* result) {
     CHECK(dx.size() == Dimension);
     VectorBlock<Dimension>* result1 =
         dynamic_cast<VectorBlock<Dimension>*>(result);
@@ -168,9 +168,14 @@ class QuaternionBlock : public BlockBase {
   }
 
   virtual void setRandom() {
+    setZero();
     Vector3 delta = NormalRandomNumberGenerator::getInstance()
     .template getVector<kMinimalDimension>();
     quaternion_helpers::boxPlus(value_, delta, &value_);
+  }
+
+  void setZero() {
+    value_ = StorageType::Identity();
   }
 
  private:
