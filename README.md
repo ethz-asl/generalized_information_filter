@@ -1,2 +1,3 @@
-# super_sexy_gif
-Super sexy filtering library, written all by Michi B's. Including the name.
+# Generalized Information Filter
+Author: Michael Burri
+Purpose: Filter in a generalized informational way.
