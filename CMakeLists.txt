@@ -10,7 +10,7 @@ catkin_simple(ALL_DEPS_REQUIRED)
 find_package(Eigen REQUIRED)
 include_directories(${Eigen_INCLUDE_DIRS})
 
-cs_add_library(filter_test
+cs_add_library(${PROJECT_NAME}
   src/library/filter.cpp
   src/library/residual.cpp
   src/library/estimator.cpp

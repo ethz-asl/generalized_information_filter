@@ -14,6 +14,7 @@
 #include "glog/logging.h"
 
 #include "filter_test/defines.h"
+#include "filter_test/utils/random.h"
 
 namespace tsif {
 
@@ -119,6 +120,12 @@ class PositionMeasurement : public MeasurementBase {
     return "Position";
   }
 
+  static PositionMeasurement createRandomMeasurement() {
+    const Vector3 position =
+        NormalRandomNumberGenerator::getInstance().template getVector<3>();
+    return PositionMeasurement(position);
+  }
+
   const Vector3 position_;
 
  private:
@@ -146,6 +153,15 @@ class ImuMeasurement : public MeasurementBase {
   virtual std::string getMeasurementName() const {
     return "IMU";
   }
+
+  static ImuMeasurement createRandomMeasurement() {
+    const Vector3 acceleration =
+        NormalRandomNumberGenerator::getInstance().template getVector<3>();
+    const Vector3 angular_velocity =
+        NormalRandomNumberGenerator::getInstance().template getVector<3>();
+    return ImuMeasurement(acceleration, angular_velocity);
+  }
+
   const Vector3 acceleration_;
   const Vector3 angular_velocity_;
 

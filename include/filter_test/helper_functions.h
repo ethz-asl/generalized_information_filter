@@ -23,7 +23,8 @@ inline std::string padTo(
 
 // Find a value in the vector. If you use this function often maybe consider
 // switching to a set!
-inline bool vectorContainsValue(const std::vector<size_t>& vec, const size_t value) {
+inline bool vectorContainsValue(
+    const std::vector<size_t>& vec, const size_t value) {
   return std::find(vec.begin(), vec.end(), value) != vec.end();
 }
 
