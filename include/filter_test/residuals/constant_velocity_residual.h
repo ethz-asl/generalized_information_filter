@@ -169,7 +169,6 @@ class ConstantVelocityResidual : public ResidualBase {
     // Since residual is not depending on any measurements this is trivial :)
     return checkJacobiansImpl(
         state1, state2, measurement_vectors, t1_ns, t2_ns, delta);
-    ;
   }
 
  private:

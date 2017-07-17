@@ -24,19 +24,19 @@ cs_add_executable(filter_test_node
 
 #add_subdirectory(src/test)
 
-target_link_libraries(filter_test_node ${PROJECT_NAME} ${catkin_LIBRARIES})
+target_link_libraries(filter_test_node ${PROJECT_NAME})
 
 catkin_add_gtest(test_state
   src/test/test_state.cpp)
-target_link_libraries(test_state ${PROJECT_NAME} ${catkin_LIBRARIES})
+target_link_libraries(test_state ${PROJECT_NAME})
 
 catkin_add_gtest(test_filter
   src/test/test_filter.cpp)
-target_link_libraries(test_filter ${PROJECT_NAME} ${catkin_LIBRARIES})
+target_link_libraries(test_filter ${PROJECT_NAME})
 
 catkin_add_gtest(test_timeline
   src/test/test_timeline.cpp)
-target_link_libraries(test_timeline ${PROJECT_NAME} ${catkin_LIBRARIES})
+target_link_libraries(test_timeline ${PROJECT_NAME})
 
 cs_install()
 cs_export()
