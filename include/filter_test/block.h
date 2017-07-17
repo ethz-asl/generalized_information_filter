@@ -87,7 +87,6 @@ class BlockBase {
  private:
 };
 
-
 namespace block_helper {
 BlockBase::Ptr createBlockByType(BlockTypeId block_type);
 

@@ -23,11 +23,13 @@ Eigen::Matrix<Scalar, 3, 3> skew(const Eigen::Matrix<Scalar, 3, 1>& vector) {
 }
 }  // namespace common
 
-
 // Quaternions are implemented as
 //@article{bloesch2016primer,
 //  title={A Primer on the Differential Calculus of 3D Orientations},
-//  author={Bloesch, Michael and Sommer, Hannes and Laidlow, Tristan and Burri, Michael and Nuetzi, Gabriel and Fankhauser, P{\'e}ter and Bellicoso, Dario and Gehring, Christian and Leutenegger, Stefan and Hutter, Marco and others},
+//  author={Bloesch, Michael and Sommer, Hannes and Laidlow, Tristan and Burri,
+//  Michael and Nuetzi, Gabriel and Fankhauser, P{\'e}ter and Bellicoso, Dario
+//  and Gehring, Christian and Leutenegger, Stefan and Hutter, Marco and
+//  others},
 //  journal={arXiv preprint arXiv:1606.05285},
 //  year={2016}
 //}
@@ -53,7 +55,8 @@ inline Eigen::Matrix<Scalar, 3, 3> expMapJacobian(
   exp_map_jacobian.setIdentity();
   exp_map_jacobian += ((1.0 - cos(phi_norm)) / phi_squared_norm) * phi_skew;
   const Scalar phi_cubed = (phi_norm * phi_squared_norm);
-  exp_map_jacobian += ((phi_norm - sin(phi_norm)) / phi_cubed) * phi_skew * phi_skew;
+  exp_map_jacobian +=
+      ((phi_norm - sin(phi_norm)) / phi_cubed) * phi_skew * phi_skew;
   return exp_map_jacobian;
 }
 
@@ -101,8 +104,7 @@ inline Vector3 logMap(const Quaternion& q) {
 // Rotates the quaternion p with the error theta on the tangent space:
 // p_plus_theta = p boxplus theta
 inline void boxPlus(
-    const Quaternion& p, const Vector3& theta,
-    Quaternion* p_plus_theta) {
+    const Quaternion& p, const Vector3& theta, Quaternion* p_plus_theta) {
   CHECK_NOTNULL(p_plus_theta);
   *p_plus_theta = expMap(theta) * p;
 }
@@ -112,8 +114,7 @@ inline void boxPlus(
 // TODO(burrimi): Extend this function to also return Jacobians to reuse
 // computation.
 inline void boxMinus(
-    const Quaternion& p, const Quaternion& q,
-    Vector3* p_minus_q) {
+    const Quaternion& p, const Quaternion& q, Vector3* p_minus_q) {
   CHECK_NOTNULL(p_minus_q);
   *p_minus_q = logMap(p * q.inverse());
 }
@@ -125,8 +126,8 @@ inline void boxMinus(
 // TODO(burrimi): Deprecate this function and extend boxMinus() to also
 // return Jacobians to reuse computation.
 inline void GetBoxMinusJacobians(
-    const Quaternion& p, const Quaternion& q,
-    Matrix3* J_boxminus_wrt_p, Matrix3* J_boxminus_wrt_q) {
+    const Quaternion& p, const Quaternion& q, Matrix3* J_boxminus_wrt_p,
+    Matrix3* J_boxminus_wrt_q) {
   if (J_boxminus_wrt_p == NULL && J_boxminus_wrt_q == NULL) {
     return;  // Nothing to do.
   }

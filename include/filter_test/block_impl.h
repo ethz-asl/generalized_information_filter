@@ -8,7 +8,6 @@
 #ifndef INCLUDE_FILTER_TEST_BLOCK_IMPL_H_
 #define INCLUDE_FILTER_TEST_BLOCK_IMPL_H_
 
-
 #include <glog/logging.h>
 
 #include "filter_test/block.h"
@@ -94,7 +93,6 @@ class VectorBlock : public BlockBase {
   StorageType value_;
 };
 
-
 class QuaternionBlock : public BlockBase {
  public:
   typedef Quaternion StorageType;
@@ -104,7 +102,8 @@ class QuaternionBlock : public BlockBase {
   static const bool kIsVectorSpace = false;
 
   QuaternionBlock(const StorageType& value)
-      : BlockBase(kDimension, kMinimalDimension, kIsVectorSpace), value_(value) {}
+      : BlockBase(kDimension, kMinimalDimension, kIsVectorSpace),
+        value_(value) {}
 
   QuaternionBlock() : QuaternionBlock(StorageType::Identity()) {}
 
@@ -112,21 +111,18 @@ class QuaternionBlock : public BlockBase {
 
   virtual BlockBase::Ptr clone() const {
     return std::make_shared<QuaternionBlock>(
-        static_cast<const QuaternionBlock&>(
-            *this));  // call the copy ctor.
+        static_cast<const QuaternionBlock&>(*this));  // call the copy ctor.
   }
 
   virtual void copyBlockTo(BlockBase* copy) const {
-    QuaternionBlock* quaternion_copy =
-        dynamic_cast<QuaternionBlock*>(copy);
+    QuaternionBlock* quaternion_copy = dynamic_cast<QuaternionBlock*>(copy);
     CHECK_NOTNULL(quaternion_copy);
     quaternion_copy->value_ = value_;
   }
 
   virtual void boxPlus(const VectorX& dx, BlockBase* result) {
     CHECK(dx.size() == kMinimalDimension);
-    QuaternionBlock* result1 =
-        dynamic_cast<QuaternionBlock*>(result);
+    QuaternionBlock* result1 = dynamic_cast<QuaternionBlock*>(result);
     CHECK_NOTNULL(result1);
     quaternion_helpers::boxPlus(value_, dx, &(result1->value_));
   }
@@ -135,7 +131,7 @@ class QuaternionBlock : public BlockBase {
     const QuaternionBlock* y_quaternion =
         dynamic_cast<const QuaternionBlock*>(y);
     CHECK_NOTNULL(y_quaternion);  // << "Type cast from BlockBase to VectorBlock
-                              // failed! Did you mix types?";
+                                  // failed! Did you mix types?";
     Vector3 result(kMinimalDimension);
     quaternion_helpers::boxMinus(value_, y_quaternion->value_, &result);
     return result;
@@ -170,7 +166,7 @@ class QuaternionBlock : public BlockBase {
   virtual void setRandom() {
     setZero();
     Vector3 delta = NormalRandomNumberGenerator::getInstance()
-    .template getVector<kMinimalDimension>();
+                        .template getVector<kMinimalDimension>();
     quaternion_helpers::boxPlus(value_, delta, &value_);
   }
 
